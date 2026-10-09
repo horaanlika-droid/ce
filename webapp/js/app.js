@@ -4,7 +4,8 @@
 import { boot, state, subscribe, cartCount } from './state.js';
 import { route, start, go, currentPath, stackDepth } from './router.js';
 import { tabbar, bindShell } from './components.js';
-import { h } from './ui.js';
+import { h, initFrames, reveal, a11y, syncRadio } from './ui.js';
+import { initTilt } from './tilt.js';
 import { tg, inTelegram } from './tg.js';
 
 import * as home from './views/home.js';
@@ -35,6 +36,11 @@ const TABS = ['/', '/collections', '/cart', '/profile'];
 
 async function main() {
   await boot();
+
+  // раунд 8: кадры (фолбэк по 404 + blur-up проявление) и tilt-параллакс
+  initFrames();
+  initTilt();
+  registerSW();
 
   const app = document.getElementById('app');
   app.hidden = false;
@@ -67,8 +73,16 @@ async function main() {
     }
   });
 
+  // держим aria-checked у radio-опций (.opts) в sync после переключения
+  shell.addEventListener('click', (e) => {
+    const opt = e.target.closest?.('.opt');
+    if (opt) setTimeout(() => syncRadio(opt), 0);
+  });
+
   await start((screen, { first, isBack, prevEl, opts = {} }) => {
     stackEl.appendChild(screen);
+    reveal(screen);          // кадры из кэша уже готовы — проявляем без ожидания load
+    a11y(screen);            // label↔поле, radiogroup/aria-checked
     if (!first) {
       screen.classList.add(isBack ? 'enter-below' : 'enter');
       if (prevEl) {
@@ -96,6 +110,22 @@ async function main() {
 
   document.getElementById('boot').classList.add('done');
   if (inTelegram) tg.expand();
+}
+
+/**
+ * Раунд 8 — PWA-невесомость: оболочка и открытые ранее кадры живут в
+ * Cache Storage, повторное открытие работает без сети. В Telegram WebView
+ * не регистрируем: там свой кэш, а SW только мешал бы обновлению.
+ * Путь абсолютный — иначе на /product/AG0001 браузер искал бы /product/sw.js.
+ */
+function registerSW() {
+  if (inTelegram) return;
+  if (!('serviceWorker' in navigator)) return;
+  const local = ['localhost', '127.0.0.1'].includes(location.hostname);
+  if (location.protocol !== 'https:' && !local) return;
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* офлайн — не критично */ });
+  });
 }
 
 main().catch((err) => {

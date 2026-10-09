@@ -18,11 +18,14 @@
   <meta name="twitter:description" content="Hand-blown crystal glassware for those who appreciate detail, balance and atmosphere. Dubai · Worldwide delivery.">
   <meta name="twitter:image" content="/assets/brand/og.jpg">
   <link rel="image_src" href="/assets/brand/og.jpg">
-  <link rel="icon" href="assets/brand/favicon.png" type="image/png">
-  <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+  <!-- пути абсолютные: витрина отдаётся и на /product/AG0001, и на /order/CE-1 —
+       относительные href уехали бы в /product/css/… и страница легла бы (раунд 8) -->
+  <link rel="icon" href="/assets/brand/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/assets/brand/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/app.css">
 </head>
 <body>
   <div id="boot" class="boot">
@@ -35,6 +38,6 @@
     <div class="boot-name">Cocktail Embassy</div>
   </div>
   <div id="app" hidden></div>
-  <script type="module" src="js/app.js"></script>
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>

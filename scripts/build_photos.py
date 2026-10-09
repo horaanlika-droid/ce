@@ -68,7 +68,12 @@ import fnmatch
 import json
 import os
 
-from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, features
+
+try:  # AVIF в Pillow даёт плагин pillow-avif-plugin (или нативный libavif в ≥ 11.3)
+    import pillow_avif  # noqa: F401
+except ImportError:
+    pass
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -132,6 +137,49 @@ def upscale(im, size):
 
 def save_jpeg(im, path, quality):
     im.save(path, 'JPEG', quality=quality, optimize=True, progressive=True, subsampling=0)
+
+
+# ── раунд 8: производные форматы ─────────────────────────────────────────────
+# JPEG остаётся каноном (оптика, веса, пробы раундов 5–7 — всё на нём), а рядом
+# кладутся .avif и .webp из ТОГО ЖЕ записанного кадра: открываем готовый JPEG и
+# перекодируем его пиксели. Поэтому производные совпадают с финалом пиксель в
+# пиксель (кромка = --bg сохраняется, пробы зелёные), а весят в 2–4 раза меньше.
+# Витрина отдаёт их через <picture><source type=…>, JPEG — фолбэк для WebView
+# Telegram и старых браузеров.
+DERIV = dict(avif=True, webp=True, avif_q=55, webp_q=70, avif_speed=6)
+
+
+def _sibling(jpeg_path, ext):
+    base, _ = os.path.splitext(jpeg_path)
+    return f'{base}.{ext}'
+
+
+def save_derivatives(jpeg_path, *, avif=None, webp=None,
+                     avif_q=None, webp_q=None, avif_speed=None):
+    """Пишет <имя>.avif и <имя>.webp рядом с финальным JPEG.
+
+    Возвращает список записанных путей. Молча пропускает формат, для которого
+    в Pillow нет кодека (тогда витрина просто отдаст JPEG)."""
+    d = DERIV
+    avif = d['avif'] if avif is None else avif
+    webp = d['webp'] if webp is None else webp
+    avif_q = d['avif_q'] if avif_q is None else avif_q
+    webp_q = d['webp_q'] if webp_q is None else webp_q
+    avif_speed = d['avif_speed'] if avif_speed is None else avif_speed
+    if not os.path.exists(jpeg_path):
+        return []
+    im = Image.open(jpeg_path).convert('RGB')
+    out = []
+    if avif and features.check('avif'):
+        p = _sibling(jpeg_path, 'avif')
+        # speed 6 — компромисс: 4K-кадр кодируется секунды, вес почти как у speed 0
+        im.save(p, 'AVIF', quality=int(avif_q), speed=int(avif_speed))
+        out.append(p)
+    if webp and features.check('webp'):
+        p = _sibling(jpeg_path, 'webp')
+        im.save(p, 'WEBP', quality=int(webp_q), method=4)
+        out.append(p)
+    return out
 
 
 def smooth_mask(luma, t0=105, t1=225):
@@ -597,12 +645,20 @@ def glow(path, out, *, near=0.55, wide=0.30, bg_blur=18, edge=14,
     if fade:
         im = fade_to_bg(im, fade_color, fade_start, fade_over)
     save_fit(im, out, q, max_kb)
+    derive_from_final(out)
     if card:
         scale = float(card) / max(im.size)
         if scale < 0.999:
             small = im.resize((max(1, int(round(im.width * scale))),
                                max(1, int(round(im.height * scale)))), Image.LANCZOS)
-            save_jpeg(small, qpath or out.replace('.jpg', '-card.jpg'), qc)
+            card_path = qpath or out.replace('.jpg', '-card.jpg')
+            save_jpeg(small, card_path, qc)
+            derive_from_final(card_path)
+
+
+def derive_from_final(jpeg_path):
+    """Производные .avif/.webp для уже записанного финального кадра (раунд 8)."""
+    return save_derivatives(jpeg_path)
 
 
 OVERRIDES_PATH = os.path.join(ROOT, 'data', 'photo_overrides.json')
@@ -634,6 +690,33 @@ def match_only(token, jid):
     if t == 'covers':
         t = 'covers/*'
     return fnmatch.fnmatchcase(jid, t) or jid == t
+
+
+def derive_jobs(only):
+    """Раунд 8, режим --derive-only: список уже готовых финальных JPEG, которым
+    нужны производные. Оптика не пересчитывается — кадры берутся как есть,
+    поэтому JPEG (и его вес, и пробы раундов 5–7) не меняются вовсе.
+
+    og.jpg пропускаем намеренно: валидаторам соцсетей нужен именно JPEG."""
+    webapp = os.path.join(ROOT, 'webapp')
+    # (каталог, префикс id для --only, с чего начинаются файлы, которые не трогаем)
+    plans = [
+        (DIR, '', ('st-', 'fb-')),                                       # товары: AG0001, AG0001-card
+        (os.path.join(webapp, 'assets', 'brand'), '', ('st-', 'og')),     # hero-01, hero-01-m
+        (os.path.join(webapp, 'assets', 'covers'), 'covers/', ('st-',)),  # covers/bullet
+    ]
+    jobs = []
+    for folder, prefix, skip in plans:
+        if not os.path.isdir(folder):
+            continue
+        for f in sorted(os.listdir(folder)):
+            if not f.endswith('.jpg') or f.startswith(skip):
+                continue
+            jid = f'{prefix}{f[:-4]}'
+            if only and not any(match_only(t, jid) for t in only):
+                continue
+            jobs.append((jid, os.path.join(folder, f)))
+    return jobs
 
 
 def main():
@@ -684,7 +767,45 @@ def main():
     ap.add_argument('--fade-over', type=float, default=1.15,
                     help='запас кривой спада: при 1.15 последние ~10% кадра = ровно --bg')
     ap.add_argument('--only', default='', help='список кодов через запятую, например AG0001,AG0004')
+    # ── раунд 8: производные AVIF/WebP (по умолчанию включены) ──
+    ap.add_argument('--avif', dest='avif', action='store_true', default=True,
+                    help='писать <имя>.avif рядом с финалом (по умолчанию вкл)')
+    ap.add_argument('--no-avif', dest='avif', action='store_false', help='не писать .avif')
+    ap.add_argument('--webp', dest='webp', action='store_true', default=True,
+                    help='писать <имя>.webp рядом с финалом (по умолчанию вкл)')
+    ap.add_argument('--no-webp', dest='webp', action='store_false', help='не писать .webp')
+    ap.add_argument('--avif-q', type=int, default=55, help='качество AVIF производных (дефолт 55)')
+    ap.add_argument('--webp-q', type=int, default=70, help='качество WebP производных (дефолт 70)')
+    ap.add_argument('--avif-speed', type=int, default=6, help='скорость кодера AVIF 0…10 (дефолт 6)')
+    ap.add_argument('--derive-only', action='store_true',
+                    help='не считать оптику: только дописать .avif/.webp к уже готовым финалам')
     args = ap.parse_args()
+
+    DERIV.update(avif=args.avif, webp=args.webp, avif_q=args.avif_q,
+                 webp_q=args.webp_q, avif_speed=args.avif_speed)
+    if args.avif and not features.check('avif'):
+        print('[photos] AVIF недоступен в этом Pillow — .avif пропущен '
+              '(pip install pillow-avif-plugin)')
+    if args.webp and not features.check('webp'):
+        print('[photos] WebP недоступен в этом Pillow — .webp пропущен')
+
+    only = [t.strip() for t in args.only.split(',') if t.strip()]
+
+    if args.derive_only:
+        jobs = derive_jobs(only)
+        written = 0
+        for jid, path in jobs:
+            made = derive_from_final(path)
+            if not made:
+                continue
+            kb = '  '.join(f'{os.path.splitext(p)[1][1:]} {os.path.getsize(p) / 1024:.0f} КБ'
+                           for p in made)
+            src = os.path.getsize(path) / 1024
+            print(f'[derive] {jid:<18} jpg {src:>6.0f} КБ → {kb}')
+            written += len(made)
+        print(f'[derive] {written} производных от {len(jobs)} финалов '
+              f'(avif q{args.avif_q} speed{args.avif_speed}, webp q{args.webp_q})')
+        return
 
     box = tuple(int(v) for v in args.bg_box.split(',')) if args.bg_ref and args.bg_box else None
     ref = args.bg_ref if os.path.isabs(args.bg_ref) else os.path.join(ROOT, args.bg_ref)
@@ -718,7 +839,6 @@ def main():
                          sdef=dict(bg_mix=0.92, fade_start=sc.get('fade_start', 0.55),
                                  fade_over=sc.get('fade_over', 1.15))))
 
-    only = [t.strip() for t in args.only.split(',') if t.strip()]
     if only:
         jobs = [j for j in jobs if any(match_only(t, j['id']) for t in only)]
 

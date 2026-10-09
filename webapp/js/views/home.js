@@ -1,7 +1,7 @@
 /**
  * Главная: hero-слайдер, коллекции, популярное, ценности бренда.
  */
-import { h, esc, productImg, coverImg } from '../ui.js';
+import { h, esc, productImg, coverImg, withExt } from '../ui.js';
 import { icons } from '../icons.js';
 import { assetUrl } from '../assets.js';
 import { state } from '../state.js';
@@ -9,6 +9,24 @@ import { navbar, productCard } from '../components.js';
 import { go } from '../router.js';
 
 const HEROES = ['01', '02', '03', '04', '05'];
+const CAPS = ['Serves that catch the light', 'Crystal, blown by hand', 'Built for the bar shift', 'From Dubai, worldwide'];
+
+/**
+ * Слайд hero в трёх форматах (раунд 8): AVIF → WebP → JPEG, и по каждому —
+ * десктоп 1920×1080 / мобильный 1080×1350. Порядок <source> важен: браузер
+ * берёт первый, у которого сошёлся и media, и type.
+ */
+function heroSources(n) {
+  const desk = assetUrl(`assets/brand/hero-${n}.jpg`);
+  const mob = assetUrl(`assets/brand/hero-${n}-m.jpg`);
+  return [
+    `<source type="image/avif" media="(min-width: 720px)" srcset="${withExt(desk, 'avif')}">`,
+    `<source type="image/webp" media="(min-width: 720px)" srcset="${withExt(desk, 'webp')}">`,
+    `<source media="(min-width: 720px)" srcset="${desk}">`,
+    `<source type="image/avif" srcset="${withExt(mob, 'avif')}">`,
+    `<source type="image/webp" srcset="${withExt(mob, 'webp')}">`,
+  ].join('');
+}
 
 export async function render() {
   const brand = state.config.brand;
@@ -18,13 +36,15 @@ export async function render() {
   const el = h(`<div>
     ${navbar({ brand: true, right: `<button class="nav-btn" data-go="/support" aria-label="Support">${icons.chat}</button>` })}
     <div class="scroll">
-      <section class="hero" data-hero>
+      <section class="hero" data-hero aria-roledescription="carousel"
+               aria-label="Cocktail Embassy — light and glass" aria-live="off">
         <div class="slides">
           ${HEROES.map((n, i) => `
-            <div class="slide">
-              <picture>
-                <source media="(min-width: 720px)" srcset="${assetUrl(`assets/brand/hero-${n}.jpg`)}">
-                <img src="${assetUrl(`assets/brand/hero-${n}-m.jpg`)}" alt="">
+            <div class="slide" role="group" aria-roledescription="slide"
+                 aria-label="${i + 1} of ${HEROES.length}"${i === 0 ? '' : ' aria-hidden="true"'}>
+              <picture>${heroSources(n)}
+                <img src="${assetUrl(`assets/brand/hero-${n}-m.jpg`)}" alt=""
+                     decoding="async"${i === 0 ? '' : ' loading="lazy"'}>
               </picture>
               ${i === 0 ? `
               <div class="cap">
@@ -35,11 +55,21 @@ export async function render() {
               </div>` : `
               <div class="cap">
                 <span class="eyebrow">Cocktail Embassy · ${esc(brand.location || 'Dubai')}</span>
-                <h1>${esc(['Serves that catch the light', 'Crystal, blown by hand', 'Built for the bar shift', 'From Dubai, worldwide'][i - 1] || '')}</h1>
+                <h1>${esc(CAPS[i - 1] || '')}</h1>
               </div>`}
             </div>`).join('')}
         </div>
-        <div class="dots">${HEROES.map((_, i) => `<i class="${i === 0 ? 'on' : ''}"></i>`).join('')}</div>
+        <button class="hero-nav prev" data-hero-step="-1" aria-label="Previous slide"
+                aria-controls="hero-slides">${icons.chev}</button>
+        <button class="hero-nav next" data-hero-step="1" aria-label="Next slide"
+                aria-controls="hero-slides">${icons.chev}</button>
+        <div class="dots">
+          ${HEROES.map((_, i) => `
+            <button class="dot ${i === 0 ? 'on' : ''}" data-hero-dot="${i}"
+                    aria-label="Slide ${i + 1} of ${HEROES.length}"${i === 0 ? ' aria-current="true"' : ''}>
+              <i aria-hidden="true"></i>
+            </button>`).join('')}
+        </div>
       </section>
 
       <section class="section wrap">
@@ -97,31 +127,69 @@ export async function render() {
   const pop = el.querySelector('[data-popular]');
   for (const p of popular) pop.appendChild(productCard(p));
 
-  // hero autoslide
+  // ── hero: карусель (раунд 8, a11y) ────────────────────────────────────────
+  // Автослайд ставится на паузу по наведению и по фокусу внутри (иначе
+  // скринридер не успевает дочитать слайд), aria-live переключается off →
+  // polite ровно на время паузы. Слайды, которых не видно, скрыты от AT
+  // (aria-hidden) и выведены из порядка фокуса (tabindex -1).
   let idx = 0;
+  const hero = el.querySelector('[data-hero]');
   const slides = el.querySelector('.slides');
-  const dots = el.querySelectorAll('.dots i');
+  const slideEls = [...el.querySelectorAll('.slide')];
+  const dots = [...el.querySelectorAll('[data-hero-dot]')];
+
+  const goTo = (next) => {
+    idx = (next + HEROES.length) % HEROES.length;
+    slides.style.transform = `translateX(-${idx * 100}%)`;
+    slideEls.forEach((s, i) => {
+      const on = i === idx;
+      s.setAttribute('aria-hidden', String(!on));
+      for (const f of s.querySelectorAll('button, a[href], input')) f.tabIndex = on ? 0 : -1;
+    });
+    dots.forEach((d, i) => {
+      d.classList.toggle('on', i === idx);
+      if (i === idx) d.setAttribute('aria-current', 'true');
+      else d.removeAttribute('aria-current');
+    });
+  };
+
+  let paused = false;
+  const setPaused = (on) => {
+    if (paused === on) return;
+    paused = on;
+    hero.setAttribute('aria-live', on ? 'polite' : 'off');
+  };
+  hero.addEventListener('mouseenter', () => setPaused(true));
+  hero.addEventListener('mouseleave', () => setPaused(false));
+  hero.addEventListener('focusin', () => setPaused(true));
+  hero.addEventListener('focusout', (e) => {
+    if (!hero.contains(e.relatedTarget)) setPaused(false);
+  });
+
   const timer = setInterval(() => {
     if (!document.body.contains(el)) return clearInterval(timer);
-    idx = (idx + 1) % HEROES.length;
-    slides.style.transform = `translateX(-${idx * 100}%)`;
-    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+    if (!paused) goTo(idx + 1);
   }, 5200);
+
+  hero.addEventListener('click', (e) => {
+    const step = e.target.closest('[data-hero-step]')?.dataset.heroStep;
+    const dot = e.target.closest('[data-hero-dot]')?.dataset.heroDot;
+    if (step) goTo(idx + Number(step));
+    else if (dot != null) goTo(Number(dot));
+  });
 
   // swipe
   let x0 = null;
-  const hero = el.querySelector('[data-hero]');
   hero.addEventListener('touchstart', (e) => (x0 = e.touches[0].clientX), { passive: true });
   hero.addEventListener('touchend', (e) => {
     if (x0 == null) return;
     const dx = e.changedTouches[0].clientX - x0;
-    if (Math.abs(dx) > 40) {
-      idx = (idx + (dx < 0 ? 1 : -1) + HEROES.length) % HEROES.length;
-      slides.style.transform = `translateX(-${idx * 100}%)`;
-      dots.forEach((d, i) => d.classList.toggle('on', i === idx));
-    }
+    if (Math.abs(dx) > 40) goTo(idx + (dx < 0 ? 1 : -1));
     x0 = null;
   }, { passive: true });
+
+  goTo(0);
+  el._cleanup = () => clearInterval(timer);
 
   // external links
   el.addEventListener('click', (e) => {
