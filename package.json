@@ -13,7 +13,10 @@
     "web": "MODE=web node src/index.js",
     "bot": "MODE=bot node src/index.js",
     "catalog": "python3 scripts/build_catalog.py",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "media:publish": "node scripts/publish_media.mjs",
+    "prestart": "npm run media:publish",
+    "test:web": "node scripts/check_webapp.mjs"
   },
   "dependencies": {
     "express": "^4.19.2",

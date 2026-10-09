@@ -164,3 +164,8 @@ h1, h2, h3, h4 {
   outline-offset: -2px;
   border-radius: var(--r-l);
 }
+
+/* Independent application field; never a blurred product-card photo. */
+body { background: linear-gradient(#05070d66, #05070daa),
+  var(--app-background, url('/assets/app/background.jpg')) center / cover fixed, var(--bg); }
+[hidden] { display: none !important; }

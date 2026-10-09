@@ -1,17 +1,21 @@
-/**
- * Метка версии картинок. Кадры тяжёлые (4K), поэтому отдаются с недельным
- * кэшем; чтобы перегонка стиля не показала покупателям старые файлы под тем
- * же именем, к URL добавляется ?v=<метка> — сервер считает её по самому
- * свежему mtime в webapp/assets/products (см. assetsVersion в src/config.js).
- */
+/** Verified release URLs. Never invent a derivative for a remote photo. */
 let tag = '';
-
-export function setAssetsV(v) {
-  tag = v ? String(v) : '';
-}
-
+let files = {};
+export function setAssetsV(v) { tag = v ? String(v) : ''; }
+export function setAssetsManifest(manifest) { files = manifest?.files || {}; }
 export function assetUrl(path) {
-  // внешние URL (фото кастомных товаров по ссылке из админки) — без ?v=
-  if (!path || !tag || path.startsWith('data:') || /^https?:\/\//i.test(path)) return path;
-  return `${path}${path.includes('?') ? '&' : '?'}v=${tag}`;
+  if (!path || /^(data:|https?:\/\/)/i.test(path)) return path;
+  const key = path.replace(/^\//, '').split(/[?#]/)[0];
+  if (files[key]) return files[key].url;
+  const absolute = path.startsWith('/') ? path : `/${path}`;
+  return tag ? `${absolute}${absolute.includes('?') ? '&' : '?'}v=${tag}` : absolute;
+}
+export function published(path) { return files[String(path).replace(/^\//, '')]?.url || ''; }
+export function imageSources(path, media = '') {
+  const key = String(path).replace(/^\//, '').split(/[?#]/)[0];
+  if (!/\.jpg$/i.test(key)) return '';
+  return ['avif', 'webp'].map((ext) => {
+    const url = published(key.replace(/\.jpg$/i, `.${ext}`));
+    return url ? `<source type="image/${ext}"${media ? ` media="${media}"` : ''} srcset="${url}">` : '';
+  }).join('');
 }

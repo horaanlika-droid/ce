@@ -7,11 +7,15 @@ async function call(method, path, body) {
   const headers = {};
   if (tg.initData) headers['X-Telegram-Init-Data'] = tg.initData;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-  const res = await fetch(`/api${path}`, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  let res;
+  try {
+    res = await fetch(`/api${path}`, {
+      method, headers, cache: 'no-store', signal: controller.signal,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+  } finally { clearTimeout(timeout); }
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
   return json;

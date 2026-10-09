@@ -30,7 +30,7 @@ export async function render() {
     const free = state.config.shop.freeShippingFrom;
 
     body.appendChild(h(`
-      <div class="cart-split">
+      <div class="cart-body"><div class="cart-split">
         <div>
           <div style="display: grid; gap: 10px;" data-lines></div>
           <div class="progress">
@@ -57,7 +57,7 @@ export async function render() {
           </div>
         </div>
       </div>
-      <div class="sticky-cta"><button class="btn block" data-checkout>Proceed to checkout ${icons.arrow}</button></div>
+      <div class="sticky-cta"><button class="btn block" data-checkout>Proceed to checkout ${icons.arrow}</button></div></div>
     `));
 
     const lines = body.querySelector('[data-lines]');

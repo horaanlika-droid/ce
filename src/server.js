@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-import { config, paymentMethods, ROOT, assetsVersion, notePublicUrl } from './config.js';
+import { config, paymentMethods, ROOT, notePublicUrl } from './config.js';
 import { db, save, upsertUser } from './store.js';
 import { validateInitData } from './lib/telegram-auth.js';
 import {
@@ -20,9 +20,12 @@ import { addUserMessage, getThread, markUserRead } from './support.js';
 import { renderInvoiceHtml, invoiceSummary } from './payments/invoice.js';
 import * as yookassa from './payments/yookassa.js';
 
+import { mediaManifest } from './media.js';
+
 const WEBAPP_DIR = path.join(ROOT, 'webapp');
 
 export function createServer() {
+  const media = mediaManifest(); // snapshot before accepting any requests
   const app = express();
   app.disable('x-powered-by');
   app.set('trust proxy', true);
@@ -93,6 +96,7 @@ export function createServer() {
   }
 
   const api = express.Router();
+  api.use((req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
   api.use(authenticate);
 
   const wrap = (fn) => (req, res) => {
@@ -122,7 +126,8 @@ export function createServer() {
       guest: Boolean(req.guest),
       botUsername: config.telegram.username,
       supportEnabled: true,
-      assetsV: assetsVersion(),
+      assetsV: media.version,
+      media,
     });
   }));
 
@@ -322,12 +327,18 @@ export function createServer() {
       if (filePath.endsWith('.avif')) res.setHeader('Content-Type', 'image/avif');
       else if (filePath.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
       else if (filePath.endsWith('.webmanifest')) res.setHeader('Content-Type', 'application/manifest+json');
-      // 4K-кадры тяжёлые (≈0.6 МБ): неделю кэша + immutable, а перегонку стиля
-      // ловит метка ?v= из assetsVersion() — старые файлы под тем же именем
-      if (/assets\//.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+      // Hash URLs identify release bytes, but filenames are mutable. Revalidate
+      // rather than pinning an old photo for a week in a Telegram WebView.
+      if (/assets\//.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
       else res.setHeader('Cache-Control', 'no-cache');
     },
   }));
+
+  // Missing assets/modules are real 404s, never HTML masquerading as an image.
+  app.use(['/assets', '/js', '/css', '/api'], (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(404).json({ error: 'not-found' });
+  });
 
   app.get('*', (req, res) => {
     // og:image в файле относительный; превью-валидаторам Telegram/WhatsApp

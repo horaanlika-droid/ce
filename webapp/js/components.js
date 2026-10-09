@@ -171,6 +171,7 @@ export function bindShell(root) {
   // клавиатура: карточка — ссылка, Enter/Space открывают её с тем же разгоном glow
   root.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.closest('button, a, input, select, textarea')) return;
     const t = e.target.closest?.('[data-product]');
     if (!t) return;
     e.preventDefault();

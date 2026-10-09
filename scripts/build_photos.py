@@ -136,7 +136,12 @@ def upscale(im, size):
 
 
 def save_jpeg(im, path, quality):
-    im.save(path, 'JPEG', quality=quality, optimize=True, progressive=True, subsampling=0)
+    temp = f'{path}.{os.getpid()}.tmp'
+    try:
+        im.save(temp, 'JPEG', quality=quality, optimize=True, progressive=True, subsampling=0)
+        os.replace(temp, path)
+    finally:
+        if os.path.exists(temp): os.unlink(temp)
 
 
 # ── раунд 8: производные форматы ─────────────────────────────────────────────
@@ -173,11 +178,15 @@ def save_derivatives(jpeg_path, *, avif=None, webp=None,
     if avif and features.check('avif'):
         p = _sibling(jpeg_path, 'avif')
         # speed 6 — компромисс: 4K-кадр кодируется секунды, вес почти как у speed 0
-        im.save(p, 'AVIF', quality=int(avif_q), speed=int(avif_speed))
+        temp = f'{p}.{os.getpid()}.tmp'
+        im.save(temp, 'AVIF', quality=int(avif_q), speed=int(avif_speed))
+        os.replace(temp, p)
         out.append(p)
     if webp and features.check('webp'):
         p = _sibling(jpeg_path, 'webp')
-        im.save(p, 'WEBP', quality=int(webp_q), method=4)
+        temp = f'{p}.{os.getpid()}.tmp'
+        im.save(temp, 'WEBP', quality=int(webp_q), method=4)
+        os.replace(temp, p)
         out.append(p)
     return out
 
