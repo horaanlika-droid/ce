@@ -114,41 +114,130 @@ python3 scripts/build_catalog.py NEW_PRICE.pdf
 
 ---
 
-## Следующая задача
+## Следующая задача: раунд 2 — футуристичный флер
 
-**Досъёмка бренд-фото оставшихся 7 позиций до полного каталога в тёмной студии.**
+**Статус.** В `webapp/assets/products/` сейчас 18 студийных кадров (тёмная студия, glow по умолчанию, мастера `st-<COD>.jpg`) и 7 позиций без кадров: AG0021–AG0027. Для них витрина показывает белые фолбэк-панели `fb-<COD>.jpg`, которые не совпадают с референсами. Раунд 2 заменяет все 25 кадров. Все 25 файлов `fb-<COD>.jpg` удаляются, когда новые кадры готовы.
 
-Сейчас в студийной съёмке с glow 18 из 25 позиций. Осталось семь:
+### Цель
 
-| COD | Позиция | Коллекция |
+Все 25 позиций в стиле референсов, с футуристичным флером:
+
+1. **Glow сильнее.** Мягкий ледяной ореол за стеклом и яркие блики по кромке. Ореол не выжигает белое пятно: блики читаются как контур, а не как засвет.
+2. **Фон очень нежно размыт.** Мелкая глубина резкости: стекло в фокусе, задник и пол в мягком боке. Жёсткой линии горизонта нет. Палитра остаётся полуночно-синей, детали фона не читаются.
+3. **Стекло тонкое и невесомое.** Тонкие стенки и ободок, блики тонкими линиями. Бокал парит: мягкая тень-эллипс под основанием вместо тяжёлого контакта с полом, отражение короче и мягче (как в референсе Levitating).
+4. **Футуристичный флер.** Холодная палитра: полуночный синий `#0a0e18` → `#13203a`, ледяной `#cfe1ff`, циановый акцент `#7fe3ff` в ореоле. Тонкие световые контуры, лёгкая атмосферная дымка. В кадре нет текста, людей, посторонних предметов, облаков и дыма.
+
+### Референсы
+
+Опорные кропы делаются из файлов в корне репозитория. Текст и интерфейс в кадр не попадают:
+
+| Файл | Окно `(left, top, right, bottom)` | Что берём |
 |---|---|---|
-| AG0021 | Rocks Glass | Levitating |
-| AG0022 | Highball Glass | Levitating |
-| AG0023 | Mini Martini | Shorties |
-| AG0024 | Daisy Coupe | Shorties |
-| AG0025 | Modern Margo | Shorties |
-| AG0026 | Lil’ NORA | Shorties |
-| AG0027 | Teapot | Soon Teapot |
+| `IMG_1440.png` (десктоп) | `(422, 92, 960, 490)` | кристальное стекло, белые блики, глянцевый пол |
+| `IMG_1441.png` (мобильный) | `(560, 200, 880, 440)` | чистые блики, тёмно-синий градиент |
+| `IMG_1431.jpeg` (Levitating) | `(180, 395, 740, 1000)` | парящие бокалы и мягкое голубое гало; окно ниже заголовка |
 
-Как выполнить:
+Карточку товара из `IMG_1440.png` не брать: в ней есть текст интерфейса.
 
-1. Для каждого COD сгенерировать image-to-image кадр из исходника
-   `webapp/assets/products/src-<COD>.png` в тёмную студию бренда
-   (промт из истории съёмки: глянцевая тёмно-синяя поверхность, направленный свет сверху,
-   ice-blue rim light, мягкое гало по кромкам, отражение, пустой тёмный фон #0a0e18);
-   результат сохранить в `webapp/assets/products/<COD>.jpg`.
-   Для AG0027 сохранить янтарное дерево и чай в кадре, glow — тёплый.
-2. Прогнать финишный glow по всем кадрам: `python3 scripts/build_photos.py`
-   (мастер-кадры автоматически уедут в `st-<COD>.jpg`).
-3. Удалить осиротевшие галерейные панели `fb-<COD>.jpg` для доснятых позиций
-   и убрать упоминание фолбэка из этого README.
+```bash
+pip install pillow
+python3 - <<'EOF'
+from PIL import Image
+import os
+os.makedirs('/tmp/refs', exist_ok=True)
+crops = {
+    'ref_desktop_hero.png': ('IMG_1440.png', (422, 92, 960, 490)),
+    'ref_mobile_home.png': ('IMG_1441.png', (560, 200, 880, 440)),
+    'ref_levitating.png': ('IMG_1431.jpeg', (180, 395, 740, 1000)),
+}
+for out, (src, box) in crops.items():
+    Image.open(src).convert('RGB').crop(box).save('/tmp/refs/' + out)
+EOF
+```
 
-Критерий готовности: все 25 карточек на витрине, в корзине и на страницах
-коллекций показывают студийные кадры с единым glow; фолбэк `fb-*` не срабатывает
-ни на одной позиции (проверка: в devtools нет запросов к `fb-*.jpg`).
+### Промт
 
-Пока задача не закрыта, витрина для этих семи позиций автоматически показывает
-галерейные панели `fb-<COD>.jpg` — магазин выглядит цельно.
+Английский шаблон (генератор с ним работает стабильнее). Плейсхолдеры в `{}`:
+
+- `{OBJ}`: тип бокала, например `footed highball glass`;
+- `{FEATS}`: силуэт из таблицы ниже;
+- `{DIMS}`: реальные размеры, например `height 180 mm, rim diameter 58 mm, 390 ml`.
+
+```text
+Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-blown crystal bar glassware). ONE single {OBJ} centred in a vertical 2:3 frame, reconstructed faithfully from the supplier photo in image 1 (low resolution: keep its exact silhouette, proportions and wall thickness; {FEATS}; real proportions: {DIMS}). Futuristic premium mood: cool ice-blue and cyan light, a stronger soft halo behind the glass, slim light contours along the rim, faint atmospheric haze. Glass very thin-walled, delicate and weightless, hovering above the surface with a soft floating shadow instead of a heavy contact shadow. Background very gently out of focus (shallow depth of field, soft bokeh), deep midnight-navy seamless backdrop with no hard horizon line, glass in sharp focus. Lighting, glass texture and colour grade must match the brand style references in images 2-4 (crisp white highlights on crystal, glossy dark navy floor). Do not copy any objects, text, UI or other glasses from images 2-4. No text, no logos, no props, no people, no clouds or smoke, no white or grey background, no liquid unless it is in image 1. Sharp focus on the glass; glass fully inside the frame with generous dark space above and below.
+```
+
+Изображения: `1` — `webapp/assets/products/src-<COD>.png` (форма), `2–4` — `/tmp/refs/ref_desktop_hero.png`, `ref_mobile_home.png`, `ref_levitating.png` (стиль).
+
+Параметры:
+- `images`: `[src-<COD>.png, ref_desktop_hero, ref_mobile_home, ref_levitating]`;
+- `file_path`: `/tmp/gen/<COD>.jpg`. В репозиторий кадр попадает только после проверки;
+- `offer_options`: `false` (ассеты внутри сборки);
+- результат примерно 848×1264, то есть 2:3;
+- инструмент выдаёт не больше 10 изображений за ход: работать партиями по ≤10 и смотреть результаты между партиями.
+
+Особые случаи:
+- **AG0027 (чайник).** Ореховая ручка и янтарный чай — реальные материалы, их сохраняем. Свет, фон и стекло — по общему стилю. Прежнее указание про тёплый glow отменено.
+- **AG0011–AG0014 (гравировка).** Рисунок на стенках сохраняем как в `src`. Каждая гравировка должна читаться бликом.
+- **AG0004, AG0019, AG0027.** Исходники на чёрно-белом или тёмном фоне: фон игнорировать, брать только силуэт.
+- **Каустики у основания** должны быть тонкими. Звёздообразные блики у основания — артефакт (наблюдали в тесте на AG0021), такие кадры отбраковываем.
+- **Облака и дым за бокалом** — артефакт, отбраковываем.
+
+### Постобработка и glow
+
+1. Мастер → `webapp/assets/products/st-<COD>.jpg`.
+2. Копия → `webapp/assets/products/<COD>.jpg`. Она нужна, потому что `build_photos.py` обрабатывает только существующие `AG*.jpg`.
+3. `python3 scripts/build_photos.py --near 0.6 --wide 0.3`. Это стартовая точка, она сильнее дефолта (`0.45` / `0.18`). Подбирать по сравнению «до / после» на контактном листе. Критерий: ореол и блики заметнее, пересвета нет.
+4. Если генератор не даёт нужного боке, делаем отдельный шаг: размытие фона по маске стекла. Сначала пробуем промтом.
+
+### Позиции
+
+| COD | Позиция | Коллекция | Высота × Ø, мм | Объём | Форма (ориентир; точная форма — по `src`) |
+|---|---|---|---|---|---|
+| AG0001 | Highball Glass | flowers | 110 × 85 | 370 мл | стакан, сужается к низу |
+| AG0002 | Cocktail Glass | flowers | 190 × 85 | 150 мл | V-конус на длинной ножке |
+| AG0003 | Rocks Glass | flowers | 85 × 95 | 330 мл | расширяется к краю, округлое дно |
+| AG0004 | Rocks Glass | replicate | 80 × 75 | 330 мл | прямой стакан, толстое дно |
+| AG0006 | Coupethini | coupethini | 170 × 80 | 145 мл | стройная чаша на длинной ножке |
+| AG0008 | Chalet Glass | bullet | 145 × 97 | 210 мл | широкая чаша на ножке |
+| AG0009 | Highball Glass | bullet | 133 × 74 | 410 мл | высокий прямой стакан |
+| AG0010 | Rocks Glass | bullet | 75 × 85 | 390 мл | низкий широкий стакан |
+| AG0011 | Cocktail Glass | retro-asia-engraved | 115 × 73 | 140 мл | V-конус, гравировка точками |
+| AG0012 | Rocks Glass | retro-asia-engraved | 80 × 73 | 270 мл | стакан, гравировка кольцами |
+| AG0013 | Highball Glass | retro-asia-engraved | 110 × 70 | 310 мл | высокий стакан, гравировка точками |
+| AG0014 | Shot Glass | retro-asia-engraved | 73 × 30 | 60 мл | шот, гравировка точками |
+| AG0015 | Cocktail Glass | retro-asia | 115 × 73 | 140 мл | V-конус, витой стебель |
+| AG0016 | Rocks Glass | retro-asia | 80 × 73 | 270 мл | прямой стакан, утяжелённое дно |
+| AG0017 | Highball Glass | retro-asia | 110 × 70 | 310 мл | высокий прямой стакан |
+| AG0018 | Shot Glass | retro-asia | 73 × 30 | 60 мл | узкий шот |
+| AG0019 | Cocktail Glass | two-sips | 150 × 90 | 85 мл | коупе на ножке |
+| AG0020 | Super Pony | levitating | 208 × 70 | 140 мл | глубокая чаша на очень длинной ножке |
+| AG0021 | Rocks Glass | levitating | 100 × 76 | 300 мл | стакан на короткой толстой ножке |
+| AG0022 | Highball Glass | levitating | 180 × 58 | 390 мл | высокий стакан на ножке |
+| AG0023 | Mini Martini | shorties | — | 150 мл | мини-мартини на короткой ножке |
+| AG0024 | Daisy Coupe | shorties | — | 150 мл | мелкое коупе на короткой ножке |
+| AG0025 | Modern Margo | shorties | — | 200 мл | ступенчатый ободок, чаша на ножке |
+| AG0026 | Lil’ NORA | shorties | — | 160 мл | округлая чаша на короткой ножке |
+| AG0027 | Teapot | soon-teapot | — | 500 мл | стеклянный чайник, ореховая ручка, янтарный чай |
+
+### Критерии готовности
+
+- 25 из 25 позиций: новые `<COD>.jpg` в стиле раунда 2. Форма совпадает с `src-<COD>.png`, проверено контактным листом «src | новое».
+- Glow заметно сильнее текущего, фон мягко размыт, стекло тонкое, бокал парит с тенью-эллипсом.
+- Ни один кадр не содержит текста, интерфейса, посторонних предметов, облаков и белого или серого фона.
+- Удалены все `fb-<COD>.jpg`. В devtools нет запросов к `fb-*.jpg`.
+- Из README убрано упоминание фолбэка. По желанию убрать `onerror`-фолбэк из `webapp/js/ui.js`, `webapp/js/views/home.js` и `webapp/js/views/collections.js`.
+
+### Порядок работы
+
+1. Кропы референсов (см. выше).
+2. Тест на трёх позициях: `AG0015` (V-конус), `AG0022` (тонкий высокий стакан, проверка «невесомости»), `AG0027` (чайник). Сравнить с референсами и подобрать силу ореола и боке в промте. Остальные позиции запускать только после этого.
+3. Остальные позиции партиями по ≤10 изображений.
+4. Мастера, копии, `build_photos.py --near 0.6 --wide 0.3`, подбор параметров.
+5. Контактные листы «src | новое» и «до | после». Точечная перегенерация отдельных позиций.
+6. Удалить `fb-*.jpg`, перевести этот раздел в историю, сделать коммит.
+
+**Вне скоупа:** hero-слайды (`webapp/assets/brand/`), данные каталога, вёрстка и цены.
 
 ---
 
