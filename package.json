@@ -1,0 +1,21 @@
+{
+  "name": "cocktail-embassy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram Mini App + бот Cocktail Embassy: витрина барного хрусталя (Dubai), корзина, заказы, счёт для юрлиц, чат поддержки и админ-панель в боте",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "web": "MODE=web node src/index.js",
+    "bot": "MODE=bot node src/index.js",
+    "catalog": "python3 scripts/build_catalog.py"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "grammy": "^1.30.0"
+  }
+}
