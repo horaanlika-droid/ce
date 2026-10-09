@@ -1,7 +1,7 @@
 /**
  * Каталог: список коллекций + поиск; детальная страница коллекции.
  */
-import { h, esc } from '../ui.js';
+import { h, esc, productImg } from '../ui.js';
 import { icons } from '../icons.js';
 import { state } from '../state.js';
 import { navbar, productCard, emptyState } from '../components.js';
@@ -40,7 +40,7 @@ export async function renderList() {
       const cover = items[0];
       list.appendChild(h(`
         <button class="coll-row" data-go="/collection/${c.id}">
-          <span class="th"><img src="${cover.image}" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/products/fb-${cover.id}.jpg'"></span>
+          <span class="th">${productImg(cover)}</span>
           <span class="t"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></span>
           <span class="cnt">${items.length}</span>
           ${icons.chev}

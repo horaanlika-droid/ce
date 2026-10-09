@@ -51,11 +51,19 @@ export function toast(text) {
   toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2400);
 }
 
-/** Картинка товара с фолбэком на подготовленную студийную панель. */
+/**
+ * Кадр товара, как в бренд-референсах: тот же кадр, сильно размытый, служит
+ * подложкой (заполняет всю область), а сам кадр лежит поверх целиком — так
+ * стекло не обрезается ни в карточке 3:4, ни в квадратной сцене.
+ * Если студийного кадра ещё нет — включается галерейная панель fb-<COD>.jpg.
+ */
 export function productImg(product, cls = '') {
+  const src = product.image;
   const fb = `assets/products/fb-${product.id}.jpg`;
-  return `<img class="${cls}" src="${product.image}" alt="${esc(product.name)}" loading="lazy"
-    onerror="this.onerror=null;this.src='${fb}'">`;
+  return `<span class="pshot ${cls}" style="--shot:url('${src}')">
+    <img src="${src}" alt="${esc(product.name)}" loading="lazy"
+      onerror="this.onerror=null;this.closest('.pshot').classList.add('fb');this.src='${fb}'">
+  </span>`;
 }
 
 export function plural(n, one, many) {

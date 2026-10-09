@@ -182,6 +182,50 @@
 }
 .chip.on { background: var(--cta-bg); color: var(--cta-text); border-color: transparent; }
 
+/* ── кадр товара ──────────────────────────────────────────────────
+   Как в бренд-референсах: тот же кадр, сильно размытый, — подложка
+   области, а сам кадр лежит поверх целиком (contain). Стекло не
+   обрезается ни в вертикальной карточке, ни в квадратной сцене,
+   а размытый фон продолжает его сцену по краям. */
+.pshot { position: absolute; inset: 0; display: block; overflow: hidden; }
+.pshot::before {
+  content: ""; position: absolute; inset: -12%;
+  background-image: var(--shot);
+  background-size: cover; background-position: 50% 46%;
+  filter: blur(26px) saturate(1.1) brightness(.72);
+}
+.pshot::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(78% 56% at 50% 44%, rgba(126, 227, 255, .07), transparent 70%),
+    radial-gradient(118% 90% at 50% 52%, transparent 44%, rgba(4, 7, 14, .5) 100%);
+}
+.pshot img {
+  position: relative; z-index: 1;
+  /* мягкая маска: края кадра растворяются в блюр-подложке, прямоугольник не читается */
+  -webkit-mask-image: radial-gradient(122% 104% at 50% 46%, #000 58%, rgba(0, 0, 0, .45) 86%, transparent 100%);
+  mask-image: radial-gradient(122% 104% at 50% 46%, #000 58%, rgba(0, 0, 0, .45) 86%, transparent 100%);
+  width: 100%; height: 100%; object-fit: contain;
+  padding: 3.5% 2%; box-sizing: border-box;
+  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, .35));
+  transition: transform .6s var(--ease);
+  /* --zoom: кадр намеренно с полями — немного приближаем, стекло крупнее,
+     пустой тёмный фон уходит за границы области (overflow: hidden) */
+  transform: scale(var(--zoom, 1.08));
+  transform-origin: 50% 46%;
+}
+.pcard .ph { --zoom: 1.16; }
+.pview .stage { --zoom: 1.06; }
+.coll-row .th { --zoom: 1.06; }
+.cline .th { --zoom: 1.04; }
+
+/* белая галерейная панель-фолбэк: блюр-подложка не нужна, зум не нужен */
+.pshot.fb { --zoom: 1; }
+.pshot.fb::before { display: none; }
+.pshot.fb::after { background: radial-gradient(70% 55% at 50% 42%, rgba(96, 140, 220, .1), transparent 70%); }
+.pshot.fb img { padding: 9%; filter: drop-shadow(0 12px 22px rgba(0, 0, 0, .5)); -webkit-mask-image: none; mask-image: none; }
+@media (max-width: 600px) { .pshot::before { filter: blur(18px) saturate(1.1) brightness(.72); } }
+
 /* product grid & cards */
 .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .pcard {
@@ -197,19 +241,14 @@
 @media (pointer: fine) { .pcard:hover { border-color: rgba(138,182,255,.35); transform: translateY(-3px); } }
 .pcard .ph {
   position: relative;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 4;
   background:
     radial-gradient(70% 55% at 50% 42%, rgba(96, 140, 220, .28), transparent 70%),
     linear-gradient(180deg, #0b1220, #070b14);
   display: grid; place-items: center;
   overflow: hidden;
 }
-.pcard .ph img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform .6s var(--ease);
-}
-.pcard .ph img.fallback { object-fit: contain; width: 78%; height: 78%; filter: drop-shadow(0 12px 24px rgba(0,0,0,.5)); }
-@media (pointer: fine) { .pcard:hover .ph img { transform: scale(1.05); } }
+@media (pointer: fine) { .pcard:hover .pshot img { transform: scale(calc(var(--zoom, 1.08) * 1.04)); } }
 .pcard .flags { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; }
 .flag {
   height: 22px; padding: 0 9px; border-radius: 999px;
@@ -266,11 +305,13 @@
 }
 .coll-row:active { transform: scale(.98); }
 .coll-row .th {
+  position: relative;
   width: 62px; height: 62px; flex: none; border-radius: 18px; overflow: hidden;
   background: radial-gradient(70% 60% at 50% 40%, rgba(96,140,220,.3), transparent 70%), #0a101d;
   display: grid; place-items: center;
 }
-.coll-row .th img { width: 100%; height: 100%; object-fit: cover; }
+.coll-row .th .pshot::before { filter: blur(12px) saturate(1.1) brightness(.8); }
+.coll-row .th .pshot img { padding: 9%; filter: none; }
 .coll-row .t { flex: 1; min-width: 0; }
 .coll-row .t b { display: block; font-size: 16px; letter-spacing: -0.015em; }
 .coll-row .t span { display: block; font-size: 12.5px; color: var(--mut); margin-top: 2px; }
@@ -313,8 +354,8 @@
   display: grid; place-items: center;
   overflow: hidden;
 }
-.pview .stage img { width: 100%; height: 100%; object-fit: cover; }
-.pview .stage img.fallback { object-fit: contain; width: 74%; height: 74%; }
+.pview .stage .pshot img { padding: 5% 3%; }
+.pview .stage .pshot::before { filter: blur(30px) saturate(1.08) brightness(.66); }
 .pview .fade { position: absolute; inset: auto 0 0 0; height: 90px; background: linear-gradient(to top, var(--bg), transparent); }
 .pinfo { padding: 6px 20px 0; }
 .pinfo .coll { font-size: 11px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); }
@@ -330,8 +371,9 @@
 
 /* ── cart ─────────────────────────────────────────────────────── */
 .cline { display: flex; gap: 12px; padding: 12px; border-radius: var(--r-l); background: var(--card); border: 1px solid var(--line-soft); }
-.cline .th { width: 74px; height: 74px; flex: none; border-radius: 16px; overflow: hidden; background: radial-gradient(70% 60% at 50% 40%, rgba(96,140,220,.28), transparent 70%), #0a101d; }
-.cline .th img { width: 100%; height: 100%; object-fit: cover; }
+.cline .th { position: relative; width: 74px; height: 74px; flex: none; border-radius: 16px; overflow: hidden; background: radial-gradient(70% 60% at 50% 40%, rgba(96,140,220,.28), transparent 70%), #0a101d; }
+.cline .th .pshot::before { filter: blur(12px) saturate(1.1) brightness(.8); }
+.cline .th .pshot img { padding: 9%; filter: none; }
 .cline .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .cline .t b { font-size: 14.5px; letter-spacing: -0.01em; }
 .cline .t .sub { font-size: 11.5px; color: var(--dim); }
@@ -419,7 +461,7 @@
 .status.paid, .status.delivered { background: rgba(93,211,158,.12); color: var(--ok); border-color: rgba(93,211,158,.25); }
 .status.canceled { background: rgba(255,107,107,.1); color: var(--danger); border-color: rgba(255,107,107,.22); }
 .thumbs { display: flex; }
-.thumbs img { width: 46px; height: 46px; border-radius: 12px; object-fit: cover; border: 2px solid var(--bg-2); margin-left: -10px; background: #0a101d; }
+.thumbs img { width: 46px; height: 46px; border-radius: 12px; object-fit: contain; padding: 3px; box-sizing: border-box; border: 2px solid var(--bg-2); margin-left: -10px; background: radial-gradient(70% 60% at 50% 42%, rgba(96,140,220,.22), transparent 72%), #0a101d; }
 .thumbs img:first-child { margin-left: 0; }
 
 .timeline { display: grid; gap: 0; margin: 4px 0; }

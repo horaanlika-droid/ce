@@ -116,7 +116,9 @@ python3 scripts/build_catalog.py NEW_PRICE.pdf
 
 ## Следующая задача: раунд 2 — футуристичный флер
 
-**Статус.** В `webapp/assets/products/` сейчас 18 студийных кадров (тёмная студия, glow по умолчанию, мастера `st-<COD>.jpg`) и 7 позиций без кадров: AG0021–AG0027. Для них витрина показывает белые фолбэк-панели `fb-<COD>.jpg`, которые не совпадают с референсами. Раунд 2 заменяет все 25 кадров. Все 25 файлов `fb-<COD>.jpg` удаляются, когда новые кадры готовы.
+**Статус.** В `webapp/assets/products/` 20 студийных кадров раунда 1 (тёмная студия, мастера `st-<COD>.jpg`), 5 позиций без кадров
+(AG0021–AG0026, кроме AG0022) — для них витрина показывала белые фолбэк-панели `fb-<COD>.jpg`. Раунд 2 заменяет **все 25** кадров
+и снимает фолбэки. Выполнено 13 из 25, детали — в конце раздела в блоке «Статус (раунд 2)».
 
 ### Цель
 
@@ -126,6 +128,15 @@ python3 scripts/build_catalog.py NEW_PRICE.pdf
 2. **Фон очень нежно размыт.** Мелкая глубина резкости: стекло в фокусе, задник и пол в мягком боке. Жёсткой линии горизонта нет. Палитра остаётся полуночно-синей, детали фона не читаются.
 3. **Стекло тонкое и невесомое.** Тонкие стенки и ободок, блики тонкими линиями. Бокал парит: мягкая тень-эллипс под основанием вместо тяжёлого контакта с полом, отражение короче и мягче (как в референсе Levitating).
 4. **Футуристичный флер.** Холодная палитра: полуночный синий `#0a0e18` → `#13203a`, ледяной `#cfe1ff`, циановый акцент `#7fe3ff` в ореоле. Тонкие световые контуры, лёгкая атмосферная дымка. В кадре нет текста, людей, посторонних предметов, облаков и дыма.
+5. **Фон — как на референсах, в числах.** Замеры пустых участков фона (`IMG_1440.png`, окно 430,100,948,478): ровное сталь-синее поле
+   `(14,34,59) → (28,43,68) → (82,98,123) → (34,50,76)` по высоте, т.е. свет мягкий и распределён по всему кадру.
+   У сырых генераций было `(2,5,13) … (95,118,148) … (4,7,17)` — «прожектор»: чёрные углы и световой диск с читаемым краем.
+   Разница устраняется не только промтом, но и шагом `--bg-ref` в `build_photos.py` (см. «Постобработка»).
+6. **Кадр живёт в карточке, а не сам по себе.** Фото 2:3 с большими полями нигде не обрезается: в карточке (3:4),
+   в сцене карточки товара и в миниатюрах кадр лежит целиком (`contain`) поверх сильно размытой копии самого себя
+   (блюр-подложка продолжает сцену по краям), слегка приближённый через `--zoom`, с мягкой радиальной маской по краям.
+   См. `.pshot` в `webapp/css/app.css` и `productImg()` в `webapp/js/ui.js`. В CSS-блоке задаётся и сила зума на контекст:
+   карточка `1.16`, сцена `1.06`, миниатюры `1.04–1.06`. 
 
 ### Референсы
 
@@ -164,8 +175,14 @@ EOF
 - `{DIMS}`: реальные размеры, например `height 180 mm, rim diameter 58 mm, 390 ml`.
 
 ```text
-Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-blown crystal bar glassware). ONE single {OBJ} centred in a vertical 2:3 frame, reconstructed faithfully from the supplier photo in image 1 (low resolution: keep its exact silhouette, proportions and wall thickness; {FEATS}; real proportions: {DIMS}). Futuristic premium mood: cool ice-blue and cyan light, a stronger soft halo behind the glass, slim light contours along the rim, faint atmospheric haze. Glass very thin-walled, delicate and weightless, hovering above the surface with a soft floating shadow instead of a heavy contact shadow. Background very gently out of focus (shallow depth of field, soft bokeh), deep midnight-navy seamless backdrop with no hard horizon line, glass in sharp focus. Lighting, glass texture and colour grade must match the brand style references in images 2-4 (crisp white highlights on crystal, glossy dark navy floor). Do not copy any objects, text, UI or other glasses from images 2-4. No text, no logos, no props, no people, no clouds or smoke, no white or grey background, no liquid unless it is in image 1. Sharp focus on the glass; glass fully inside the frame with generous dark space above and below.
+Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-blown crystal bar glassware). ONE single {OBJ}, centred in a vertical 2:3 frame, the glass occupying about {FILL}% of the frame height. FORM: reconstruct it strictly from image 1 — the supplier photo from the price-list PDF; use only its geometry, ignore its background: {FEATS}; real proportions: {DIMS}. Do not redesign the glass and do not take a different shape from images 2-4. COLOUR, LIGHT AND HIGHLIGHTS: follow the brand references in images 2-4 — deep midnight-navy palette #0a0e18 to #13203a, ice-blue #cfe1ff key light, faint cyan #7fe3ff inside the glow, crisp thin white specular highlights tracing the rim and running down the wall as fine lines, glossy dark navy floor. The background is a clean, smooth, evenly blurred navy gradient: no cloud wisps, no smoke, no grain, no visible horizon seam, no floor edge; the halo behind the glass is a soft gradient with no circular edge and never burns to white; the reflection under the glass is short, dim and blurred. Only the glass is sharp. The glass is very thin-walled, delicate and weightless, hovering a hair above the floor with a soft elliptical floating shadow, no heavy contact shadow. No text, no logos, no UI, no props, no people, no other glasses, no white or grey background, no star-shaped caustics at the base, no liquid. Dark space above and below.
 ```
+
+`{FILL}` — 72 для высоких позиций (стаканы, бокалы на ножке), 62 для низких (рокс, шот), 74 для гравированных
+(гравировку должно читаться). Для гравировок добавить в промт: `The engraved pattern from image 1 must stay on the
+glass and read as fine bright line-work catching the light — do not remove it and do not invent a different pattern.`
+
+
 
 Изображения: `1` — `webapp/assets/products/src-<COD>.png` (форма), `2–4` — `/tmp/refs/ref_desktop_hero.png`, `ref_mobile_home.png`, `ref_levitating.png` (стиль).
 
@@ -180,15 +197,26 @@ Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-
 - **AG0027 (чайник).** Ореховая ручка и янтарный чай — реальные материалы, их сохраняем. Свет, фон и стекло — по общему стилю. Прежнее указание про тёплый glow отменено.
 - **AG0011–AG0014 (гравировка).** Рисунок на стенках сохраняем как в `src`. Каждая гравировка должна читаться бликом.
 - **AG0004, AG0019, AG0027.** Исходники на чёрно-белом или тёмном фоне: фон игнорировать, брать только силуэт.
+  Для них в `.arena/prep_refs.py` задан ручной кроп (`AG0004`: 46,44,100,104; `AG0019`: 18,8,128,130).
+- **Белый фон у `src`.** Чтобы генератор не утащил белый фон и цвет исходника, референс формы собирается нейтрально-серым:
+  автоконтраст по каналам яркости, апскейл LANCZOS, `UnsharpMask`, и только геометрия — весь свет и цвет из `images 2-4`.
+  Файлы `.arena/shape/shape-<COD>.png` пересобираются скриптом `.arena/prep_refs.py` (`.arena/` не коммитится).
 - **Каустики у основания** должны быть тонкими. Звёздообразные блики у основания — артефакт (наблюдали в тесте на AG0021), такие кадры отбраковываем.
 - **Облака и дым за бокалом** — артефакт, отбраковываем.
 
 ### Постобработка и glow
 
-1. Мастер → `webapp/assets/products/st-<COD>.jpg`.
-2. Копия → `webapp/assets/products/<COD>.jpg`. Она нужна, потому что `build_photos.py` обрабатывает только существующие `AG*.jpg`.
-3. `python3 scripts/build_photos.py --near 0.6 --wide 0.3`. Это стартовая точка, она сильнее дефолта (`0.45` / `0.18`). Подбирать по сравнению «до / после» на контактном листе. Критерий: ореол и блики заметнее, пересвета нет.
-4. Если генератор не даёт нужного боке, делаем отдельный шаг: размытие фона по маске стекла. Сначала пробуем промтом.
+1. Мастер → `webapp/assets/products/st-<COD>.jpg`, рядом копия `<COD>.jpg` (`build_photos.py` обрабатывает только существующие `AG*.jpg`).
+2. `python3 scripts/build_photos.py` — дефолт раунда 2 уже вшит в скрипт, он делает три шага подряд:
+   - `--bg-blur 10` — боке по маске граней: где нет резких рёбер (фон, дымка, пол) дополнительно размывается, стекло резкое;
+   - `--bg-ref IMG_1440.png --bg-box 430,100,948,478 --bg-w 0.8` — световое поле фона приводится к референсу:
+     правка знакомая (gain/loss по низкочастотному слою), поэтому блики и отражение не «съедаются»;
+     прожектор, световой диск, шов горизонта и чёрная виньетка уходят;
+   - `--near 0.5 --wide 0.24` — bloom по хайлайтам (ближний и широкий ореол).
+3. Подбирать по контактному листу «до / после» и по замерам фона (`probe` в `.arena/`): ореол и блики заметны, пересвета нет,
+   фон по каналу R держится в пределах ~14–80 и не уходит в черноту углов.
+4. Приём «detail = im − low» для замены фона не использовать: он обнуляет отрицательную разницу и вымывает стекло
+   (было опробовано, кадр получается «призрачным»). Только знако-точная сборка gain/loss.
 
 ### Позиции
 
@@ -237,7 +265,86 @@ Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-
 5. Контактные листы «src | новое» и «до | после». Точечная перегенерация отдельных позиций.
 6. Удалить `fb-*.jpg`, перевести этот раздел в историю, сделать коммит.
 
-**Вне скоупа:** hero-слайды (`webapp/assets/brand/`), данные каталога, вёрстка и цены.
+**Вне скоупа раунда 2:** данные каталога, вёрстка и цены (hero-слайды и обложки ушли в раунд 3).
+
+---
+
+---
+
+## Следующая задача: раунд 3 — свет бренда на hero, обложках коллекций и og:image
+
+**Предварительно.** Закрыть раунд 2: доснять 12 позиций (`AG0013 AG0014 AG0016 AG0017 AG0018 AG0019 AG0020 AG0021
+AG0023 AG0024 AG0025 AG0026`), прогнать `build_photos.py`, удалить `fb-<COD>.jpg` и `onerror`-фолбэки
+(`webapp/js/ui.js`, `webapp/js/views/home.js`, `webapp/js/views/collections.js`).
+
+**Проблема.** Товарные кадры теперь живут в полуночно-синем свете референсов, а всё остальное — нет:
+hero-слайды на главной это сырые кроки из `IMG_1420/1421.png` (свет, цвет и зерно чужие), у страницы
+коллекции нет обложки вообще, `og:image` нет — ссылка из Telegram и WhatsApp разворачивается серым прямоугольником.
+
+### Цель
+
+1. **Hero — из новых мастеров, а не из Instagram.** 5 слайдов: 2–3 бокала из одного кадра серии на том же световом поле.
+   Десктоп 16:9 (1920×1080), мобильный 4:5 (1080×1350); раскладка `IMG_1440.png` (текст слева, стекло справа) и
+   `IMG_1441.png` (стекло по центру, подпись снизу).
+2. **Обложки коллекций.** 10 кадров 16:9 (1280×720) — по одному на коллекцию, в `webapp/assets/covers/<coll-id>.jpg`;
+   ставить их в шапку `renderCollection()` и в рельс `.coll-row` вместо миниатюры товара.
+3. **og:image.** `webapp/assets/brand/og.jpg` 1200×630 + `<meta property="og:image">`, `og:title`, `og:description`,
+   `twitter:card` в `webapp/index.html`, и `link rel="image_src"` для старых клиентов.
+4. **Один свет на весь магазин.** Низкочастотное поле фона во всех новых кадрах приводится к тому же референсу,
+   что и товары: `--bg-ref IMG_1440.png --bg-box 430,100,948,478`. Проверка — пробы R-канала фона в пределах 14–82.
+
+### Состав кадров
+
+| Актив | Размер | Состав (позиции из каталога) |
+|---|---|---|
+| `brand/hero-01.jpg` | 1920×1080 | AG0008 + AG0021 + AG0009 — пара «витринная», как в `IMG_1440` |
+| `brand/hero-02.jpg` | 1920×1080 | AG0002 + AG0006 — две длинные ножки, силуэты |
+| `brand/hero-03.jpg` | 1920×1080 | AG0015 + AG0016 + AG0012 — Retro Asia, гравировка в контровом |
+| `brand/hero-04.jpg` | 1920×1080 | AG0020 + AG0022 — Levitating, «невесомость» |
+| `brand/hero-05.jpg` | 1920×1080 | AG0027 — чайник, единственный тёплый акцент |
+| `brand/hero-0N-m.jpg` | 1080×1350 | те же составы, вертикальная нарезка под мобильный hero |
+| `covers/retro-asia.jpg` … | 1280×720 | флагман коллекции + одна позиция рядом; список коллекций — `COLLECTIONS` в `scripts/build_catalog.py` |
+| `brand/og.jpg` | 1200×630 | AG0015 + AG0008 + AG0009, слева оставляем чистое место под `og:title` (текст не вжигать) |
+
+### Как собирать
+
+Композиция собирается скриптом из готовых мастеров, генератор нужен только если требуется новый свет или фон:
+
+```bash
+python3 .arena/prep_refs.py                                   # референсы света и формы
+python3 scripts/build_photos.py --only hero,covers,og         # боке + bg-match + bloom на новых активах
+```
+
+В `scripts/build_photos.py` для этого нужен флаг `--only` — список масок имён вместо `AG*.jpg`
+(`AG*` — товары, `hero-*`, `covers/*`, `og`). Мастер для hero и обложек — `st-<имя>.jpg` рядом с файлом,
+чтобы шаг оставался идемпотентным.
+
+Промт для генерации фона/сцены (если одного композита мало) — тот же, что в раунде 2, только вместо
+одного бокала — группа и горизонтальный кадр:
+
+```text
+Photorealistic luxury studio scene for the brand Cocktail Embassy. TWO {OBJS} grouped on a glossy dark navy floor,
+off-centre to the right in a horizontal 16:9 frame, left half of the frame kept empty and dark for a headline.
+Each glass is reconstructed faithfully from its supplier photo: {FEATS}. Shared light: deep midnight-navy backdrop
+#0a0e18 to #13203a, ice-blue #cfe1ff key light, faint cyan #7fe3ff rim, crisp thin white highlights along rims and
+walls, soft even glow across the whole background (no spotlight hotspot, no black corners, no visible horizon seam),
+gently blurred backdrop, thin atmospheric haze. Very thin-walled, weightless, soft elliptical floating shadows.
+No text, no logos, no props, no people, no clouds or smoke, no liquid.
+```
+
+### Критерии готовности
+
+- `webapp/assets/brand/hero-01..05.jpg` и вертикальные `-m`-версии собраны из новых мастеров, пропорции 16:9 и 4:5;
+  в `home.js` больше нет прямых ссылок на кроки Instagram, старые `hero-06..12.jpg` удалены.
+- 10 обложек в `webapp/assets/covers/`, шапка страницы коллекции и рельс `.coll-row` рендерят их (с фолбэком на
+  `productImg()`, если обложки нет).
+- `og.jpg` 1200×630, `og:image` доступен по абсолютному URL (`PUBLIC_URL`), валидатор Telegram/WhatsApp отдаёт картинку.
+- Пробы R-канала фона во всех новых кадрах — 14…82, как у товаров; ни один кадр не темнее `(8,10,18)` по углам.
+- Текст и интерфейс в генерируемые кадры не попадают: надпись hero остаётся HTML (`hero .cap`), в PNG её нет.
+
+### Вне скоупа
+
+Новые ракурсы и анимации, 3D, видеоподложка, цены и данные каталога, рассылка.
 
 ---
 
