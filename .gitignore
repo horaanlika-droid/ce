@@ -6,3 +6,4 @@ data/db.json.tmp
 data/backups/
 *.log
 .DS_Store
+.arena/pilot/
