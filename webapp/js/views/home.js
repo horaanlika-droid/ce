@@ -1,7 +1,7 @@
 /**
  * Главная: hero-слайдер, коллекции, популярное, ценности бренда.
  */
-import { h, esc, productImg } from '../ui.js';
+import { h, esc, productImg, coverImg } from '../ui.js';
 import { icons } from '../icons.js';
 import { assetUrl } from '../assets.js';
 import { state } from '../state.js';
@@ -22,7 +22,10 @@ export async function render() {
         <div class="slides">
           ${HEROES.map((n, i) => `
             <div class="slide">
-              <img src="${assetUrl(`assets/brand/hero-${n}.jpg`)}" alt="">
+              <picture>
+                <source media="(min-width: 720px)" srcset="${assetUrl(`assets/brand/hero-${n}.jpg`)}">
+                <img src="${assetUrl(`assets/brand/hero-${n}-m.jpg`)}" alt="">
+              </picture>
               ${i === 0 ? `
               <div class="cap">
                 <span class="eyebrow">${esc(brand.tagline)}</span>
@@ -83,7 +86,7 @@ export async function render() {
     const cover = state.products.find((p) => p.collection === c.id);
     const row = h(`
       <button class="coll-row" style="width: 240px; flex: none;" data-go="/collection/${c.id}">
-        <span class="th">${cover ? productImg(cover) : ''}</span>
+        <span class="th">${coverImg(c.id, cover)}</span>
         <span class="t"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></span>
         <span class="cnt">${count}</span>
         ${icons.chev}

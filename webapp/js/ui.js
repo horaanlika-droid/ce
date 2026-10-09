@@ -85,6 +85,23 @@ export function productImg(product, cls = '', variant = 'card') {
   </span>`;
 }
 
+/**
+ * Обложка коллекции (раунд 7): кадр 1280×720 из того же пайплайна, что и
+ * товары, — кладётся в рельс `.coll-row` и в шапку страницы коллекции вместо
+ * миниатюры товара. Если обложки нет (404) — фолбэк на productImg-кадр:
+ * --shot и src переключаются на карточку товара, панель не ломается.
+ */
+export function coverImg(collId, product, cls = '') {
+  const url = assetUrl(`assets/covers/${collId}.jpg`);
+  if (!product) return `<span class="pshot ${cls}"></span>`;
+  const fb = assetUrl((product.image || '').replace(/\.jpg$/, '-card.jpg'));
+  return `<span class="pshot ccover ${cls}" style="--shot:url('${url}')">
+    <img src="${url}" alt="${esc(product.name)}" loading="lazy" decoding="async" data-fb="${fb}"
+      onerror="this.onerror=null;var p=this.closest('.pshot');p.style.setProperty('--shot','url('+this.dataset.fb+')');this.src=this.dataset.fb">
+    <i class="rim" aria-hidden="true"></i>
+  </span>`;
+}
+
 export function plural(n, one, many) {
   return n === 1 ? one : many;
 }

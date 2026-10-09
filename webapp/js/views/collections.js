@@ -1,7 +1,7 @@
 /**
  * Каталог: список коллекций + поиск; детальная страница коллекции.
  */
-import { h, esc, productImg } from '../ui.js';
+import { h, esc, coverImg } from '../ui.js';
 import { icons } from '../icons.js';
 import { state } from '../state.js';
 import { navbar, productCard, emptyState } from '../components.js';
@@ -40,7 +40,7 @@ export async function renderList() {
       const cover = items[0];
       list.appendChild(h(`
         <button class="coll-row" data-go="/collection/${c.id}">
-          <span class="th">${productImg(cover)}</span>
+          <span class="th">${coverImg(c.id, cover)}</span>
           <span class="t"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></span>
           <span class="cnt">${items.length}</span>
           ${icons.chev}
@@ -72,7 +72,8 @@ export async function renderCollection({ id }) {
       <div class="wrap" style="padding-top: 16px;">
         <span class="eyebrow">${esc(cat.subtitle)}</span>
         <h1 style="font-size: 30px; margin: 8px 0 6px; letter-spacing: -0.03em;">${esc(cat.title)}</h1>
-        <p class="mut" style="margin: 0 0 20px; font-size: 14.5px; max-width: 46ch;">${esc(cat.blurb || '')}</p>
+        <p class="mut" style="margin: 0 0 16px; font-size: 14.5px; max-width: 46ch;">${esc(cat.blurb || '')}</p>
+        <div class="coll-hero">${coverImg(id, items[0], 'wide')}</div>
         <div class="grid" data-grid></div>
       </div>
     </div>

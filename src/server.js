@@ -2,6 +2,7 @@
  * HTTP-сервер: раздаёт витрину и обслуживает API.
  */
 import crypto from 'node:crypto';
+import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
 import { config, paymentMethods, ROOT, assetsVersion } from './config.js';
@@ -294,7 +295,9 @@ export function createServer() {
     res.json({ ok: true, app: 'cocktail-embassy', time: new Date().toISOString() });
   });
 
+  // index: false — корень отдаёт app.get('*') ниже, с абсолютными og-тегами
   app.use(express.static(WEBAPP_DIR, {
+    index: false,
     setHeaders(res, filePath) {
       // 4K-кадры тяжёлые (≈0.6 МБ): неделю кэша + immutable, а перегонку стиля
       // ловит метка ?v= из assetsVersion() — старые файлы под тем же именем
@@ -304,7 +307,20 @@ export function createServer() {
   }));
 
   app.get('*', (req, res) => {
-    res.sendFile(path.join(WEBAPP_DIR, 'index.html'));
+    // og:image в файле относительный; превью-валидаторам Telegram/WhatsApp
+    // нужен абсолютный — подставляем PUBLIC_URL на лету
+    let html = fs.readFileSync(path.join(WEBAPP_DIR, 'index.html'), 'utf8');
+    const pub = config.publicUrl;
+    if (pub) {
+      html = html.split('content="/assets/').join(`content="${pub}/assets/`)
+                 .split('href="/assets/').join(`href="${pub}/assets/`);
+      if (!html.includes('og:url')) {
+        html = html.replace('<meta property="og:type"',
+          `<meta property="og:url" content="${pub}/">\n  <meta property="og:type"`);
+      }
+    }
+    res.setHeader('Cache-Control', 'no-cache');
+    res.type('html').send(html);
   });
 
   return app;

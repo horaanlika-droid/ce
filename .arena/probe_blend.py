@@ -65,9 +65,12 @@ def main():
     codes = sys.argv[1:] or ['AG0015']
     tiles = []
     for cod in codes:
-        p = os.path.join(DIR, f'{cod}-card.jpg')
-        if not os.path.exists(p):
-            p = os.path.join(DIR, f'{cod}.jpg')
+        if os.path.exists(cod):                      # раунд 7: прямой путь к кадру
+            p = cod
+        else:
+            p = os.path.join(DIR, f'{cod}-card.jpg')
+            if not os.path.exists(p):
+                p = os.path.join(DIR, f'{cod}.jpg')
         if not os.path.exists(p):
             print('нет файла', cod)
             continue
