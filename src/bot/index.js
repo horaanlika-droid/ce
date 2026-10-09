@@ -21,23 +21,59 @@ const webAppUrl = () => {
   return u && u.startsWith('https://') ? u : null;
 };
 
+const sleep = (ms) => new Promise((r) => { setTimeout(r, ms); });
+
+/**
+ * Инициализация бота (getMe).
+ *
+ * Важно: `bot.init()` в grammy объявлен как `init(signal?): Promise<void>` —
+ * он НЕ возвращает профиль бота, а кладёт его в `bot.botInfo`. Поэтому
+ * `const me = await bot.init()` всегда даёт undefined, и бот падал на первой
+ * же строчке после успешного getMe.
+ *
+ * Внутри grammy getMe уже ретраится с экспоненциальной паузой, поэтому сверху
+ * добавлены только две дополнительные попытки на случай, когда сеть в
+ * контейнере поднимается позже приложения.
+ */
+async function initBot(bot) {
+  const delays = [0, 5_000, 15_000];
+  for (let attempt = 1; attempt <= delays.length; attempt++) {
+    if (delays[attempt - 1]) await sleep(delays[attempt - 1]);
+    const ctrl = new AbortController();
+    const to = setTimeout(() => ctrl.abort(), 20_000);
+    try {
+      await bot.init(ctrl.signal);
+      return bot.botInfo;
+    } catch (err) {
+      // 401/404 — токен неверный или отозван: повторять бессмысленно.
+      if (err?.error_code === 401 || err?.error_code === 404) {
+        console.error(`[bot] токен отклонён Telegram (${err.error_code}) — проверьте BOT_TOKEN в переменных окружения`);
+        return null;
+      }
+      console.error(`[bot] getMe не удался (попытка ${attempt}/${delays.length}): ${err.message}`);
+    } finally {
+      clearTimeout(to);
+    }
+  }
+  return null;
+}
+
 export async function startBot() {
   const bot = new Bot(config.telegram.token);
 
+  // Ошибка внутри обработчика не должна ронять процесс: polling продолжит
+  // работать, а сообщение об ошибке останется в логах хостинга.
+  bot.catch((err) => {
+    console.error(`[bot] ошибка в обработчике update ${err.ctx?.update?.update_id ?? '?'}:`, err.error?.message || err.error || err);
+  });
+
   // ── username: если BOT_USERNAME не задан, подхватываем из getMe ──
-  // Таймаут 20 с: grammy ретраит getMe, и при мёртвой сети не будем висеть
-  // вечно — веб-часть уже работает, бот подхватится при перезапуске.
-  let me;
-  try {
-    const ctrl = new AbortController();
-    const to = setTimeout(() => ctrl.abort(), 20_000);
-    me = await bot.init(ctrl.signal);
-    clearTimeout(to);
-  } catch (err) {
-    console.error(`[bot] getMe не удался (токен недействителен или нет сети): ${err.message} — веб-витрина продолжает работать`);
+  const me = await initBot(bot);
+  if (!me) {
+    console.error('[bot] бот не запущен — остальные части приложения продолжают работать');
     return null;
   }
-  if (me?.username) config.telegram.username = me.username;
+  if (me.username) config.telegram.username = me.username;
   console.log(`[bot] @${me.username} · режим: ${config.telegram.mode}${config.publicUrl ? ` · URL: ${config.publicUrl}` : ' · URL появится из запросов к витрине'}`);
 
   // ── кнопка меню (слева от поля ввода) → Mini App ──

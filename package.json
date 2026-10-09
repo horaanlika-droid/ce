@@ -12,7 +12,8 @@
     "start": "node src/index.js",
     "web": "MODE=web node src/index.js",
     "bot": "MODE=bot node src/index.js",
-    "catalog": "python3 scripts/build_catalog.py"
+    "catalog": "python3 scripts/build_catalog.py",
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "express": "^4.19.2",

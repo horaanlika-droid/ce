@@ -8,13 +8,71 @@ import path from 'node:path';
 import { config, ROOT } from './config.js';
 import { db } from './store.js';
 
-const CATALOG_FILE = path.join(ROOT, 'data', 'catalog.json');
+/**
+ * Где искать базовый каталог:
+ *  1. CATALOG_FILE — явный путь, если он задан (удобно для нестандартных
+ *     схем деплоя и для тестов);
+ *  2. DATA_DIR/catalog.json — volume хостинга, там же живёт db.json;
+ *  3. ./data/catalog.json из деплоя.
+ *
+ * Без третьего пути любая площадка, которая монтирует volume поверх ./data
+ * (README как раз советует DATA_DIR для персистентности), прятала бы
+ * закоммиченный data/catalog.json, и витрина поднималась пустой с ошибкой
+ * ENOENT в логах.
+ */
+const CATALOG_CANDIDATES = [...new Set(
+  config.catalogFile
+    ? [config.catalogFile]
+    : [path.join(config.dataDir, 'catalog.json'), path.join(ROOT, 'data', 'catalog.json')],
+)];
 
-let base = { brand: {}, delivery: {}, categories: [], products: [] };
-try {
-  base = JSON.parse(fs.readFileSync(CATALOG_FILE, 'utf8'));
-} catch (err) {
-  console.error('[catalog] нет data/catalog.json — запустите scripts/build_catalog.py:', err.message);
+const EMPTY = { brand: {}, delivery: {}, categories: [], products: [] };
+
+let base = structuredClone(EMPTY);
+let source = '';
+const missing = [];
+
+for (const file of CATALOG_CANDIDATES) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!parsed || !Array.isArray(parsed.products)) {
+      throw new Error('в файле нет массива products');
+    }
+    base = { ...structuredClone(EMPTY), ...parsed };
+    source = file;
+    break;
+  } catch (err) {
+    missing.push(`${file} (${err.code === 'ENOENT' ? 'нет файла' : err.message})`);
+  }
+}
+
+// Обычный случай для volume: своего каталога там нет, работает копия из
+// деплоя. Говорим об этом одной спокойной строкой — без ложной тревоги.
+if (source && missing.length) {
+  console.log(`[catalog] взят ${source} · не найден: ${missing.join(', ')}`);
+}
+const loadError = missing.length ? missing[missing.length - 1] : '';
+
+if (!source) {
+  console.error(
+    '[catalog] каталог не найден — витрина будет пустой.\n'
+    + `  Проверено: ${CATALOG_CANDIDATES.join(', ')}\n`
+    + '  1) убедитесь, что data/catalog.json попадает в деплой (он закоммичен в репозиторий);\n'
+    + '  2) если DATA_DIR указывает на пустой volume — файл берётся из ./data автоматически;\n'
+    + '  3) пересобрать каталог: npm run catalog (python3 scripts/build_catalog.py).',
+  );
+}
+
+/** Состояние каталога — для /health и сводки при старте. */
+export function catalogStatus() {
+  return {
+    ok: Boolean(source),
+    file: source || null,
+    error: source ? null : loadError,
+    searched: CATALOG_CANDIDATES,
+    products: base.products.length,
+    categories: (base.categories || []).length,
+  };
 }
 
 const clone = (x) => structuredClone(x);
