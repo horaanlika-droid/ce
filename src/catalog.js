@@ -25,8 +25,44 @@ export function allProducts() {
   const list = base.products
     .filter((p) => !deleted.has(p.id))
     .map((p) => ({ ...clone(p), ...(db.overrides[p.id] || {}) }));
-  const custom = Object.values(db.customProducts || {}).map((p) => clone(p));
+  const custom = Object.values(db.customProducts || {})
+    .filter((p) => !deleted.has(p.id))
+    .map((p) => ({ ...clone(p), ...(db.overrides[p.id] || {}) }));
   return [...list, ...custom];
+}
+
+/**
+ * Товар в том числе удалённый — для раздела «Удалённые» в админке
+ * (возврат позиции в один тап). Базовая карточка + правки админа.
+ */
+export function findAnyProduct(id) {
+  const key = String(id);
+  const raw = base.products.find((p) => String(p.id) === key) || db.customProducts?.[key] || null;
+  if (!raw) return null;
+  return { ...clone(raw), ...(db.overrides[key] || {}), _deleted: (db.deletedProducts || []).includes(key) };
+}
+
+export function deletedProducts() {
+  return (db.deletedProducts || [])
+    .map((id) => findAnyProduct(id))
+    .filter(Boolean);
+}
+
+export function deletedCategories() {
+  const list = [];
+  for (const id of db.deletedCategories || []) {
+    const baseCat = base.categories.find((c) => c.id === id);
+    const customCat = (db.customCategories || []).find((c) => c.id === id);
+    const raw = baseCat || customCat;
+    if (!raw) continue;
+    list.push({
+      id,
+      ...clone(raw),
+      ...(baseCat ? (db.categoryOverrides[id] || {}) : {}),
+      _custom: Boolean(customCat),
+    });
+  }
+  return list;
 }
 
 /** Товары, видимые на витрине. */
@@ -43,7 +79,9 @@ export function getCategories() {
   const baseCats = base.categories
     .filter((c) => !deleted.has(c.id))
     .map((c) => ({ ...clone(c), ...(db.categoryOverrides[c.id] || {}) }));
-  const custom = (db.customCategories || []).map((c) => clone(c));
+  const custom = (db.customCategories || [])
+    .filter((c) => !deleted.has(c.id))
+    .map((c) => clone(c));
   return [...baseCats, ...custom];
 }
 
@@ -60,6 +98,8 @@ export function getShopSettings() {
     freeShippingFrom: Number(db.shopInfo.shop?.freeShippingFrom ?? config.shop.freeShippingFrom),
     shippingCost: Number(db.shopInfo.shop?.shippingCost ?? config.shop.shippingCost),
     minOrderTotal: Number(db.shopInfo.shop?.minOrderTotal ?? config.shop.minOrderTotal),
+    /** Курс USD к AED для конвертации цен (меняется в админке → Магазин). */
+    usdRate: Number(db.shopInfo.shop?.usdRate ?? config.currency.rate),
   };
 }
 

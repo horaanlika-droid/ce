@@ -4,9 +4,10 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { ROOT } from './config.js';
+import { config } from './config.js';
 
-const DATA_DIR = path.join(ROOT, 'data');
+// Каталог данных из DATA_DIR (volume хостинга) или ./data по умолчанию.
+const DATA_DIR = config.dataDir;
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
 const EMPTY = {

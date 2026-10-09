@@ -72,7 +72,8 @@ export function computeTotals(items, deliveryMethod = 'pickup') {
     shippingQuote = true;
   }
   const totalAed = subtotalAed + (shippingQuote ? 0 : shippingAed);
-  const totalUsd = subtotalUsd + (shippingQuote ? 0 : shippingAed / 3.6725);
+  const rate = shop.usdRate || 3.6725;
+  const totalUsd = subtotalUsd + (shippingQuote ? 0 : shippingAed / rate);
 
   return {
     items: list,
@@ -118,6 +119,7 @@ export function createOrder({ userId, items, customer, delivery, paymentMethod, 
   const u = db.users[String(userId)];
   if (u) {
     u.ordersCount = (u.ordersCount || 0) + 1;
+    u.totalSpent = (u.totalSpent || 0) + (totals.totalAed || 0);
   }
   save();
   emit('order:new', order);

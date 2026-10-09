@@ -11,6 +11,7 @@ export function setAssetsV(v) {
 }
 
 export function assetUrl(path) {
-  if (!path || !tag || path.startsWith('data:')) return path;
+  // внешние URL (фото кастомных товаров по ссылке из админки) — без ?v=
+  if (!path || !tag || path.startsWith('data:') || /^https?:\/\//i.test(path)) return path;
   return `${path}${path.includes('?') ? '&' : '?'}v=${tag}`;
 }
