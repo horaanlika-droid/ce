@@ -10,7 +10,7 @@ import { db, save, upsertUser } from './store.js';
 import { validateInitData } from './lib/telegram-auth.js';
 import {
   publicProducts, findProduct, getCategories, getBrand,
-  getDeliveryInfo, getShopSettings, getTexts,
+  getDeliveryInfo, getShopSettings, getTexts, catalogStatus,
 } from './catalog.js';
 import {
   createOrder, getOrder, userOrders, updateOrder, markPaid,
@@ -300,7 +300,17 @@ export function createServer() {
   });
 
   app.get('/health', (req, res) => {
-    res.json({ ok: true, app: 'cocktail-embassy', time: new Date().toISOString() });
+    // Всегда 200 — иначе хостинг начнёт перезапускать контейнер по кругу
+    // из-за проблемы, которую перезапуск не лечит (например, нет catalog.json).
+    // Подробности видны в теле ответа и в логах старта.
+    const cat = catalogStatus();
+    res.json({
+      ok: true,
+      app: 'cocktail-embassy',
+      time: new Date().toISOString(),
+      catalog: { ok: cat.ok, products: cat.products, file: cat.file, error: cat.error },
+      dataDir: config.dataDir,
+    });
   });
 
   // index: false — корень отдаёт app.get('*') ниже, с абсолютными og-тегами
