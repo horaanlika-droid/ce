@@ -34,8 +34,14 @@ route('/support', support.render, { noTab: true });
 
 const TABS = ['/', '/collections', '/cart', '/profile'];
 
+// минимальное время показа прелоадера — чтобы анимация логотипа успела отыграть
+const BOOT_MIN_MS = 3800;
+
 async function main() {
+  const t0 = performance.now();
   await boot();
+  const left = BOOT_MIN_MS - (performance.now() - t0);
+  if (left > 0) await new Promise((r) => setTimeout(r, left));
 
   // раунд 8: кадры (фолбэк по 404 + blur-up проявление) и tilt-параллакс
   initFrames();

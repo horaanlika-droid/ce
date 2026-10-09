@@ -16,7 +16,7 @@
  * стиля меняет метку, и браузер сквозь SW добирает свежие файлы сам.
  */
 
-const VERSION = 'ce-r8-1';
+const VERSION = 'ce-r8-2';
 const SHELL = `shell-${VERSION}`;
 const SHOTS = `shots-${VERSION}`;
 const SHOT_LIMIT = 120;

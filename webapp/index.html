@@ -29,13 +29,17 @@
 </head>
 <body>
   <div id="boot" class="boot">
-    <div class="boot-logo">
-      <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
-        <path d="M10 8h28L26 24v14h-4V24L10 8Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-        <path d="M16 40h16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-      </svg>
+    <div class="boot-stage">
+      <div class="boot-logo">
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <path class="boot-draw" pathLength="1" d="M10 8h28L26 24v14h-4V24L10 8Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
+          <path class="boot-draw boot-draw-2" pathLength="1" d="M16 40h16" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="boot-name">Cocktail Embassy</div>
+      <div class="boot-bar" aria-hidden="true"><span></span></div>
     </div>
-    <div class="boot-name">Cocktail Embassy</div>
+    <div class="boot-foot">app by @stonym0ntana</div>
   </div>
   <div id="app" hidden></div>
   <script type="module" src="/js/app.js"></script>
