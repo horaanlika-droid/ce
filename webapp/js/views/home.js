@@ -1,7 +1,7 @@
 /**
  * Главная: hero-слайдер, коллекции, популярное, ценности бренда.
  */
-import { h, esc } from '../ui.js';
+import { h, esc, productImg } from '../ui.js';
 import { icons } from '../icons.js';
 import { state } from '../state.js';
 import { navbar, productCard } from '../components.js';
@@ -82,7 +82,7 @@ export async function render() {
     const cover = state.products.find((p) => p.collection === c.id);
     const row = h(`
       <button class="coll-row" style="width: 240px; flex: none;" data-go="/collection/${c.id}">
-        <span class="th">${cover ? `<img src="${cover.image}" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/products/fb-${cover.id}.jpg'">` : ''}</span>
+        <span class="th">${cover ? productImg(cover) : ''}</span>
         <span class="t"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></span>
         <span class="cnt">${count}</span>
         ${icons.chev}

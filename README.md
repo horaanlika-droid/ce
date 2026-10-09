@@ -126,6 +126,15 @@ python3 scripts/build_catalog.py NEW_PRICE.pdf
 2. **Фон очень нежно размыт.** Мелкая глубина резкости: стекло в фокусе, задник и пол в мягком боке. Жёсткой линии горизонта нет. Палитра остаётся полуночно-синей, детали фона не читаются.
 3. **Стекло тонкое и невесомое.** Тонкие стенки и ободок, блики тонкими линиями. Бокал парит: мягкая тень-эллипс под основанием вместо тяжёлого контакта с полом, отражение короче и мягче (как в референсе Levitating).
 4. **Футуристичный флер.** Холодная палитра: полуночный синий `#0a0e18` → `#13203a`, ледяной `#cfe1ff`, циановый акцент `#7fe3ff` в ореоле. Тонкие световые контуры, лёгкая атмосферная дымка. В кадре нет текста, людей, посторонних предметов, облаков и дыма.
+5. **Фон — как на референсах, в числах.** Замеры пустых участков фона (`IMG_1440.png`, окно 430,100,948,478): ровное сталь-синее поле
+   `(14,34,59) → (28,43,68) → (82,98,123) → (34,50,76)` по высоте, т.е. свет мягкий и распределён по всему кадру.
+   У сырых генераций было `(2,5,13) … (95,118,148) … (4,7,17)` — «прожектор»: чёрные углы и световой диск с читаемым краем.
+   Разница устраняется не только промтом, но и шагом `--bg-ref` в `build_photos.py` (см. «Постобработка»).
+6. **Кадр живёт в карточке, а не сам по себе.** Фото 2:3 с большими полями нигде не обрезается: в карточке (3:4),
+   в сцене карточки товара и в миниатюрах кадр лежит целиком (`contain`) поверх сильно размытой копии самого себя
+   (блюр-подложка продолжает сцену по краям), слегка приближённый через `--zoom`, с мягкой радиальной маской по краям.
+   См. `.pshot` в `webapp/css/app.css` и `productImg()` в `webapp/js/ui.js`. В CSS-блоке задаётся и сила зума на контекст:
+   карточка `1.16`, сцена `1.06`, миниатюры `1.04–1.06`. 
 
 ### Референсы
 
@@ -164,8 +173,14 @@ EOF
 - `{DIMS}`: реальные размеры, например `height 180 mm, rim diameter 58 mm, 390 ml`.
 
 ```text
-Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-blown crystal bar glassware). ONE single {OBJ} centred in a vertical 2:3 frame, reconstructed faithfully from the supplier photo in image 1 (low resolution: keep its exact silhouette, proportions and wall thickness; {FEATS}; real proportions: {DIMS}). Futuristic premium mood: cool ice-blue and cyan light, a stronger soft halo behind the glass, slim light contours along the rim, faint atmospheric haze. Glass very thin-walled, delicate and weightless, hovering above the surface with a soft floating shadow instead of a heavy contact shadow. Background very gently out of focus (shallow depth of field, soft bokeh), deep midnight-navy seamless backdrop with no hard horizon line, glass in sharp focus. Lighting, glass texture and colour grade must match the brand style references in images 2-4 (crisp white highlights on crystal, glossy dark navy floor). Do not copy any objects, text, UI or other glasses from images 2-4. No text, no logos, no props, no people, no clouds or smoke, no white or grey background, no liquid unless it is in image 1. Sharp focus on the glass; glass fully inside the frame with generous dark space above and below.
+Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-blown crystal bar glassware). ONE single {OBJ}, centred in a vertical 2:3 frame, the glass occupying about {FILL}% of the frame height. FORM: reconstruct it strictly from image 1 — the supplier photo from the price-list PDF; use only its geometry, ignore its background: {FEATS}; real proportions: {DIMS}. Do not redesign the glass and do not take a different shape from images 2-4. COLOUR, LIGHT AND HIGHLIGHTS: follow the brand references in images 2-4 — deep midnight-navy palette #0a0e18 to #13203a, ice-blue #cfe1ff key light, faint cyan #7fe3ff inside the glow, crisp thin white specular highlights tracing the rim and running down the wall as fine lines, glossy dark navy floor. The background is a clean, smooth, evenly blurred navy gradient: no cloud wisps, no smoke, no grain, no visible horizon seam, no floor edge; the halo behind the glass is a soft gradient with no circular edge and never burns to white; the reflection under the glass is short, dim and blurred. Only the glass is sharp. The glass is very thin-walled, delicate and weightless, hovering a hair above the floor with a soft elliptical floating shadow, no heavy contact shadow. No text, no logos, no UI, no props, no people, no other glasses, no white or grey background, no star-shaped caustics at the base, no liquid. Dark space above and below.
 ```
+
+`{FILL}` — 72 для высоких позиций (стаканы, бокалы на ножке), 62 для низких (рокс, шот), 74 для гравированных
+(гравировку должно читаться). Для гравировок добавить в промт: `The engraved pattern from image 1 must stay on the
+glass and read as fine bright line-work catching the light — do not remove it and do not invent a different pattern.`
+
+
 
 Изображения: `1` — `webapp/assets/products/src-<COD>.png` (форма), `2–4` — `/tmp/refs/ref_desktop_hero.png`, `ref_mobile_home.png`, `ref_levitating.png` (стиль).
 
@@ -180,15 +195,26 @@ Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-
 - **AG0027 (чайник).** Ореховая ручка и янтарный чай — реальные материалы, их сохраняем. Свет, фон и стекло — по общему стилю. Прежнее указание про тёплый glow отменено.
 - **AG0011–AG0014 (гравировка).** Рисунок на стенках сохраняем как в `src`. Каждая гравировка должна читаться бликом.
 - **AG0004, AG0019, AG0027.** Исходники на чёрно-белом или тёмном фоне: фон игнорировать, брать только силуэт.
+  Для них в `.arena/prep_refs.py` задан ручной кроп (`AG0004`: 46,44,100,104; `AG0019`: 18,8,128,130).
+- **Белый фон у `src`.** Чтобы генератор не утащил белый фон и цвет исходника, референс формы собирается нейтрально-серым:
+  автоконтраст по каналам яркости, апскейл LANCZOS, `UnsharpMask`, и только геометрия — весь свет и цвет из `images 2-4`.
+  Файлы `.arena/shape/shape-<COD>.png` пересобираются скриптом `.arena/prep_refs.py` (`.arena/` не коммитится).
 - **Каустики у основания** должны быть тонкими. Звёздообразные блики у основания — артефакт (наблюдали в тесте на AG0021), такие кадры отбраковываем.
 - **Облака и дым за бокалом** — артефакт, отбраковываем.
 
 ### Постобработка и glow
 
-1. Мастер → `webapp/assets/products/st-<COD>.jpg`.
-2. Копия → `webapp/assets/products/<COD>.jpg`. Она нужна, потому что `build_photos.py` обрабатывает только существующие `AG*.jpg`.
-3. `python3 scripts/build_photos.py --near 0.6 --wide 0.3`. Это стартовая точка, она сильнее дефолта (`0.45` / `0.18`). Подбирать по сравнению «до / после» на контактном листе. Критерий: ореол и блики заметнее, пересвета нет.
-4. Если генератор не даёт нужного боке, делаем отдельный шаг: размытие фона по маске стекла. Сначала пробуем промтом.
+1. Мастер → `webapp/assets/products/st-<COD>.jpg`, рядом копия `<COD>.jpg` (`build_photos.py` обрабатывает только существующие `AG*.jpg`).
+2. `python3 scripts/build_photos.py` — дефолт раунда 2 уже вшит в скрипт, он делает три шага подряд:
+   - `--bg-blur 10` — боке по маске граней: где нет резких рёбер (фон, дымка, пол) дополнительно размывается, стекло резкое;
+   - `--bg-ref IMG_1440.png --bg-box 430,100,948,478 --bg-w 0.8` — световое поле фона приводится к референсу:
+     правка знакомая (gain/loss по низкочастотному слою), поэтому блики и отражение не «съедаются»;
+     прожектор, световой диск, шов горизонта и чёрная виньетка уходят;
+   - `--near 0.5 --wide 0.24` — bloom по хайлайтам (ближний и широкий ореол).
+3. Подбирать по контактному листу «до / после» и по замерам фона (`probe` в `.arena/`): ореол и блики заметны, пересвета нет,
+   фон по каналу R держится в пределах ~14–80 и не уходит в черноту углов.
+4. Приём «detail = im − low» для замены фона не использовать: он обнуляет отрицательную разницу и вымывает стекло
+   (было опробовано, кадр получается «призрачным»). Только знако-точная сборка gain/loss.
 
 ### Позиции
 
