@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-import { config, paymentMethods, ROOT, assetsVersion } from './config.js';
+import { config, paymentMethods, ROOT, assetsVersion, notePublicUrl } from './config.js';
 import { db, save, upsertUser } from './store.js';
 import { validateInitData } from './lib/telegram-auth.js';
 import {
@@ -27,6 +27,14 @@ export function createServer() {
   app.disable('x-powered-by');
   app.set('trust proxy', true);
   app.use(express.json({ limit: '8mb' }));
+
+  // Lazy-детект публичного URL: хостинг (Bothost) не всегда прокидывает
+  // домен переменной — берём его из заголовка Host первого публичного
+  // запроса и используем для кнопки Mini App, ссылок t.me?startapp и og.
+  app.use((req, res, next) => {
+    notePublicUrl(req.get('host'), req.get('x-forwarded-proto') || 'https');
+    next();
+  });
 
   // ─── авторизация ─────────────────────────────────────────────
   // В Telegram проверяется подпись initData. В обычном браузере магазин
@@ -109,7 +117,7 @@ export function createServer() {
       texts: getTexts(),
       payments: paymentMethods(),
       statuses: ORDER_STATUSES,
-      currency: config.currency,
+      currency: { ...config.currency, rate: getShopSettings().usdRate },
       user: req.user,
       guest: Boolean(req.guest),
       botUsername: config.telegram.username,

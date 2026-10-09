@@ -41,16 +41,56 @@ const adminIds = str('ADMIN_IDS')
   .filter((x) => Number.isFinite(x) && x > 0);
 
 /**
- * Публичный HTTPS-адрес. Если PUBLIC_URL не задан, подхватываем домен,
- * который хостинг прокидывает переменными DOMAIN / BOTHOST_DOMAIN.
+ * Публичный HTTPS-адрес. Приоритет источников:
+ *  1. PUBLIC_URL (или DOMAIN / BOTHOST_DOMAIN / BOT_DOMAIN от хостинга);
+ *  2. lazy-детект из заголовка Host входящих запросов (Bothost и подобные
+ *     платформы не всегда прокидывают домен переменной — первый же запрос
+ *     покупателя/админа по публичному адресу раскрывает его).
+ * Пока значение не задано ниоткуда — строка пуста, бот работает, а кнопка
+ * Mini App и ссылки подставляются, как только URL станет известен.
  */
-function detectPublicUrl() {
+const envPublicUrl = (() => {
   let url = str('PUBLIC_URL');
   if (!url) {
     url = str('DOMAIN') || str('BOTHOST_DOMAIN') || str('BOT_DOMAIN');
     if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`;
   }
   return url.replace(/\/+$/, '');
+})();
+
+let detectedPublicUrl = envPublicUrl;
+const publicUrlListeners = [];
+
+const isLocalHost = (host) => {
+  const h = (host || '').toLowerCase().split(':')[0];
+  if (!h) return true;
+  if (h === 'localhost' || h === '0.0.0.0' || h === '::' || h === '[::1]') return true;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return true; // любой IP
+  if (/^10\.|^192\.168\.|^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true; // private
+  if (h.endsWith('.e2b.app')) return true; // песочница Arena — не публичный адрес
+  return false;
+};
+
+/**
+ * Зафиксировать публичный URL из входящего запроса. Вызывается из HTTP-сервера
+ * на каждый запрос; пишет значение только если URL ещё не задан переменными.
+ */
+export function notePublicUrl(host, proto = 'https') {
+  if (!host || isLocalHost(host)) return false;
+  const url = `${String(proto || 'https').replace(/\/+$/, '')}://${host.replace(/\/+$/, '')}`;
+  if (envPublicUrl || detectedPublicUrl === url) return detectedPublicUrl === url;
+  detectedPublicUrl = url;
+  console.log(`[config] публичный URL обнаружен по заголовку Host: ${url}`);
+  for (const fn of publicUrlListeners) {
+    try { fn(url); } catch { /* слушатель не сломал остальное */ }
+  }
+  return true;
+}
+
+/** Подписка на появление/смену публичного URL (мощная кнопка бота и т.п.). */
+export function onPublicUrlChange(fn) {
+  publicUrlListeners.push(fn);
+  if (detectedPublicUrl) setImmediate(() => fn(detectedPublicUrl));
 }
 
 /**
@@ -88,25 +128,44 @@ export function assetsVersion() {
   return _assetsV;
 }
 
+const _botUsername = str('BOT_USERNAME').replace(/^@/, '');
+let _detectedBotUsername = '';
+
 export const config = {
   root: ROOT,
   mode: (str('MODE', 'all') || 'all').toLowerCase(), // all | web | bot
   port: num('PORT', 3000),
   host: str('HOST', '0.0.0.0'),
+  // Каталог данных: DATA_DIR — для volumes на хостинге (на бесплатных
+  // тарифах Bothost данные в контейнере не переживают перезапуск).
+  dataDir: str('DATA_DIR') || path.join(ROOT, 'data'),
+  // Порт(ы) веб-сервера. Если хостинг задаёт PORT — слушаем только его.
+  // Если не задан — раскидываемся по типовым портам, чтобы гарантированно
+  // попасть в прокси Bothost/Render-подобных платформ (отказы отдельных
+  // портов, например EACCES на 80, не роняют процесс).
   webPorts: (() => {
-    const main = num('PORT', 3000);
-    const extra = str('EXTRA_PORTS', '3000,8080')
-      .split(/[,;\s]+/)
-      .map((p) => Number.parseInt(p, 10))
-      .filter((p) => Number.isInteger(p) && p > 0 && p < 65536);
-    return [...new Set([main, ...extra])];
+    const main = num('PORT', 0);
+    if (main > 0) {
+      const extra = str('EXTRA_PORTS', '')
+        .split(/[,;\s]+/)
+        .map((p) => Number.parseInt(p, 10))
+        .filter((p) => Number.isInteger(p) && p > 0 && p < 65536);
+      return [...new Set([main, ...extra])];
+    }
+    return [80, 3000, 8080];
   })(),
-  publicUrl: detectPublicUrl(),
+  /** Публичный HTTPS-адрес: из env или обнаруженный из Host (см. notePublicUrl). */
+  get publicUrl() {
+    return detectedPublicUrl;
+  },
 
   telegram: {
     token: botToken,
     hasBot: Boolean(botToken),
-    username: str('BOT_USERNAME').replace(/^@/, ''),
+    // username: из env BOT_USERNAME; если не задан — подхватывается из getMe
+    // при запуске бота, поэтому в переменных хостинга вводить не нужно.
+    get username() { return _botUsername || _detectedBotUsername; },
+    set username(v) { if (!_botUsername) _detectedBotUsername = String(v || '').replace(/^@/, ''); },
     adminIds,
     mode: str('TELEGRAM_MODE', 'polling').toLowerCase(),
     webhookSecret: str('TELEGRAM_WEBHOOK_SECRET'),

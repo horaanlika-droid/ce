@@ -28,7 +28,6 @@ async function call(path, method = 'GET', body) {
 const cryptoKey = () => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
 export async function createPayment(order, { returnUrl }) {
-  const value = Math.round(order.totals.totalAed * 3.6725 * 100) / 100; // AED -> RUB-эквивалент задаётся магазином; здесь сумма в валюте магазина
   return call('/payments', 'POST', {
     amount: { value: order.totals.totalAed.toFixed(2), currency: 'AED' },
     capture: true,
