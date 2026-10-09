@@ -63,18 +63,23 @@ function detectPublicUrl() {
 let _assetsV = null;
 let _assetsAt = 0;
 export function assetsVersion() {
-  const dir = path.join(ROOT, 'webapp', 'assets', 'products');
+  // раунд 7: метка считается по всем каталогам кадров — товары, hero и og,
+  // обложки коллекций; перегонка любого из них обновляет ?v= у витрины
+  const dirs = ['products', 'brand', 'covers'].map((d) =>
+    path.join(ROOT, 'webapp', 'assets', d));
   const now = Date.now();
   if (_assetsV !== null && now - _assetsAt < 60_000) return _assetsV;
   let newest = 0;
-  try {
-    for (const f of fs.readdirSync(dir)) {
-      if (!f.endsWith('.jpg')) continue;
-      const m = fs.statSync(path.join(dir, f)).mtimeMs;
-      if (m > newest) newest = m;
+  for (const dir of dirs) {
+    try {
+      for (const f of fs.readdirSync(dir)) {
+        if (!f.endsWith('.jpg')) continue;
+        const m = fs.statSync(path.join(dir, f)).mtimeMs;
+        if (m > newest) newest = m;
+      }
+    } catch {
+      /* каталога нет — пропускаем */
     }
-  } catch {
-    /* каталога нет — метки нет */
   }
   _assetsAt = now;
   _assetsV = newest ? Math.floor(newest / 1000).toString(36) : '';

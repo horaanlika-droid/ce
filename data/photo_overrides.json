@@ -1,0 +1,14 @@
+{
+  "AG0027": {"clear": 0.45},
+  "AG0011": {"clear": 0.55, "near": 0.62, "clear_detail": 1.05},
+  "AG0012": {"clear": 0.55, "near": 0.62, "clear_detail": 1.05},
+  "AG0013": {"clear": 0.55, "near": 0.62, "clear_detail": 1.05},
+  "AG0014": {"clear": 0.55, "near": 0.62, "clear_detail": 1.05},
+  "AG0018": {"clear": 0.60, "near": 0.60, "clear_detail": 1.05},
+  "hero-03": {"clear": 0.60},
+  "hero-03-m": {"clear": 0.60},
+  "hero-05": {"clear": 0.45},
+  "hero-05-m": {"clear": 0.45},
+  "covers/retro-asia-engraved": {"clear": 0.60},
+  "covers/soon-teapot": {"clear": 0.45}
+}

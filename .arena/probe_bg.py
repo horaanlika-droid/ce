@@ -45,16 +45,29 @@ def probe(path, obj_box=None):
 
 def main():
     args = sys.argv[1:]
+    box = None
+    if '--box' in args:                              # доли кадра: x0,y0,x1,y1
+        i = args.index('--box')
+        box = tuple(float(v) for v in args[i + 1].split(','))
+        args = args[:i] + args[i + 2:]
     codes = args or sorted({f[:-4] for f in os.listdir(DIR)
                             if f.startswith('AG') and f.endswith('.jpg')})
     for cod in codes:
-        for suffix in ('', '-card'):
-            p = os.path.join(DIR, f'{cod}{suffix}.jpg')
-            if not os.path.exists(p):
-                continue
-            st = probe(p)
+        paths = []
+        if os.path.exists(cod):                      # раунд 7: прямые пути к кадрам
+            paths = [cod]
+        else:
+            paths = [os.path.join(DIR, f'{cod}{s}.jpg') for s in ('', '-card')
+                     if os.path.exists(os.path.join(DIR, f'{cod}{s}.jpg'))]
+        for p in paths:
+            im = Image.open(p)
+            ob = None
+            if box:
+                ob = (int(box[0] * im.width), int(box[1] * im.height),
+                      int(box[2] * im.width), int(box[3] * im.height))
+            st = probe(p, ob)
             flag = '  ⚠ гранями' if st['grad'] > 1.9 else ''
-            print(f'{cod}{suffix or " (4k)":10} {st["size"]:>10}  grad {st["grad"]:<5} '
+            print(f'{os.path.basename(p):24} {st["size"]:>10}  grad {st["grad"]:<5} '
                   f'R {st["r_lo"]}…{st["r_hi"]:<5} seam {st["seam"]}{flag}')
 
 

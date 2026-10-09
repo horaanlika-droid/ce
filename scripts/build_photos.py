@@ -64,6 +64,8 @@
   python3 scripts/build_photos.py --long 1264 --card 0   # старый режим, без 4K
 """
 import argparse
+import fnmatch
+import json
 import os
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
@@ -234,19 +236,23 @@ def shape_geometry(cod, size):
     return _protect_mask(size, bbox), obj, bbox
 
 
-def master_geometry(im, cod):
+def master_geometry(im, cod, zone_x=(0.15, 0.85)):
     """Геометрия предмета по самому кадру мастера: на ровном тёмном фоне предмет
     — это яркие блики (hi) и контуры. Основание (y1) — самый нижний ряд, где
     яркие блики занимают заметную ширину (тень под предметом отсекается).
     Возвращает (protect_mask, obj_mask, bbox). Если бликов нет, фон «грязный»
     (диск/поверхность — старые мастера) или геометрия неправдоподобна —
-    фолбэк на силуэт прайса."""
+    фолбэк на силуэт прайса.
+
+    zone_x — окна по X, в которых ищутся блики/контуры: для одиночного предмета
+    это 15% полей по краям, для сцен раунда 7 (группа стекла со сдвигом вправо,
+    og:image) — шире, иначе правый предмет обрезается детекцией."""
     W, H = im.size
     L = im.convert('L')
     hi = L.point(lambda v: 255 if v > 205 else 0).filter(ImageFilter.MaxFilter(5))
     zone = Image.new('L', (W, H), 0)
     ImageDraw.Draw(zone).rectangle(
-        (int(W * 0.15), int(H * 0.04), int(W * 0.85), H), fill=255)
+        (int(W * zone_x[0]), int(H * 0.04), int(W * zone_x[1]), H), fill=255)
     hi = ImageChops.multiply(hi, zone)
     total = sum(hi.histogram()[1:])
     if total < 300:  # нет ярких бликов — фолбэк
@@ -288,10 +294,10 @@ def master_geometry(im, cod):
     return _protect_mask((W, H), (x0, y0, x1, y1)), obj, (x0, y0, x1, y1)
 
 
-def frame_geometry(im, cod):
+def frame_geometry(im, cod, zone_x=(0.15, 0.85)):
     """Геометрия кадра в целевом разрешении: морфология считается в референсном
     размере (см. ref_copy), мягкие маски и bbox растягиваются во весь кадр."""
-    protect, obj, bbox = master_geometry(ref_copy(im), cod)
+    protect, obj, bbox = master_geometry(ref_copy(im), cod, zone_x)
     if bbox is None:
         return None, None, None
     if abs(_S - 1.0) > 1e-3:
@@ -522,13 +528,36 @@ def rim_glow(im, obj_mask, strength=0.5, color=(70, 130, 230), blur_r=18):
     return ImageChops.screen(im, ImageChops.multiply(glow, edge.convert('RGB')))
 
 
+def save_fit(im, path, q, max_kb=None):
+    """JPEG с потолком веса (раунд 7: hero ≤ 350 КБ, обложки/og ≤ 200 КБ):
+    сначала снижаем качество, потом — размер. Поле фона гладкое, поэтому
+    качество падает незаметно."""
+    if not max_kb:
+        save_jpeg(im, path, q)
+        return q
+    limit = int(max_kb) * 1024
+    cur = im
+    for qq in range(q, 66, -4):
+        save_jpeg(cur, path, qq)
+        if os.path.getsize(path) <= limit:
+            return qq
+    k = 0.94
+    while os.path.getsize(path) > limit and k > 0.72:
+        cur = cur.resize((max(1, int(cur.width * k)), max(1, int(cur.height * k))),
+                         Image.LANCZOS)
+        save_jpeg(cur, path, 80)
+        k *= 0.94
+    return 80
+
+
 def glow(path, out, *, near=0.55, wide=0.30, bg_blur=18, edge=14,
          bg_ref=None, bg_box=None, bg_w=1.0, bg_r=90, field_r=120,
          bg_smooth=150, bg_grow=26, bg_feather=34, bg_mix=0.92, bg_wall=26,
          clear=0.72, refract=1.05, clear_detail=0.92, surface=False, refl=0.0,
          shadow=0.0, rim=0.4, cod=None, band_gain=0.22, surface_fade=170,
          fade=True, fade_color=(5, 7, 13), fade_start=0.30, fade_over=1.15,
-         long_side=None, card=None, q=95, qc=88, qpath=None):
+         long_side=None, card=None, q=95, qc=88, qpath=None,
+         max_kb=None, zone_x=(0.15, 0.85)):
     """Мастер → финальный кадр (и, если задано, производный кадр карточки).
     Все шаги считаются в целевом разрешении: set_scale() подгоняет оптику."""
     im = Image.open(path).convert('RGB')
@@ -537,7 +566,7 @@ def glow(path, out, *, near=0.55, wide=0.30, bg_blur=18, edge=14,
         if k > 1.001:
             size = (int(round(im.width * k)), int(round(im.height * k)))
             im = upscale(im, size)
-    protect, obj_mask, bbox = frame_geometry(im, cod) if cod else (None, None, None)
+    protect, obj_mask, bbox = frame_geometry(im, cod, zone_x) if cod else (None, None, None)
     field = ref_field(bg_ref, bg_box, im.size, field_r) if bg_ref and os.path.exists(bg_ref) else None
     if bg_blur:
         im = bokeh(im, bg_blur, edge)
@@ -567,7 +596,7 @@ def glow(path, out, *, near=0.55, wide=0.30, bg_blur=18, edge=14,
         im = rim_glow(im, obj_mask, rim)
     if fade:
         im = fade_to_bg(im, fade_color, fade_start, fade_over)
-    save_jpeg(im, out, q)
+    save_fit(im, out, q, max_kb)
     if card:
         scale = float(card) / max(im.size)
         if scale < 0.999:
@@ -576,8 +605,42 @@ def glow(path, out, *, near=0.55, wide=0.30, bg_blur=18, edge=14,
             save_jpeg(small, qpath or out.replace('.jpg', '-card.jpg'), qc)
 
 
+OVERRIDES_PATH = os.path.join(ROOT, 'data', 'photo_overrides.json')
+
+# ключи реестра data/photo_overrides.json, которые могут переопределять дефолт
+PARAM_KEYS = ('near', 'wide', 'rim', 'bg_blur', 'edge', 'bg_w', 'bg_r', 'field_r',
+              'bg_smooth', 'bg_grow', 'bg_feather', 'bg_mix', 'bg_wall', 'clear',
+              'refract', 'clear_detail', 'surface', 'refl', 'shadow', 'band_gain',
+              'surface_fade', 'fade', 'fade_start', 'fade_over', 'q', 'qc')
+
+
+def load_overrides():
+    """Точечные отклонения от дефолтов по позициям/сценам (раунд 7): у чайника
+    --clear съедает деревянную ручку, у шотов и гравировок блики узора
+    пропадают — реестр правит это без новых флагов."""
+    try:
+        with open(OVERRIDES_PATH, encoding='utf-8') as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def match_only(token, jid):
+    """Маски --only: AG* (товары), hero-*, covers/*, og; сокращения hero/covers."""
+    t = token.strip()
+    if t == 'hero':
+        t = 'hero-*'
+    if t == 'covers':
+        t = 'covers/*'
+    return fnmatch.fnmatchcase(jid, t) or jid == t
+
+
 def main():
+    import scenes
     ap = argparse.ArgumentParser()
+    ap.add_argument('--dry', action='store_true',
+                    help='напечатать эффективные параметры по каждой позиции/сцене и ничего не писать')
     ap.add_argument('--long', type=int, default=3840,
                     help='длинная сторона финального кадра, px (3840 = 4K); 0 — оставить размер мастера')
     ap.add_argument('--card', type=int, default=1280,
@@ -623,40 +686,80 @@ def main():
     ap.add_argument('--only', default='', help='список кодов через запятую, например AG0001,AG0004')
     args = ap.parse_args()
 
-    set_scale(args.long)
+    box = tuple(int(v) for v in args.bg_box.split(',')) if args.bg_ref and args.bg_box else None
+    ref = args.bg_ref if os.path.isabs(args.bg_ref) else os.path.join(ROOT, args.bg_ref)
+    if args.bg_ref and not os.path.exists(ref):
+        ref = os.path.join(ROOT, args.bg_ref)
 
-    only = {c.strip() for c in args.only.split(',') if c.strip()}
-    n = 0
+    # ── задания: товары (4K + карточка) и сцены раунда 7 (hero/обложки/og) ──
+    jobs = []
     for f in sorted(os.listdir(DIR)):
         if not f.startswith('st-AG') or not f.endswith('.jpg'):
             continue
         cod = f[3:-4]
-        if only and cod not in only:
+        jobs.append(dict(id=cod, master=os.path.join(DIR, f),
+                         out=os.path.join(DIR, f'{cod}.jpg'),
+                         qpath=os.path.join(DIR, f'{cod}-card.jpg'),
+                         scale=args.long, long_side=args.long, card=args.card,
+                         q=args.q, qc=args.qc, max_kb=None, zone_x=(0.15, 0.85)))
+    webapp = os.path.join(ROOT, 'webapp')
+    for sc in scenes.SCENES:
+        if not os.path.exists(scenes.master_path(sc, webapp)):
+            continue  # мастер ещё не собран — compose_masters.py
+        jobs.append(dict(id=sc['id'], master=scenes.master_path(sc, webapp),
+                         out=os.path.join(webapp, sc['out']), qpath=None,
+                         scale=max(sc['size']), long_side=None, card=None,
+                         q=sc.get('q', 92), qc=88, max_kb=sc.get('max_kb'),
+                         zone_x=sc.get('zone_x', (0.15, 0.85)),
+                         # правила кадра раунда 7: фон — одно поле референса;
+                         # у товаров свой исторический дефолт 0.6 (идемпотентность).
+                         # fade_start позже: в широком кадре группа стекла доходит
+                         # до 0.8W — при товарном 0.30 правое стекло темнеет
+                         sdef=dict(bg_mix=0.92, fade_start=sc.get('fade_start', 0.55),
+                                 fade_over=sc.get('fade_over', 1.15))))
+
+    only = [t.strip() for t in args.only.split(',') if t.strip()]
+    if only:
+        jobs = [j for j in jobs if any(match_only(t, j['id']) for t in only)]
+
+    overrides = load_overrides()
+    n = 0
+    for j in jobs:
+        kw = dict(near=args.near, wide=args.wide, bg_blur=args.bg_blur, edge=args.edge,
+                  bg_ref=args.bg_ref and ref, bg_box=box, bg_w=args.bg_w, bg_r=args.bg_r,
+                  fade_color=tuple(int(v) for v in args.fade_color.split(',')),
+                  fade=args.fade > 0, fade_start=args.fade_start, fade_over=args.fade_over,
+                  field_r=args.field_r, bg_smooth=args.bg_smooth, bg_grow=args.bg_grow,
+                  bg_mix=args.bg_mix, bg_wall=args.bg_wall, clear=args.clear,
+                  refract=args.refract, clear_detail=args.clear_detail,
+                  bg_feather=args.bg_feather, surface=args.surface, refl=args.refl,
+                  shadow=args.shadow, rim=args.rim,
+                  band_gain=args.band_gain, surface_fade=args.surface_fade)
+        kw.update(j.get('sdef', {}))
+        ov = {k: v for k, v in overrides.get(j['id'], {}).items() if k in PARAM_KEYS}
+        kw.update(ov)
+        if args.dry:
+            eff = '  '.join(f'{k}={kw[k]}' for k in
+                            ('clear', 'near', 'wide', 'rim', 'bg_mix', 'clear_detail', 'fade'))
+            note = f'  ← реестр: {", ".join(ov)}' if ov else ''
+            print(f"{j['id']:>24}  {eff}{note}")
             continue
-        master = os.path.join(DIR, f)
-        cur = os.path.join(DIR, f'{cod}.jpg')
-        box = tuple(int(v) for v in args.bg_box.split(',')) if args.bg_ref and args.bg_box else None
-        ref = args.bg_ref if os.path.isabs(args.bg_ref) else os.path.join(ROOT, args.bg_ref)
-        if not os.path.exists(ref):
-            ref = os.path.join(ROOT, args.bg_ref)
-        glow(master, cur,
-             near=args.near, wide=args.wide, bg_blur=args.bg_blur, edge=args.edge,
-             bg_ref=args.bg_ref and ref, bg_box=box, bg_w=args.bg_w, bg_r=args.bg_r,
-             fade_color=tuple(int(v) for v in args.fade_color.split(',')),
-             fade=args.fade > 0, fade_start=args.fade_start, fade_over=args.fade_over,
-             field_r=args.field_r, bg_smooth=args.bg_smooth, bg_grow=args.bg_grow, bg_mix=args.bg_mix,
-             bg_wall=args.bg_wall, clear=args.clear, refract=args.refract,
-             clear_detail=args.clear_detail,
-             bg_feather=args.bg_feather, surface=args.surface, refl=args.refl,
-             shadow=args.shadow, rim=args.rim, cod=cod,
-             band_gain=args.band_gain, surface_fade=args.surface_fade,
-             long_side=args.long, card=args.card, q=args.q, qc=args.qc,
-             qpath=os.path.join(DIR, f'{cod}-card.jpg'))
+        set_scale(j['scale'])
+        if not os.path.exists(j['master']):
+            print(f"[photos] {j['id']}: нет мастера {j['master']} — пропуск")
+            continue
+        glow(j['master'], j['out'],
+             long_side=j['long_side'], card=j['card'], q=j['q'], qc=j['qc'],
+             qpath=j['qpath'], max_kb=j['max_kb'], zone_x=j['zone_x'],
+             cod=j['id'], **kw)
         n += 1
+    if args.dry:
+        print(f'[photos] --dry: {len(jobs)} заданий, ничего не записано')
+        return
     size = f'{args.long} px (4K)' if args.long >= 3000 else (f'{args.long} px' if args.long else 'размер мастера')
-    print(f'[photos] раунд 5: {n} кадров в {size}'
+    print(f'[photos] раунд 7: {n} кадров (товары в {size}'
           + (f' + карточки {args.card} px' if args.card else '')
-          + f', качество JPEG {args.q}/{args.qc}')
+          + f', качество JPEG {args.q}/{args.qc})')
 
 
 if __name__ == '__main__':
