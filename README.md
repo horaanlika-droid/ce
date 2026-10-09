@@ -116,7 +116,9 @@ python3 scripts/build_catalog.py NEW_PRICE.pdf
 
 ## Следующая задача: раунд 2 — футуристичный флер
 
-**Статус.** В `webapp/assets/products/` сейчас 18 студийных кадров (тёмная студия, glow по умолчанию, мастера `st-<COD>.jpg`) и 7 позиций без кадров: AG0021–AG0027. Для них витрина показывает белые фолбэк-панели `fb-<COD>.jpg`, которые не совпадают с референсами. Раунд 2 заменяет все 25 кадров. Все 25 файлов `fb-<COD>.jpg` удаляются, когда новые кадры готовы.
+**Статус.** В `webapp/assets/products/` 20 студийных кадров раунда 1 (тёмная студия, мастера `st-<COD>.jpg`), 5 позиций без кадров
+(AG0021–AG0026, кроме AG0022) — для них витрина показывала белые фолбэк-панели `fb-<COD>.jpg`. Раунд 2 заменяет **все 25** кадров
+и снимает фолбэки. Выполнено 13 из 25, детали — в конце раздела в блоке «Статус (раунд 2)».
 
 ### Цель
 
@@ -263,7 +265,86 @@ glass and read as fine bright line-work catching the light — do not remove it 
 5. Контактные листы «src | новое» и «до | после». Точечная перегенерация отдельных позиций.
 6. Удалить `fb-*.jpg`, перевести этот раздел в историю, сделать коммит.
 
-**Вне скоупа:** hero-слайды (`webapp/assets/brand/`), данные каталога, вёрстка и цены.
+**Вне скоупа раунда 2:** данные каталога, вёрстка и цены (hero-слайды и обложки ушли в раунд 3).
+
+---
+
+---
+
+## Следующая задача: раунд 3 — свет бренда на hero, обложках и OG-превью
+
+**Предварительно.** Закрыть раунд 2: доснять 12 позиций (`AG0013 AG0014 AG0016 AG0017 AG0018 AG0019 AG0020 AG0021
+AG0023 AG0024 AG0025 AG0026`), прогнать `build_photos.py`, удалить `fb-<COD>.jpg` и `onerror`-фолбэки
+(`webapp/js/ui.js`, `webapp/js/views/home.js`, `webapp/js/views/collections.js`).
+
+**Проблема.** Товарные кадры теперь живут в полуночно-синем свете референсов, а всё остальное — нет:
+hero-слайды на главной это сырые кроки из `IMG_1420/1421.png` (свет, цвет и зерно чужие), у страницы
+коллекции нет обложки вообще, `og:image` нет — ссылка из Telegram и WhatsApp разворачивается серым прямоугольником.
+
+### Цель
+
+1. **Hero — из новых мастеров, а не из Instagram.** 5 слайдов: 2–3 бокала из одного кадра серии на том же световом поле.
+   Десктоп 16:9 (1920×1080), мобильный 4:5 (1080×1350); раскладка `IMG_1440.png` (текст слева, стекло справа) и
+   `IMG_1441.png` (стекло по центру, подпись снизу).
+2. **Обложки коллекций.** 10 кадров 16:9 (1280×720) — по одному на коллекцию, в `webapp/assets/covers/<coll-id>.jpg`;
+   ставить их в шапку `renderCollection()` и в рельс `.coll-row` вместо миниатюры товара.
+3. **OG-превью.** `webapp/assets/brand/og.jpg` 1200×630 + `<meta property="og:image">`, `og:title`, `og:description`,
+   `twitter:card` в `webapp/index.html`, и `link rel="image_src"` для старых клиентов.
+4. **Один свет на весь магазин.** Низкочастотное поле фона во всех новых кадрах приводится к тому же референсу,
+   что и товары: `--bg-ref IMG_1440.png --bg-box 430,100,948,478`. Проверка — пробы R-канала фона в пределах 14–82.
+
+### Состав кадров
+
+| Актив | Размер | Состав (позиции из каталога) |
+|---|---|---|
+| `brand/hero-01.jpg` | 1920×1080 | AG0008 + AG0021 + AG0009 — пара «витринная», как в `IMG_1440` |
+| `brand/hero-02.jpg` | 1920×1080 | AG0002 + AG0006 — две длинные ножки, силуэты |
+| `brand/hero-03.jpg` | 1920×1080 | AG0015 + AG0016 + AG0012 — Retro Asia, гравировка в контровом |
+| `brand/hero-04.jpg` | 1920×1080 | AG0020 + AG0022 — Levitating, «невесомость» |
+| `brand/hero-05.jpg` | 1920×1080 | AG0027 — чайник, единственный тёплый акцент |
+| `brand/hero-0N-m.jpg` | 1080×1350 | те же составы, вертикальная нарезка под мобильный hero |
+| `covers/retro-asia.jpg` … | 1280×720 | флагман коллекции + одна позиция рядом; список коллекций — `COLLECTIONS` в `scripts/build_catalog.py` |
+| `brand/og.jpg` | 1200×630 | AG0015 + AG0008 + AG0009, слева оставляем чистое место под `og:title` (текст не вжигать) |
+
+### Как собирать
+
+Композиция собирается скриптом из готовых мастеров, генератор нужен только если требуется новый свет или фон:
+
+```bash
+python3 .arena/prep_refs.py                                   # референсы света и формы
+python3 scripts/build_photos.py --only hero,covers,og         # боке + bg-match + bloom на новых активах
+```
+
+В `scripts/build_photos.py` для этого нужен флаг `--only` — список масок имён вместо `AG*.jpg`
+(`AG*` — товары, `hero-*`, `covers/*`, `og`). Мастер для hero и обложек — `st-<имя>.jpg` рядом с файлом,
+чтобы шаг оставался идемпотентным.
+
+Промт для генерации фона/сцены (если одного композита мало) — тот же, что в раунде 2, только вместо
+одного бокала — группа и горизонтальный кадр:
+
+```text
+Photorealistic luxury studio scene for the brand Cocktail Embassy. TWO {OBJS} grouped on a glossy dark navy floor,
+off-centre to the right in a horizontal 16:9 frame, left half of the frame kept empty and dark for a headline.
+Each glass is reconstructed faithfully from its supplier photo: {FEATS}. Shared light: deep midnight-navy backdrop
+#0a0e18 to #13203a, ice-blue #cfe1ff key light, faint cyan #7fe3ff rim, crisp thin white highlights along rims and
+walls, soft even glow across the whole background (no spotlight hotspot, no black corners, no visible horizon seam),
+gently blurred backdrop, thin atmospheric haze. Very thin-walled, weightless, soft elliptical floating shadows.
+No text, no logos, no props, no people, no clouds or smoke, no liquid.
+```
+
+### Критерии готовности
+
+- `webapp/assets/brand/hero-01..05.jpg` и вертикальные `-m`-версии собраны из новых мастеров, пропорции 16:9 и 4:5;
+  в `home.js` больше нет прямых ссылок на кроки Instagram, старые `hero-06..12.jpg` удалены.
+- 10 обложек в `webapp/assets/covers/`, шапка страницы коллекции и рельс `.coll-row` рендерят их (с фолбэком на
+  `productImg()`, если обложки нет).
+- `og.jpg` 1200×630, `og:image` доступен по абсолютному URL (`PUBLIC_URL`), валидатор Telegram/WhatsApp отдаёт картинку.
+- Пробы R-канала фона во всех новых кадрах — 14…82, как у товаров; ни один кадр не темнее `(8,10,18)` по углам.
+- Текст и интерфейс в генерируемые кадры не попадают: надпись hero остаётся HTML (`hero .cap`), в PNG её нет.
+
+### Вне скоупа
+
+Новые ракурсы и анимации, 3D, видеоподложка, цены и данные каталога, рассылка.
 
 ---
 
