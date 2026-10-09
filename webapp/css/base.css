@@ -1,0 +1,125 @@
+/* ══════════════════════════════════════════════════════════════
+   Cocktail Embassy · design tokens & base
+   Premium dark "crystal" theme: deep navy, ice light, glass blur.
+   ══════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #05070d;
+  --bg-2: #0a0f1c;
+  --bg-3: #0e1526;
+  --card: rgba(255, 255, 255, 0.045);
+  --card-solid: #0d1424;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-soft: rgba(255, 255, 255, 0.05);
+  --text: #f2f5fb;
+  --mut: #929aab;
+  --dim: #5d6577;
+  --accent: #8ab6ff;
+  --accent-soft: rgba(138, 182, 255, 0.14);
+  --ice: #cfe1ff;
+  --cta-bg: #f4f6fb;
+  --cta-text: #0a0e18;
+  --danger: #ff6b6b;
+  --ok: #5dd39e;
+
+  --r-s: 12px;
+  --r-m: 18px;
+  --r-l: 24px;
+  --r-xl: 32px;
+
+  --blur: saturate(180%) blur(22px);
+  --nav-h: 54px;
+  --tab-h: 56px;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --shadow: 0 18px 50px -18px rgba(0, 0, 0, 0.7);
+  --glow: 0 0 60px -18px rgba(120, 170, 255, 0.45);
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable",
+          "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display",
+             "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior-y: none;
+}
+
+body {
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgba(64, 106, 190, 0.16), transparent 60%),
+    radial-gradient(900px 600px at -10% 30%, rgba(48, 84, 160, 0.10), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+img { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+input, textarea, select { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+svg { display: block; }
+
+::selection { background: rgba(138, 182, 255, 0.28); }
+
+::-webkit-scrollbar { width: 0; height: 0; }
+
+h1, h2, h3, h4 {
+  font-family: var(--display);
+  margin: 0;
+  letter-spacing: -0.022em;
+  font-weight: 700;
+}
+
+/* ── boot splash ─────────────────────────────────────────────── */
+.boot {
+  position: fixed; inset: 0;
+  display: grid; place-content: center; gap: 14px; justify-items: center;
+  background: var(--bg);
+  z-index: 99;
+  transition: opacity .45s var(--ease), visibility .45s;
+}
+.boot.done { opacity: 0; visibility: hidden; }
+.boot-logo {
+  width: 64px; height: 64px; color: var(--ice);
+  display: grid; place-items: center;
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(138,182,255,.16), rgba(138,182,255,.03));
+  border: 1px solid var(--line);
+  animation: boot-pulse 1.6s ease-in-out infinite;
+}
+.boot-logo svg { width: 34px; height: 34px; }
+.boot-name { font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: var(--mut); }
+@keyframes boot-pulse { 50% { transform: scale(1.06); box-shadow: var(--glow); } }
+
+/* ── utilities ───────────────────────────────────────────────── */
+.mut { color: var(--mut); }
+.dim { color: var(--dim); }
+.num { font-variant-numeric: tabular-nums; }
+.row { display: flex; align-items: center; }
+.grow { flex: 1; min-width: 0; }
+.center { text-align: center; }
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* thin elegant scrollbars on desktop */
+@media (pointer: fine) {
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+}
