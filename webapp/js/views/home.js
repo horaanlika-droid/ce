@@ -3,6 +3,7 @@
  */
 import { h, esc, productImg } from '../ui.js';
 import { icons } from '../icons.js';
+import { assetUrl } from '../assets.js';
 import { state } from '../state.js';
 import { navbar, productCard } from '../components.js';
 import { go } from '../router.js';
@@ -21,7 +22,7 @@ export async function render() {
         <div class="slides">
           ${HEROES.map((n, i) => `
             <div class="slide">
-              <img src="assets/brand/hero-${n}.jpg" alt="">
+              <img src="${assetUrl(`assets/brand/hero-${n}.jpg`)}" alt="">
               ${i === 0 ? `
               <div class="cap">
                 <span class="eyebrow">${esc(brand.tagline)}</span>

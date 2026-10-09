@@ -53,6 +53,34 @@ function detectPublicUrl() {
   return url.replace(/\/+$/, '');
 }
 
+/**
+ * Метка версии ассетов кадров: самый свежий mtime в webapp/assets/products.
+ * Витрина кэширует тяжёлые 4K-файлы на неделю под неизменными именами, а
+ * перегонка стиля (scripts/build_photos.py) меняет mtime → браузер заберёт
+ * новые кадры сам, без ручного сброса кэша. Пересчитывается не чаще раза в
+ * минуту и только пока процесс живёт.
+ */
+let _assetsV = null;
+let _assetsAt = 0;
+export function assetsVersion() {
+  const dir = path.join(ROOT, 'webapp', 'assets', 'products');
+  const now = Date.now();
+  if (_assetsV !== null && now - _assetsAt < 60_000) return _assetsV;
+  let newest = 0;
+  try {
+    for (const f of fs.readdirSync(dir)) {
+      if (!f.endsWith('.jpg')) continue;
+      const m = fs.statSync(path.join(dir, f)).mtimeMs;
+      if (m > newest) newest = m;
+    }
+  } catch {
+    /* каталога нет — метки нет */
+  }
+  _assetsAt = now;
+  _assetsV = newest ? Math.floor(newest / 1000).toString(36) : '';
+  return _assetsV;
+}
+
 export const config = {
   root: ROOT,
   mode: (str('MODE', 'all') || 'all').toLowerCase(), // all | web | bot

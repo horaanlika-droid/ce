@@ -33,7 +33,7 @@ export async function render({ id }) {
     <div class="scroll">
       <div class="product-split">
         <div class="pview">
-          <div class="stage">${productImg(p)}</div>
+          <div class="stage" data-stage>${productImg(p, '', 'full')}</div>
         </div>
         <div class="pinfo">
           <span class="coll">${esc(cat?.title || p.collection)}</span>
@@ -70,6 +70,10 @@ export async function render({ id }) {
       </div>
     </div>
   </div>`);
+
+  // rim glow сцены набирает силу плавно, при появлении карточки товара
+  const stage = el.querySelector('[data-stage]');
+  requestAnimationFrame(() => stage.classList.add('lit'));
 
   const sim = el.querySelector('[data-sim]');
   if (sim) for (const s of similar) sim.appendChild(productCard(s));

@@ -4,7 +4,7 @@
 import crypto from 'node:crypto';
 import path from 'node:path';
 import express from 'express';
-import { config, paymentMethods, ROOT } from './config.js';
+import { config, paymentMethods, ROOT, assetsVersion } from './config.js';
 import { db, save, upsertUser } from './store.js';
 import { validateInitData } from './lib/telegram-auth.js';
 import {
@@ -113,6 +113,7 @@ export function createServer() {
       guest: Boolean(req.guest),
       botUsername: config.telegram.username,
       supportEnabled: true,
+      assetsV: assetsVersion(),
     });
   }));
 
@@ -295,7 +296,9 @@ export function createServer() {
 
   app.use(express.static(WEBAPP_DIR, {
     setHeaders(res, filePath) {
-      if (/assets\//.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=86400');
+      // 4K-кадры тяжёлые (≈0.6 МБ): неделю кэша + immutable, а перегонку стиля
+      // ловит метка ?v= из assetsVersion() — старые файлы под тем же именем
+      if (/assets\//.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
       else res.setHeader('Cache-Control', 'no-cache');
     },
   }));
