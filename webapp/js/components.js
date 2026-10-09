@@ -53,8 +53,11 @@ export function productCard(product) {
   const fav = state.favorites.includes(product.id);
   const inCart = state.cart.some((it) => it.id === product.id);
   const coll = state.categories.find((c) => c.id === product.collection);
+  // .picked — позиция уже выбрана (лежит в корзине): rim glow горит постоянно,
+  // но не на полную силу; hover/тап докручивают его до максимума (см. app.css)
   return h(`
-    <article class="pcard" data-product="${product.id}">
+    <article class="pcard ${inCart ? 'picked' : ''}" data-product="${product.id}"
+             tabindex="0" role="link" aria-label="${esc(product.name)}">
       <div class="ph">
         ${productImg(product)}
         <div class="flags">
@@ -137,6 +140,7 @@ export function bindShell(root) {
       await addToCart(id, 1);
       t.classList.add('in');
       t.innerHTML = icons.check;
+      t.closest('.pcard')?.classList.add('picked');  // карточка «выбрана» — glow нарастает
       tg.haptic('success');
       toast(`${product.name} added to cart`);
       return;
@@ -156,7 +160,26 @@ export function bindShell(root) {
     }
 
     if (t.dataset.product) {
+      selectCard(t);
       go(`/product/${t.dataset.product}`);
     }
   });
+
+  // клавиатура: карточка — ссылка, Enter/Space открывают её с тем же разгоном glow
+  root.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const t = e.target.closest?.('[data-product]');
+    if (!t) return;
+    e.preventDefault();
+    selectCard(t);
+    go(`/product/${t.dataset.product}`);
+  });
+}
+
+/** Подсвечивает выбранную карточку до перехода: уходящий экран видно ~240 ms. */
+function selectCard(card) {
+  const el = card.closest('.pcard') || card;
+  el.classList.add('sel');
+  tg.haptic('light');
+  setTimeout(() => el.classList.remove('sel'), 700);
 }

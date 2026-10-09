@@ -1,3 +1,5 @@
+import { assetUrl } from './assets.js';
+
 /**
  * UI-хелперы: создание DOM, форматирование, toast.
  */
@@ -56,13 +58,30 @@ export function toast(text) {
  * подложкой (заполняет всю область), а сам кадр лежит поверх целиком — так
  * стекло не обрезается ни в карточке 3:4, ни в квадратной сцене.
  * Если студийного кадра ещё нет — включается галерейная панель fb-<COD>.jpg.
+ *
+ * Разрешение: мастер `<COD>.jpg` — 4K (2576×3840), он нужен большой сцене
+ * карточки товара и pinch-zoom. Для сеток, рельсов и миниатюр тот же кадр
+ * в размере карточки — `<COD>-card.jpg` (859×1280, ≈65 KB вместо ≈630 KB),
+ * иначе 25 тяжёлых файлов в ленте разорвали бы мобильный трафик. Оба файла
+ * делает `scripts/build_photos.py`. Подложка-блюр всегда берёт маленький кадр:
+ * он всё равно размывается в пятно.
+ *
+ * variant: 'card' (по умолчанию) | 'full' (4K).
  */
-export function productImg(product, cls = '') {
-  const src = product.image;
-  const fb = `assets/products/fb-${product.id}.jpg`;
-  return `<span class="pshot ${cls}" style="--shot:url('${src}')">
-    <img src="${src}" alt="${esc(product.name)}" loading="lazy"
-      onerror="this.onerror=null;this.closest('.pshot').classList.add('fb');this.src='${fb}'">
+export function productImg(product, cls = '', variant = 'card') {
+  const base = product.image || '';
+  const full = assetUrl(base);
+  const card = assetUrl(base.replace(/\.jpg$/, '-card.jpg'));
+  const src = variant === 'full' ? full : card;
+  const fb = assetUrl(`assets/products/fb-${product.id}.jpg`);
+  // 404 на -card.jpg (пайплайн ещё не прогнан) → сначала пробуем 4K, потом фолбэк
+  const retry = variant === 'full'
+    ? `this.onerror=null;this.closest('.pshot').classList.add('fb');this.src='${fb}'`
+    : `this.onerror=function(){this.onerror=null;this.closest('.pshot').classList.add('fb');this.src='${fb}'};this.src='${full}'`;
+  return `<span class="pshot ${cls}" style="--shot:url('${card}')">
+    <img src="${src}" alt="${esc(product.name)}" loading="lazy" decoding="async"
+      onerror="${retry}">
+    <i class="rim" aria-hidden="true"></i>
   </span>`;
 }
 

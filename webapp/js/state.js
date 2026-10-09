@@ -4,6 +4,7 @@
  * локально — оптимистичные обновления.
  */
 import { api } from './api.js';
+import { setAssetsV } from './assets.js';
 
 export const state = {
   config: null,
@@ -27,6 +28,7 @@ export function notify(event) {
 export async function boot() {
   const [config, catalog] = await Promise.all([api.config(), api.catalog()]);
   state.config = config;
+  setAssetsV(config.assetsV);
   state.categories = catalog.categories;
   state.products = catalog.products;
   const [fav, cart] = await Promise.all([api.favorites(), api.cart()]);
