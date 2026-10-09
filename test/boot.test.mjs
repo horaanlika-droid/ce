@@ -65,6 +65,19 @@ test('витрина поднимается и /health показывает ка
 
   const home = await fetch(`http://127.0.0.1:${port}/`);
   assert.equal(home.status, 200, 'главная отдаётся');
+  for (const missing of ['/assets/products/not-a-photo.avif', '/js/missing.js', '/api/missing']) {
+    const res = await fetch(`http://127.0.0.1:${port}${missing}`);
+    assert.equal(res.status, 404, `${missing} is not disguised as SPA HTML`);
+    assert.match(res.headers.get('cache-control'), /no-store/);
+  }
+  const cfg = await (await fetch(`http://127.0.0.1:${port}/api/config`)).json();
+  assert.match(cfg.media.version, /^[a-f0-9]{16}$/);
+  assert.ok(cfg.media.files['assets/app/hero-01.jpg']);
+  const photo = await fetch(`http://127.0.0.1:${port}${cfg.media.files['assets/products/AG0015-card.jpg'].url}`);
+  assert.equal(photo.status, 200);
+  assert.match(photo.headers.get('content-type'), /image\/jpeg/);
+  assert.doesNotMatch(photo.headers.get('cache-control'), /immutable/);
+
   assert.match(app.log, /\[boot\] mode=web · web=ok:/);
 });
 

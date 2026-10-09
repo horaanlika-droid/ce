@@ -57,7 +57,7 @@ export async function render({ id }) {
 
       <div class="wrap">
         <div class="sticky-cta">
-          <button class="btn block" data-main ${p.priceAed == null ? 'disabled' : ''}>
+          <button class="btn block" data-main>
             ${p.priceAed == null ? 'Request price' : `Add to cart · ${p.priceAed} AED`} ${icons.bag}
           </button>
         </div>
@@ -97,8 +97,8 @@ export async function render({ id }) {
   };
 
   el.querySelector('[data-main]').addEventListener('click', add);
-  if (inTelegram && p.priceAed != null) {
-    tg.mainButton.show(`Add to cart · AED ${p.priceAed}`, add);
+  if (inTelegram) {
+    tg.mainButton.show(p.priceAed == null ? 'Request price' : `Add to cart · AED ${p.priceAed}`, add);
     el._cleanup = () => tg.mainButton.hide();
   }
 

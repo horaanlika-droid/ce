@@ -71,7 +71,9 @@ async function navigate(first = false) {
 
   const screen = document.createElement('div');
   screen.className = 'screen' + (m.route.opts.noTab ? ' no-tab' : '');
+  if (el.querySelector('.scroll')) el.classList.add('page');
   screen.appendChild(el);
+  screen._cleanup = () => el._cleanup?.();
 
   if (isBack) {
     stack = stack.slice(0, stack.findIndex((s) => s.path === path) + 1);

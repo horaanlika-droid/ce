@@ -105,7 +105,7 @@ async function main() {
       b.classList.toggle('on', b.dataset.nav === path);
     }
     // скролл-контейнер нового экрана — наверх
-    screen.querySelector('.scroll')?.scrollTo(0, 0);
+    screen.querySelector('.scroll')?.scrollTo?.(0, 0);
   });
 
   // deep-links: ?order=CE-1 / start_param=order_CE-1
@@ -129,9 +129,7 @@ function registerSW() {
   if (!('serviceWorker' in navigator)) return;
   const local = ['localhost', '127.0.0.1'].includes(location.hostname);
   if (location.protocol !== 'https:' && !local) return;
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => { /* офлайн — не критично */ });
-  });
+  navigator.serviceWorker.register('/sw.js').catch(() => { /* not critical */ });
 }
 
 main().catch((err) => {

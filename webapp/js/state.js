@@ -4,7 +4,7 @@
  * локально — оптимистичные обновления.
  */
 import { api } from './api.js';
-import { setAssetsV } from './assets.js';
+import { setAssetsV, setAssetsManifest, assetUrl } from './assets.js';
 
 export const state = {
   config: null,
@@ -29,11 +29,14 @@ export async function boot() {
   const [config, catalog] = await Promise.all([api.config(), api.catalog()]);
   state.config = config;
   setAssetsV(config.assetsV);
+  setAssetsManifest(config.media);
+  document.documentElement.style.setProperty('--app-background', `url("${assetUrl('assets/app/background.jpg')}")`);
   state.categories = catalog.categories;
   state.products = catalog.products;
-  const [fav, cart] = await Promise.all([api.favorites(), api.cart()]);
-  state.favorites = fav.ids || [];
-  state.cart = cart.items || [];
+  // A personal API failure must not hide the public catalog.
+  const [fav, cart] = await Promise.allSettled([api.favorites(), api.cart()]);
+  state.favorites = fav.status === 'fulfilled' ? fav.value.ids || [] : [];
+  state.cart = cart.status === 'fulfilled' ? cart.value.items || [] : [];
 }
 
 export const productById = (id) => state.products.find((p) => p.id === id) || null;

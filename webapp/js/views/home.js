@@ -3,7 +3,7 @@
  */
 import { h, esc, productImg, coverImg, withExt } from '../ui.js';
 import { icons } from '../icons.js';
-import { assetUrl } from '../assets.js';
+import { assetUrl, imageSources } from '../assets.js';
 import { state } from '../state.js';
 import { navbar, productCard } from '../components.js';
 import { go } from '../router.js';
@@ -17,33 +17,31 @@ const CAPS = ['Serves that catch the light', 'Crystal, blown by hand', 'Built fo
  * берёт первый, у которого сошёлся и media, и type.
  */
 function heroSources(n) {
-  const desk = assetUrl(`assets/brand/hero-${n}.jpg`);
-  const mob = assetUrl(`assets/brand/hero-${n}-m.jpg`);
-  return [
-    `<source type="image/avif" media="(min-width: 720px)" srcset="${withExt(desk, 'avif')}">`,
-    `<source type="image/webp" media="(min-width: 720px)" srcset="${withExt(desk, 'webp')}">`,
-    `<source media="(min-width: 720px)" srcset="${desk}">`,
-    `<source type="image/avif" srcset="${withExt(mob, 'avif')}">`,
-    `<source type="image/webp" srcset="${withExt(mob, 'webp')}">`,
-  ].join('');
+  const desk = assetUrl(`assets/app/hero-${n}.jpg`);
+  const mob = assetUrl(`assets/app/hero-${n}-m.jpg`);
+  return imageSources(desk, '(min-width: 768px)')
+    + `<source media="(min-width: 768px)" srcset="${desk}">`
+    + imageSources(mob);
+
 }
 
 export async function render() {
   const brand = state.config.brand;
   const texts = state.config.texts;
-  const popular = state.products.filter((p) => p.isHit || p.isNew).slice(0, 8);
+  const featured = state.products.filter((p) => p.isHit || p.isNew);
+  const popular = (featured.length ? featured : state.products).slice(0, 8);
 
   const el = h(`<div>
     ${navbar({ brand: true, right: `<button class="nav-btn" data-go="/support" aria-label="Support">${icons.chat}</button>` })}
     <div class="scroll">
       <section class="hero" data-hero aria-roledescription="carousel"
                aria-label="Cocktail Embassy — light and glass" aria-live="off">
-        <div class="slides">
+        <div class="slides" id="hero-slides">
           ${HEROES.map((n, i) => `
             <div class="slide" role="group" aria-roledescription="slide"
                  aria-label="${i + 1} of ${HEROES.length}"${i === 0 ? '' : ' aria-hidden="true"'}>
               <picture>${heroSources(n)}
-                <img src="${assetUrl(`assets/brand/hero-${n}-m.jpg`)}" alt=""
+                <img src="${assetUrl(`assets/app/hero-${n}-m.jpg`)}" alt=""
                      decoding="async"${i === 0 ? '' : ' loading="lazy"'}>
               </picture>
               ${i === 0 ? `
@@ -115,7 +113,7 @@ export async function render() {
     const count = state.products.filter((p) => p.collection === c.id).length;
     const cover = state.products.find((p) => p.collection === c.id);
     const row = h(`
-      <button class="coll-row" style="width: 240px; flex: none;" data-go="/collection/${c.id}">
+      <button class="coll-row"  data-go="/collection/${c.id}">
         <span class="th">${coverImg(c.id, cover)}</span>
         <span class="t"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></span>
         <span class="cnt">${count}</span>

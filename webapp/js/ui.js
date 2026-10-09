@@ -1,4 +1,4 @@
-import { assetUrl } from './assets.js';
+import { assetUrl, published, imageSources } from './assets.js';
 
 /**
  * UI-хелперы: создание DOM, форматирование, toast.
@@ -53,61 +53,32 @@ export function toast(text) {
   toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2400);
 }
 
-/**
- * Кадр товара, как в бренд-референсах: тот же кадр, сильно размытый, служит
- * подложкой (заполняет всю область), а сам кадр лежит поверх целиком — так
- * стекло не обрезается ни в карточке 3:4, ни в квадратной сцене.
- * Если студийного кадра ещё нет — включается галерейная панель fb-<COD>.jpg.
- *
- * Разрешение: мастер `<COD>.jpg` — 4K (2576×3840), он нужен большой сцене
- * карточки товара и pinch-zoom. Для сеток, рельсов и миниатюр тот же кадр
- * в размере карточки — `<COD>-card.jpg` (859×1280, ≈65 KB вместо ≈630 KB),
- * иначе 25 тяжёлых файлов в ленте разорвали бы мобильный трафик. Оба файла
- * делает `scripts/build_photos.py`. Подложка-блюр всегда берёт маленький кадр:
- * он всё равно размывается в пятно.
- *
- * Раунд 8 — три формата одного кадра: `<picture>` с AVIF (q55, ≈1/12 веса
- * JPEG) и WebP (q70, ≈1/5); JPEG остаётся фолбэком для WebView Telegram и
- * старых браузеров. Производные пишет `build_photos.py --derive-only` из того
- * же финального кадра, поэтому оптика и кромка = --bg у всех трёх совпадают.
- * Пока кадр едет, контейнер держит блюр-подложку --shot, а сам кадр
- * проявляется (opacity 0→1 + scale 1.04→1, класс .ready — см. initFrames).
- *
- * variant: 'card' (по умолчанию) | 'full' (4K).
- */
+/** Frames are visible by default. The release manifest supplies only real
+ * derivatives; custom images keep their URL exactly, including query strings. */
 export function productImg(product, cls = '', variant = 'card') {
   const base = product.image || '';
-  const full = assetUrl(base);
-  const card = assetUrl(base.replace(/\.jpg$/, '-card.jpg'));
+  const fallback = published(`assets/products/fb-${product.id}.jpg`);
+  const full = base ? assetUrl(base) : fallback || '/assets/brand/placeholder.svg';
+  const card = published(base.replace(/\.jpg$/, '-card.jpg')) || full;
   const src = variant === 'full' ? full : card;
-  const fb = assetUrl(`assets/products/fb-${product.id}.jpg`);
-  // цепочку фолбэков 404 (карточка → 4K → fb-панель) ведёт initFrames(): внутри
-  // <picture> подмена src не спасает, пока живы <source>
-  return `<span class="pshot ${cls}" style="--shot:url('${card}')">
+  return `<span class="pshot ${cls}">
     <picture>${sources(src)}
-      <img src="${src}" alt="${esc(product.name)}" loading="lazy" decoding="async"
-        data-full="${full}" data-fb="${fb}">
-    </picture>
-    <i class="rim" aria-hidden="true"></i>
+      <img src="${esc(src)}" alt="${esc(product.name)}" loading="lazy" decoding="async"
+        data-full="${esc(full)}" data-fb="${esc(fallback)}">
+    </picture><i class="rim" aria-hidden="true"></i>
   </span>`;
 }
 
-/**
- * Обложка коллекции (раунд 7): кадр 1280×720 из того же пайплайна, что и
- * товары, — кладётся в рельс `.coll-row` и в шапку страницы коллекции вместо
- * миниатюры товара. Если обложки нет (404) — фолбэк на productImg-кадр:
- * --shot и src переключаются на карточку товара, панель не ломается.
- */
+/** Covers are separate artwork, including for an empty/custom collection. */
 export function coverImg(collId, product, cls = '') {
-  const url = assetUrl(`assets/covers/${collId}.jpg`);
-  if (!product) return `<span class="pshot ${cls}"></span>`;
-  const fb = assetUrl((product.image || '').replace(/\.jpg$/, '-card.jpg'));
-  return `<span class="pshot ccover ${cls}" style="--shot:url('${url}')">
+  const base = product?.image || '';
+  const fb = published(base.replace(/\.jpg$/, '-card.jpg')) || assetUrl(base);
+  const url = published(`assets/covers/${collId}.jpg`) || fb || '/assets/brand/placeholder.svg';
+  return `<span class="pshot ccover ${cls}">
     <picture>${sources(url)}
-      <img src="${url}" alt="${esc(product.name)}" loading="lazy" decoding="async"
-        data-fb="${fb}">
-    </picture>
-    <i class="rim" aria-hidden="true"></i>
+      <img src="${esc(url)}" alt="${esc(product?.name || collId)}" loading="lazy" decoding="async"
+        data-fb="${esc(fb)}">
+    </picture><i class="rim" aria-hidden="true"></i>
   </span>`;
 }
 
@@ -115,14 +86,9 @@ export function plural(n, one, many) {
   return n === 1 ? one : many;
 }
 
-/**
- * Раунд 8 — <source> для <picture>: браузер, который не знает формат, просто
- * пройдёт мимо, поэтому отдельная проверка поддержки не нужна. Расширение
- * подставляется в URL до `?v=`, чтобы метка версии кадров работала и тут.
- */
+/** Codec URLs are supplied by the server registry, not string guesses. */
 export function sources(jpgUrl) {
-  return `<source type="image/avif" srcset="${withExt(jpgUrl, 'avif')}">
-          <source type="image/webp" srcset="${withExt(jpgUrl, 'webp')}">`;
+  return imageSources(jpgUrl);
 }
 
 export function withExt(url, ext) {
@@ -139,9 +105,16 @@ export function initFrames() {
     const img = e.target;
     if (!(img instanceof HTMLImageElement)) return;
     const shot = img.closest('.pshot');
-    if (!shot) return;
+    if (!shot && !img.closest('.hero .slide')) return;
     // сначала убираем <source>: пока они на месте, браузер берёт их, а не src
-    img.parentElement?.querySelectorAll('source').forEach((s) => s.remove());
+    const codecs = img.parentElement?.querySelectorAll('source');
+    if (codecs?.length) {
+      codecs.forEach((s) => s.remove());
+      const jpeg = img.getAttribute('src');
+      img.removeAttribute('src');
+      img.src = jpeg;
+      return;
+    }
     const { full, fb } = img.dataset;
     if (full && !img.dataset.triedFull) {
       img.dataset.triedFull = '1';
@@ -150,12 +123,16 @@ export function initFrames() {
     }
     if (fb && !img.dataset.triedFb) {
       img.dataset.triedFb = '1';
-      shot.classList.add('fb');             // нет и 4K → галерейная панель
-      shot.style.setProperty('--shot', `url('${fb}')`);
+      shot?.classList.add('fb');             // нет и 4K → галерейная панель
+      shot?.style.setProperty('--shot', `url('${fb}')`);
       img.src = fb;
       return;
     }
-    shot.classList.add('fb');
+    shot?.classList.add('fb');
+    if (!img.dataset.triedPlaceholder) {
+      img.dataset.triedPlaceholder = '1';
+      img.src = '/assets/brand/placeholder.svg';
+    }
   }, true);
 
   document.addEventListener('load', (e) => {

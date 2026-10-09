@@ -2,7 +2,8 @@
  * Мостик к Telegram WebApp. Вне Telegram всё деградирует в безопасные заглушки,
  * поэтому витрина работает и как обычный сайт.
  */
-const w = window.Telegram?.WebApp;
+const sdk = window.Telegram?.WebApp;
+const w = sdk?.initData ? sdk : null;
 
 if (w) {
   try {

@@ -2,6 +2,7 @@
  * Каталог: список коллекций + поиск; детальная страница коллекции.
  */
 import { h, esc, coverImg } from '../ui.js';
+import { assetUrl } from '../assets.js';
 import { icons } from '../icons.js';
 import { state } from '../state.js';
 import { navbar, productCard, emptyState } from '../components.js';
@@ -11,6 +12,7 @@ export async function renderList() {
     ${navbar({ brand: true, right: `<button class="nav-btn" data-go="/support" aria-label="Support">${icons.chat}</button>` })}
     <div class="scroll">
       <div class="wrap" style="padding-top: 14px; display: grid; gap: 14px;">
+        <section class="catalog-banner"><img src="${assetUrl('assets/app/collections.jpg')}" alt="" decoding="async"><div><h1>Collections</h1><p>Signature glassware for every serve.</p></div></section>
         <div class="searchbar">${icons.search}<input placeholder="Search glassware…" data-q></div>
         <div class="chips" data-chips>
           <button class="chip on" data-group="">All</button>

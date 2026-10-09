@@ -210,7 +210,7 @@
    coll-hero — свои), поэтому layout-прыжка нет: CLS = 0. */
 .pshot picture {
   display: block; position: relative; z-index: 1; width: 100%; height: 100%;
-  opacity: 0; transform: scale(1.04);
+  opacity: 1; transform: none;
   /* перспектива для tilt: rotateX/rotateY у img читаются как 3D-поворот */
   perspective: 900px;
   transition: opacity .5s var(--ease), transform .5s var(--ease);
@@ -461,7 +461,7 @@
 }
 .hero.ready::before { animation: none; opacity: 0; transition: opacity .5s var(--ease); }
 @keyframes hero-shimmer { to { background-position: -220% 0; } }
-.hero .slide picture { opacity: 0; transform: scale(1.04); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+.hero .slide picture { opacity: 1; transform: none; transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .hero .slide.ready picture { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   .hero::before { animation: none; opacity: 0; }
@@ -803,3 +803,100 @@
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Publication/layout repair: every route returns one page wrapper. The actual
+   scrollport must have a bounded flex height, otherwise the shell clips rows
+   and lazy images below the hero never intersect the viewport. */
+.screen > .page { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.screen .scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(var(--tab-h) + var(--safe-b) + 28px); }
+.screen.no-tab .scroll { padding-bottom: calc(var(--safe-b) + 110px); }
+/* Image visibility is not stateful. Missing/cached load events must never make
+   decoded glass invisible. Loading is browser-native, dimensions are stable. */
+.pshot picture, .hero .slide picture { opacity: 1; transform: none; }
+.hero::before { display: none; }
+.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pcard .price { flex-direction: column; gap: 1px; min-width: 0; }
+.pcard .name, .pcard .coll { overflow-wrap: anywhere; }
+.pcard .spec { display: block; padding: 0; border: 0; background: none; }
+.btn { min-height: 48px; height: auto; padding: 12px 22px; white-space: normal; }
+.btn.sm, .chip, .searchbar { min-height: 44px; }
+.navbar .nav-btn, .pcard .fav, .pcard .add { width: 44px; height: 44px; }
+.navbar .nav-btn::after, .pcard .fav::after, .pcard .add::after { display: none; }
+.prop .ic { margin-top: 0; }
+.specs .spec { min-width: 0; }
+.specs .spec b { overflow-wrap: anywhere; }
+.hero .slide { aspect-ratio: 4 / 5; }
+.hero .slide::after { background: linear-gradient(to top, rgba(5,7,13,.8), transparent 48%); }
+.hero .cap { padding: 18px 20px 60px; }
+.hero .cap h1 { font-size: clamp(24px, 6.5vw, 32px); max-width: 20ch; line-height: 1.1; }
+.hero .cap p { font-size: 13px; line-height: 1.4; }
+.hero .eyebrow { font-size: 9px; letter-spacing: .14em; }
+.hero .dots { left: 0; right: 0; bottom: 6px; justify-content: center; }
+.hero .dots .dot { margin: 0; }
+.hero .cta { width: 100%; margin-top: 12px; }
+.rail .coll-row { width: 180px; flex: none; display: grid; gap: 8px; padding: 10px; }
+.rail .coll-row .th { width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 12px; }
+.rail .coll-row .t b { font-size: 14px; }
+.rail .coll-row .t span { font-size: 11px; }
+.rail .coll-row > svg, .rail .coll-row .cnt { display: none; }
+.coll-row .th { width: 88px; height: 88px; }
+.coll-row .th .ccover img { object-fit: contain; padding: 0; }
+.catalog-banner { position: relative; aspect-ratio: 16 / 7; overflow: hidden; border-radius: 20px; }
+.catalog-banner img { width: 100%; height: 100%; object-fit: cover; }
+.catalog-banner > div { position: absolute; inset: 0; display: flex; flex-direction: column;
+  justify-content: flex-end; padding: 18px; background: linear-gradient(0deg, #05070dcc, transparent); }
+.catalog-banner h1 { font-size: 28px; }
+.catalog-banner p { font-size: 13px; margin: 4px 0 0; }
+@media (min-width: 768px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero .slide { aspect-ratio: 16 / 9; }
+  .hero .cap { width: 43%; padding: 28px 28px 64px; }
+  .hero .cap h1 { font-size: clamp(30px, 3.8vw, 50px); }
+  .hero .cta { width: auto; }
+  .hero .slide::after { background: linear-gradient(90deg, #05070d99, transparent 60%); }
+  .hero .dots { left: auto; right: 20px; }
+  .catalog-banner { max-height: 260px; }
+}
+@media (min-width: 1120px) {
+  .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .screen .scroll, .screen.no-tab .scroll { padding-bottom: 60px; }
+}
+@media (max-width: 360px) {
+  .wrap { padding-left: 12px; padding-right: 12px; }
+  .grid { gap: 8px; }
+  .pcard .info { padding: 10px; }
+  .pcard .price .aed { font-size: 15px; }
+  .hero .cap p, .hero .eyebrow { display: none; }
+  .coll-row { gap: 10px; padding: 10px; }
+  .coll-row .t b { font-size: 14px; }
+  .coll-row .t span { font-size: 11px; }
+}
+
+/* The product already contains its light field. Duplicating it as a blur and
+   adding a rectangular rim made the photo edge visible on the detail screen. */
+.pshot::before, .pshot .rim::after { display: none; }
+.pview .stage .rim { display: none; }
+.hero .cap { padding-top: 12px; }
+.hero .cap p { display: none; }
+.sticky-cta { bottom: calc(var(--tab-h) + var(--safe-b)); }
+.screen .scroll { padding-bottom: calc(var(--tab-h) + var(--safe-b) + 100px); }
+@media (min-width: 768px) {
+  .hero .cap p { display: block; }
+  .product-split .specs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1120px) {
+  .product-split .pinfo { padding: 10px 0 0; }
+}
+
+.section.wrap { margin-top: 30px; }
+.searchbar input { min-width: 0; }
+.section-head .link { min-height: 44px; flex: none; }
+/* Cart controls use real, non-overlapping 44px targets even at 320px. */
+.cline { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px 12px; }
+.cline .th { width: 64px; height: 74px; grid-row: span 2; }
+.cline .right { grid-column: 2; flex-direction: row; align-items: center; }
+.cline .rm, .stepper button { width: 44px; height: 44px; }
+.stepper button::after { display: none; }
+.stepper b { min-width: 20px; }

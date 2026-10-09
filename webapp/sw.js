@@ -16,7 +16,7 @@
  * стиля меняет метку, и браузер сквозь SW добирает свежие файлы сам.
  */
 
-const VERSION = 'ce-r8-2';
+const VERSION = 'ce-media-r10';
 const SHELL = `shell-${VERSION}`;
 const SHOTS = `shots-${VERSION}`;
 const SHOT_LIMIT = 120;
@@ -80,7 +80,7 @@ async function staleWhileRevalidate(req, cacheName, lru) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(req);
   const refresh = fetch(req).then((res) => {
-    if (res.ok) {
+    if (res.ok && (!req.url.includes('/assets/') || res.headers.get('Content-Type')?.startsWith('image/'))) {
       cache.put(req, res.clone()).then(() => (lru ? lruTouch(cache, req.url) : null));
     }
     return res;
@@ -112,6 +112,7 @@ self.addEventListener('fetch', (e) => {
 
   if (url.pathname.startsWith('/css/') || url.pathname.startsWith('/js/') ||
       url.pathname === '/manifest.webmanifest') {
-    e.respondWith(staleWhileRevalidate(req, SHELL, false));
+    // Online modules must belong to the current release, not yesterday's SW shell.
+    e.respondWith(fetch(req).catch(() => caches.match(req).then((r) => r || Response.error())));
   }
 });
