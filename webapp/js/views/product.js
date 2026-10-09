@@ -73,7 +73,11 @@ export async function render({ id }) {
 
   // rim glow сцены набирает силу плавно, при появлении карточки товара
   const stage = el.querySelector('[data-stage]');
-  requestAnimationFrame(() => stage.classList.add('lit'));
+  // reflow фиксирует стартовое состояние, иначе переход .lit может не отыграть
+  requestAnimationFrame(() => {
+    void stage.offsetWidth;
+    stage.classList.add('lit');
+  });
 
   const sim = el.querySelector('[data-sim]');
   if (sim) for (const s of similar) sim.appendChild(productCard(s));

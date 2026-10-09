@@ -88,26 +88,53 @@ h1, h2, h3, h4 {
   font-weight: 700;
 }
 
-/* ── boot splash ─────────────────────────────────────────────── */
+/* ── boot splash (длинный прелоадер) ─────────────────────────── */
 .boot {
   position: fixed; inset: 0;
-  display: grid; place-content: center; gap: 14px; justify-items: center;
-  background: var(--bg);
+  display: grid; place-items: center;
+  background:
+    radial-gradient(60% 45% at 50% 42%, rgba(138,182,255,.10), transparent 70%),
+    var(--bg);
   z-index: 99;
-  transition: opacity .45s var(--ease), visibility .45s;
+  transition: opacity .6s var(--ease), visibility .6s;
+  overflow: hidden;
 }
 .boot.done { opacity: 0; visibility: hidden; }
-.boot-logo {
-  width: 64px; height: 64px; color: var(--ice);
-  display: grid; place-items: center;
-  border-radius: 20px;
-  background: linear-gradient(160deg, rgba(138,182,255,.16), rgba(138,182,255,.03));
-  border: 1px solid var(--line);
-  animation: boot-pulse 1.6s ease-in-out infinite;
+.boot-stage {
+  display: grid; justify-items: center; gap: 16px;
+  animation: boot-in .9s var(--ease) both;
 }
-.boot-logo svg { width: 34px; height: 34px; }
+.boot-logo {
+  width: 104px; height: 104px; border-radius: 50%;
+  display: grid; place-items: center;
+  animation: boot-breathe 2.4s ease-in-out infinite;
+}
+.boot-logo svg { width: 104px; height: 104px; overflow: visible; }
 .boot-name { font-size: 13px; letter-spacing: .22em; text-transform: uppercase; color: var(--mut); }
-@keyframes boot-pulse { 50% { transform: scale(1.06); box-shadow: var(--glow); } }
+.boot-bar {
+  width: 140px; height: 2px; border-radius: 2px;
+  background: rgba(255,255,255,.08); overflow: hidden; margin-top: 6px;
+}
+.boot-bar span {
+  display: block; height: 100%; width: 100%;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  transform: translateX(-100%);
+  animation: boot-sweep 1.6s ease-in-out infinite;
+}
+.boot-foot {
+  position: absolute; left: 0; right: 0;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  font-size: 12px; letter-spacing: .08em; color: var(--dim);
+  opacity: 0; animation: boot-in 1s var(--ease) 1.2s forwards;
+}
+@keyframes boot-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes boot-draw { to { stroke-dashoffset: 0; } }
+@keyframes boot-breathe { 50% { transform: scale(1.05); filter: drop-shadow(0 0 22px rgba(138,182,255,.45)); } }
+@keyframes boot-sweep { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .boot-logo, .boot-bar span { animation: none; }
+}
 
 /* ── utilities ───────────────────────────────────────────────── */
 .mut { color: var(--mut); }
