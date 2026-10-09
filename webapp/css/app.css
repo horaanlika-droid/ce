@@ -48,6 +48,7 @@
   border-bottom: 1px solid var(--line-soft);
 }
 .navbar .nav-btn {
+  position: relative;
   width: 34px; height: 34px; flex: none;
   display: grid; place-items: center;
   border-radius: 50%;
@@ -55,6 +56,8 @@
   background: rgba(255, 255, 255, 0.07);
   transition: transform .2s var(--ease), background .2s;
 }
+/* раунд 8: тап-цель ≥ 44 px без роста визуального круга */
+.navbar .nav-btn::after { content: ""; position: absolute; inset: -6px; }
 .navbar .nav-btn:active { transform: scale(.9); }
 .navbar .nav-btn svg { width: 19px; height: 19px; }
 .nav-title {
@@ -193,13 +196,30 @@
   background-image: var(--shot);
   background-size: cover; background-position: 50% 46%;
   filter: blur(26px);
+  /* раунд 8: блюр-подложка уходит навстречу кадру (counter-shift) */
+  transform: translate3d(calc(var(--tx, 0) * var(--tilt-shift, 5px) * -1),
+                         calc(var(--ty, 0) * var(--tilt-shift, 5px) * -1), 0);
 }
 .pshot::after {
   content: ""; position: absolute; inset: 0;
   background: transparent;
 }
+/* раунд 8 — blur-up проявление: пока <img> едет, контейнер держит блюр-
+   подложку --shot; кадр приходит не «включается прямоугольником», а
+   проявляется (opacity 0→1 + scale 1.04→1). Аспекты заданы (.ph 3/4, hero и
+   coll-hero — свои), поэтому layout-прыжка нет: CLS = 0. */
+.pshot picture {
+  display: block; position: relative; z-index: 1; width: 100%; height: 100%;
+  opacity: 0; transform: scale(1.04);
+  /* перспектива для tilt: rotateX/rotateY у img читаются как 3D-поворот */
+  perspective: 900px;
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+}
+.pshot.ready picture { opacity: 1; transform: none; }
+/* фолбэк-панель тоже проявляем, но без увеличения (там свой drop-shadow) */
+.pshot.fb picture { transform: none; }
+
 .pshot img {
-  position: relative; z-index: 1;
   width: 100%; height: 100%; object-fit: contain;
   padding: 3.5% 2%; box-sizing: border-box;
   /* маски и drop-shadow здесь запрещены: тень по альфе = тёмный прямоугольник
@@ -208,15 +228,32 @@
   filter: none;
   /* --zoom: кадр намеренно с полями — немного приближаем, стекло крупнее,
      пустой тёмный фон уходит за границы области (overflow: hidden) */
-  transform: scale(var(--zoom, 1.08));
+  /* раунд 8 — tilt: кадр поворачивается ≤ 2.5° и смещается на --tilt-shift;
+     слой .rim и блюр-подложка (ниже) уходят навстречу — свет «плывёт».
+     --hz докручивает зум на hover, не сбрасывая tilt (см. правило .pcard:hover) */
+  transform:
+    translate3d(calc(var(--tx, 0) * var(--tilt-shift, 5px)),
+                calc(var(--ty, 0) * var(--tilt-shift, 5px)), 0)
+    rotateY(calc(var(--tx, 0) * var(--tilt-deg, 2.5deg)))
+    rotateX(calc(var(--ty, 0) * -1 * var(--tilt-deg, 2.5deg)))
+    scale(calc(var(--zoom, 1.08) * var(--hz, 1)));
   transform-origin: 50% 46%;
   transition: transform .6s var(--ease), filter .5s var(--ease);
+}
+/* пока tilt ведёт кадр, transform меняем без transition (rAF сам сглаживает),
+   иначе каждое событие мыши перезапускало бы 600 мс-твин и кадр «плыл» с лагом */
+.pshot.tilting img { transition: filter .5s var(--ease); will-change: transform; }
+@media (prefers-reduced-motion: reduce) {
+  .pshot picture { transform: none; transition-duration: .08s; }
+  .pshot img { transform: scale(var(--zoom, 1.08)); }
 }
 /* при выборе позиции стекло чуть «ловит» больше света — тот же плавный набор */
 @media (pointer: fine) { .pcard:hover .pshot img, .coll-row:hover .pshot img { filter: brightness(1.06) saturate(1.08); } }
 .pcard:active .pshot img, .pview .stage.lit .pshot img { filter: brightness(1.06) saturate(1.08); }
 .pcard .ph { --zoom: 1.16; }
-.pview .stage { --zoom: 1.06; --rim-blur: 130px; --rim-spread: 26px; }
+/* на экране товара амплитуда tilt ×1.5 (2.5°→3.75°, 5px→7.5px) */
+.pview .stage { --zoom: 1.06; --rim-blur: 130px; --rim-spread: 26px;
+  --tilt-deg: 3.75deg; --tilt-shift: 7.5px; }
 .rail .pcard { --rim-blur: 52px; --rim-spread: 10px; }
 .cline .pshot { --rim-blur: 26px; --rim-spread: 5px; }
 .coll-row .th { --zoom: 1.06; }
@@ -242,6 +279,9 @@
 .pshot .rim {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
   opacity: 0;
+  /* раунд 8: гало смещается навстречу кадру, свет «плывёт» по стеклу */
+  transform: translate3d(calc(var(--tx, 0) * var(--tilt-shift, 5px) * -1),
+                         calc(var(--ty, 0) * var(--tilt-shift, 5px) * -1), 0);
   transition: opacity .45s var(--ease);
 }
 .pshot .rim::before {  /* гало за стеклом */
@@ -317,7 +357,8 @@
   display: grid; place-items: center;
   overflow: hidden;
 }
-@media (pointer: fine) { .pcard:hover .pshot img { transform: scale(calc(var(--zoom, 1.08) * 1.04)); } }
+/* hover докручивает зум через --hz, чтобы не сбросить tilt-переменные */
+@media (pointer: fine) { .pcard:hover .pshot img { --hz: 1.04; } }
 .pcard .flags { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; z-index: 3; }
 .flag {
   height: 22px; padding: 0 9px; border-radius: 999px;
@@ -338,6 +379,8 @@
   color: var(--mut);
   transition: color .2s, transform .2s var(--ease);
 }
+/* тап-цель ≥ 44 px (круг остаётся 32) */
+.pcard .fav::after { content: ""; position: absolute; inset: -7px; }
 .pcard .fav:active { transform: scale(.85); }
 .pcard .fav.on { color: #ff7d9d; }
 .pcard .fav svg { width: 16px; height: 16px; }
@@ -347,12 +390,14 @@
 .pcard .spec { font-size: 11.5px; color: var(--mut); }
 .pcard .foot { margin-top: auto; padding-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pcard .add {
+  position: relative;
   width: 34px; height: 34px; flex: none; border-radius: 50%;
   display: grid; place-items: center;
   background: rgba(255,255,255,.08); border: 1px solid var(--line);
   color: var(--text);
   transition: all .2s var(--ease);
 }
+.pcard .add::after { content: ""; position: absolute; inset: -6px; }
 .pcard .add:active { transform: scale(.86); }
 .pcard .add.in { background: var(--accent); border-color: transparent; color: #08101f; }
 .pcard .add svg { width: 16px; height: 16px; }
@@ -406,6 +451,22 @@
 .hero .slide { position: relative; flex: none; width: 100%; aspect-ratio: 4 / 4.6; }
 .hero .slide picture { display: block; width: 100%; height: 100%; }
 .hero .slide img { width: 100%; height: 100%; object-fit: cover; }
+/* раунд 8 — blur-up + shimmer: до первого байта кадра герой держит скелетон;
+   как только слайд проявился (.ready), шиммер гаснет */
+.hero::before {
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background: linear-gradient(100deg, rgba(255,255,255,.03) 40%, rgba(255,255,255,.09) 50%, rgba(255,255,255,.03) 60%);
+  background-size: 220% 100%;
+  animation: hero-shimmer 1.4s linear infinite;
+}
+.hero.ready::before { animation: none; opacity: 0; transition: opacity .5s var(--ease); }
+@keyframes hero-shimmer { to { background-position: -220% 0; } }
+.hero .slide picture { opacity: 0; transform: scale(1.04); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+.hero .slide.ready picture { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .hero::before { animation: none; opacity: 0; }
+  .hero .slide picture { transform: none; }
+}
 .hero .slide::after {
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(to top, rgba(4,6,12,.92) 8%, rgba(4,6,12,.25) 45%, rgba(4,6,12,.05) 70%);
@@ -413,9 +474,32 @@
 .hero .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 20px; z-index: 2; }
 .hero .cap h1 { font-size: 32px; line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; }
 .hero .cap p { margin: 8px 0 0; color: #c4cddc; font-size: 14px; max-width: 34ch; }
-.hero .dots { position: absolute; right: 18px; bottom: 26px; z-index: 3; display: flex; gap: 5px; }
-.hero .dots i { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.32); transition: all .3s var(--ease); }
-.hero .dots i.on { width: 18px; background: #fff; }
+/* раунд 8 — точки и стрелки карусели: настоящие кнопки, тап-цель ≥ 44 px
+   (визуальная точка — маленький <i> внутри), aria-label в разметке (home.js) */
+.hero .dots { position: absolute; right: 8px; bottom: 12px; z-index: 3; display: flex; gap: 0; }
+.hero .dots .dot {
+  width: 44px; height: 44px; margin: -14px -11px;  /* визуальный зазор как был, но цель 44 */
+  display: grid; place-items: center; background: none; border: 0; cursor: pointer;
+}
+.hero .dots .dot i { display: block; width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.35); transition: all .3s var(--ease); }
+.hero .dots .dot.on i { width: 18px; background: #fff; }
+.hero .dots .dot:focus-visible { outline: 2px solid var(--accent); outline-offset: -8px; border-radius: 999px; }
+.hero-nav {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  border-radius: 50%; color: var(--ice);
+  background: rgba(5, 8, 14, .45); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.12);
+  opacity: 0; transition: opacity .3s var(--ease), transform .2s;
+}
+.hero-nav svg { width: 18px; height: 18px; }
+.hero-nav.prev { left: 10px; }
+.hero-nav.next { right: 10px; }
+.hero-nav.next svg { transform: rotate(180deg); }
+.hero-nav:active { transform: translateY(-50%) scale(.9); }
+@media (hover: hover) and (pointer: fine) { .hero:hover .hero-nav, .hero-nav:focus-visible { opacity: 1; } }
+@media (hover: none) { .hero-nav { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .hero .slides { transition-duration: .08s; } }
 .hero .cta { margin-top: 16px; }
 
 /* value props */
@@ -466,7 +550,9 @@
   border-radius: 999px; padding: 3px;
   margin-top: auto; align-self: flex-start;
 }
-.stepper button { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: var(--mut); transition: all .15s; }
+.stepper button { position: relative; width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: var(--mut); transition: all .15s; }
+/* тап-цель ≥ 44 px, визуально круг остаётся компактным */
+.stepper button::after { content: ""; position: absolute; inset: -8px; }
 .stepper button:active { transform: scale(.85); color: var(--text); }
 .stepper button svg { width: 13px; height: 13px; }
 .stepper b { min-width: 26px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }

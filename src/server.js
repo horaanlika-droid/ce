@@ -299,6 +299,11 @@ export function createServer() {
   app.use(express.static(WEBAPP_DIR, {
     index: false,
     setHeaders(res, filePath) {
+      // раунд 8: старый mime в express не знает .avif — отдаём верный тип,
+      // иначе <picture> получит octet-stream и пропустит производный кадр
+      if (filePath.endsWith('.avif')) res.setHeader('Content-Type', 'image/avif');
+      else if (filePath.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
+      else if (filePath.endsWith('.webmanifest')) res.setHeader('Content-Type', 'application/manifest+json');
       // 4K-кадры тяжёлые (≈0.6 МБ): неделю кэша + immutable, а перегонку стиля
       // ловит метка ?v= из assetsVersion() — старые файлы под тем же именем
       if (/assets\//.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=604800, immutable');

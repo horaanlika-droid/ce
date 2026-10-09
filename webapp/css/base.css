@@ -13,7 +13,9 @@
   --line-soft: rgba(255, 255, 255, 0.05);
   --text: #f2f5fb;
   --mut: #929aab;
-  --dim: #5d6577;
+  /* раунд 8 (a11y): --dim поднят до #7b8496 — контраст к --bg ≈ 5.3:1,
+     мелкий текст (COD, спеки) проходит WCAG AA ≥ 4.5:1 (было #5d6577 ≈ 3.4:1) */
+  --dim: #7b8496;
   --accent: #8ab6ff;
   --accent-soft: rgba(138, 182, 255, 0.14);
   --ice: #cfe1ff;
@@ -122,4 +124,16 @@ h1, h2, h3, h4 {
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
+}
+
+/* раунд 8 (a11y): видимый фокус с клавиатуры на всех интерактивных элементах.
+   Мышь/палец фокус-кольца не видят (:focus-visible), порядок фокуса — по DOM. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.pcard:focus-visible, .opt:focus-visible, .tab:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--r-l);
 }

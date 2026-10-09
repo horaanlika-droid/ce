@@ -8,6 +8,9 @@ import { go } from './router.js';
 import { tg } from './tg.js';
 import { toast } from './ui.js';
 
+// Возвращается строкой: navbar() всегда подставляется в шаблон `${navbar(...)}`,
+// а HTMLElement в template-строке дал бы «[object HTMLElement]» — баг, который
+// нашёлся только прогоном витрины в реальном браузере (раунд 8).
 export function navbar({ title, back: showBack = false, right = '', brand = false, sub = false } = {}) {
   return h(`
     <header class="navbar">
@@ -27,7 +30,7 @@ export function navbar({ title, back: showBack = false, right = '', brand = fals
         <button data-nav="/profile">Account</button>
       </nav>
       ${right}
-    </header>`);
+    </header>`).outerHTML;
 }
 
 export function tabbar(active) {

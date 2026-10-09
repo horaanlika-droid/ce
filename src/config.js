@@ -73,7 +73,9 @@ export function assetsVersion() {
   for (const dir of dirs) {
     try {
       for (const f of fs.readdirSync(dir)) {
-        if (!f.endsWith('.jpg')) continue;
+        // раунд 8: производные .avif/.webp тоже участвуют — перегонка любого
+        // формата обновляет метку ?v= у витрины
+        if (!/\.(jpg|avif|webp)$/.test(f)) continue;
         const m = fs.statSync(path.join(dir, f)).mtimeMs;
         if (m > newest) newest = m;
       }
