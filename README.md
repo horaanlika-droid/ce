@@ -271,7 +271,7 @@ glass and read as fine bright line-work catching the light — do not remove it 
 
 ---
 
-## Следующая задача: раунд 3 — свет бренда на hero, обложках и OG-превью
+## Следующая задача: раунд 3 — свет бренда на hero, обложках коллекций и обложке ссылки
 
 **Предварительно.** Закрыть раунд 2: доснять 12 позиций (`AG0013 AG0014 AG0016 AG0017 AG0018 AG0019 AG0020 AG0021
 AG0023 AG0024 AG0025 AG0026`), прогнать `build_photos.py`, удалить `fb-<COD>.jpg` и `onerror`-фолбэки
@@ -288,7 +288,7 @@ hero-слайды на главной это сырые кроки из `IMG_142
    `IMG_1441.png` (стекло по центру, подпись снизу).
 2. **Обложки коллекций.** 10 кадров 16:9 (1280×720) — по одному на коллекцию, в `webapp/assets/covers/<coll-id>.jpg`;
    ставить их в шапку `renderCollection()` и в рельс `.coll-row` вместо миниатюры товара.
-3. **OG-превью.** `webapp/assets/brand/og.jpg` 1200×630 + `<meta property="og:image">`, `og:title`, `og:description`,
+3. **Обложка ссылки.** `webapp/assets/brand/og.jpg` 1200×630 + `<meta property="og:image">`, `og:title`, `og:description`,
    `twitter:card` в `webapp/index.html`, и `link rel="image_src"` для старых клиентов.
 4. **Один свет на весь магазин.** Низкочастотное поле фона во всех новых кадрах приводится к тому же референсу,
    что и товары: `--bg-ref IMG_1440.png --bg-box 430,100,948,478`. Проверка — пробы R-канала фона в пределах 14–82.
