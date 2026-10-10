@@ -16,7 +16,7 @@
  * стиля меняет метку, и браузер сквозь SW добирает свежие файлы сам.
  */
 
-const VERSION = 'ce-media-r10';
+const VERSION = 'ce-media-r11';
 const SHELL = `shell-${VERSION}`;
 const SHOTS = `shots-${VERSION}`;
 const SHOT_LIMIT = 120;

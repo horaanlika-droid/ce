@@ -36,8 +36,9 @@ test('client: absolute deep-route URLs, verified codecs, exact custom URLs, inde
   assert.equal(assetUrl('assets/products/AG0001-card.jpg'), '/assets/products/AG0001-card.jpg?v=card');
   assert.match(assetUrl('assets/products/missing.jpg'), /^\/assets\//);
   const html = productImg({id: 'AG0001', name: 'Glass', image: 'assets/products/AG0001.jpg'});
-  assert.match(html, /image\/webp/);
-  assert.doesNotMatch(html, /image\/avif/);
+  // раунд 11: товар — прямой <img> на JPEG-карточку, без <picture>/<source>
+  assert.match(html, /<img src="\/assets\/products\/AG0001-card\.jpg\?v=card"/);
+  assert.doesNotMatch(html, /<picture|<source|image\/webp|image\/avif/);
   const url = 'https://example.com/photo.jpg?token=opaque';
   const custom = productImg({id: 'CUSTOM', name: 'Custom', image: url});
   assert.match(custom, /src="https:\/\/example.com\/photo.jpg\?token=opaque"/);

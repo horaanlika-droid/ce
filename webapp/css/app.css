@@ -219,6 +219,8 @@
 /* фолбэк-панель тоже проявляем, но без увеличения (там свой drop-shadow) */
 .pshot.fb picture { transform: none; }
 
+/* прямой <img> (без <picture>): кадр поверх блюр-подложки, без гейта по load */
+.pshot > img { position: relative; z-index: 1; display: block; }
 .pshot img {
   width: 100%; height: 100%; object-fit: contain;
   padding: 3.5% 2%; box-sizing: border-box;
@@ -388,6 +390,7 @@
 .pcard .coll { font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
 .pcard .name { font-size: 15px; font-weight: 650; letter-spacing: -0.015em; }
 .pcard .spec { font-size: 11.5px; color: var(--mut); }
+.pcard .cod { font-size: 10.5px; color: var(--dim); letter-spacing: .04em; }
 .pcard .foot { margin-top: auto; padding-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pcard .add {
   position: relative;
