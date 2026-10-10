@@ -903,3 +903,226 @@
 .cline .rm, .stepper button { width: 44px; height: 44px; }
 .stepper button::after { display: none; }
 .stepper b { min-width: 20px; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   Раунд 10 — визуал по референсу IMG_1441 (мокапы 9:41, mobile-first)
+   ══════════════════════════════════════════════════════════════════════
+   1) Свечение на стекле ПОСТОЯННОЕ: rim горит всегда — карточка, миниатюра
+      коллекции, строка корзины, сцена товара. hover / «выбрано» / клавиша
+      только докручивают яркость (filter: brightness), а не включают свет.
+      Блюр-подложку .pshot::before и прямоугольный rim::after из раунда 9 не
+      возвращаем: свет собран из радиальных слоёв поверх кадра и в режиме
+      screen, поэтому граница фотографии по-прежнему не читается.
+   2) Кадры держат мягкий внешний свет (box-shadow), как на мокапах.
+   3) Home hero — full-bleed под прозрачным навбаром, заголовок 600,
+      кнопка-обводка вместо белой плашки.
+   4) Строка коллекции: миниатюра 68 + kicker PREMIUM + название + описание
+      + шеврон; счётчик позиций уходит в aria-label и на страницу коллекции.
+   5) Товар: h1 = коллекция, подзаголовок = тип; спеки в одну строку без
+      карточек; Material / COD / чип ремесла / цена — списком; CTA с иконкой.
+   6) Корзина: AED + USD в строке, × в навбаре, блоки доверия без карточек.
+   */
+
+/* ── 1. постоянный glow ─────────────────────────────────────────────────
+   Проверено послойной эмуляцией CSS-света поверх реального кадра
+   (.arena/glow_tune.py, .arena/glow_scale.png): три радиальных слоя + мягкое
+   гало поднимают среднюю яркость кадра 31.5 → 40.3 — между строкой коллекций
+   на IMG_1441 (37.4) и сценой товара (42.3), доля выбитых пикселей при этом
+   остаётся <1%, то есть свет не «выбеливает» бокал. Кольцо-«овал» от
+   box-shadow оставлен очень широким и тусклым: на кадр ~173 px его блюр 62px —
+   это ~36% ширины, поэтому он читается как дымка, а не как рамка (в раунде 9
+   его рубили именно за прямоугольность; слоёв-рамок здесь нет). */
+.pshot .rim {
+  opacity: 1;
+  mix-blend-mode: screen;
+  background:
+    /* световое основание под ножкой — самое яркое и почти белое */
+    radial-gradient(34% 12% at 50% 82%, rgba(206, 231, 255, .26), rgba(206, 231, 255, 0) 74%),
+    /* лужа шире и тусклее */
+    radial-gradient(56% 22% at 50% 86%, rgba(150, 196, 255, .14), rgba(150, 196, 255, 0) 78%),
+    /* холодная дымка вокруг чаши */
+    radial-gradient(64% 46% at 50% 42%, rgba(128, 175, 255, .09), rgba(128, 175, 255, 0) 78%);
+  transition: opacity .45s var(--ease), filter .45s var(--ease);
+}
+.pshot .rim::before {
+  inset: 6% 10% 12%;
+  border-radius: 50% / 46%;
+  box-shadow:
+    0 0 var(--rim-blur, 62px) var(--rim-spread, 13px) rgba(132, 184, 255, .15),
+    0 0 calc(var(--rim-blur, 62px) / 3.4) calc(var(--rim-spread, 13px) / 5) rgba(206, 232, 255, .2);
+  filter: blur(12px);
+  transform: scale(1);
+}
+/* усиление — не вкл/выкл, а яркость; старые opacity-правила остаются совместимы */
+.pcard:hover .pshot .rim,
+.pcard:focus-visible .pshot .rim,
+.pcard.sel .pshot .rim,
+.pcard:active .pshot .rim,
+.pcard.picked .pshot .rim,
+.coll-row:hover .pshot .rim,
+.cline:hover .pshot .rim,
+.pview .stage.lit .pshot .rim { filter: brightness(1.32); }
+@media (prefers-reduced-motion: reduce) { .pshot .rim { transition-duration: .08s; } }
+
+/* изоляция: screen-смешивание осталось внутри кадра и не трогает тени карточки */
+.pshot { isolation: isolate; }
+/* позиция в корзине больше не «полусвечение»: свет постоянный у всех */
+.pcard.picked .pshot .rim { opacity: 1; }
+.pcard.picked .pshot .rim::before { transform: scale(1); }
+
+/* миниатюры: оптика поменьше, но горит так же постоянно */
+.coll-row .th .pshot { --rim-blur: 22px; --rim-spread: 5px; }
+.coll-row .th .pshot .rim::before { inset: 9% 12% 13%; }
+.cline .th .pshot { --rim-blur: 24px; --rim-spread: 5px; }
+.cline .th .pshot .rim::before { inset: 8% 12% 10%; }
+.rail .pcard { --rim-blur: 48px; --rim-spread: 10px; }
+
+/* ── 2. внешний свет карточек (постоянный) ─────────────────────────────── */
+.pcard {
+  box-shadow: 0 20px 44px -30px rgba(0, 0, 0, .9), 0 0 40px -26px rgba(126, 196, 255, .5);
+}
+.pcard:hover, .pcard:focus-visible, .pcard.sel, .pcard.picked {
+  box-shadow: 0 24px 52px -28px rgba(0, 0, 0, .92), 0 0 56px -18px rgba(126, 196, 255, .62);
+}
+.pcard.picked { border-color: rgba(138, 182, 255, .3); }
+.coll-row {
+  box-shadow: 0 16px 36px -28px rgba(0, 0, 0, .85), 0 0 34px -24px rgba(126, 196, 255, .4);
+}
+.cline {
+  box-shadow: 0 14px 32px -28px rgba(0, 0, 0, .8), 0 0 30px -24px rgba(126, 196, 255, .34);
+}
+
+/* ── 3. навбар: аватар как на мокапах, прозрачная шапка над hero ───────── */
+/* референс: в шапке только название — значок бокала уходит */
+.nav-brand .mark { display: none; }
+.nav-btn.avatar {
+  background: linear-gradient(180deg, #eef3fb, #c8d6e9);
+  color: #0b1220;
+  border: 1px solid rgba(255, 255, 255, .3);
+}
+.nav-btn.avatar svg { width: 20px; height: 20px; }
+
+/* ── 4. тап-бар: активный Home заливается, как в референсе ────────────── */
+.tab[data-tab="/"].on svg { fill: currentColor; }
+
+@media (max-width: 767.98px) {
+  /* hero уходит под строку состояния: навбар лежит поверх кадра без плашки */
+  .screen:has(.hero) .page { position: relative; }
+  .screen:has(.hero) .navbar {
+    position: absolute; inset: 0 0 auto; z-index: 4;
+    background: linear-gradient(180deg, rgba(5, 7, 13, .74), rgba(5, 7, 13, 0));
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    border-bottom: 0;
+  }
+  .screen:has(.hero) .scroll { padding-top: 0; }
+  .hero { margin: 0; border: 0; border-radius: 0; }
+  .hero .slide {
+    aspect-ratio: 4 / 5;
+    min-height: clamp(460px, calc(100vh - var(--tab-h) - var(--safe-b) - 26px), 780px);
+    min-height: clamp(460px, calc(100svh - var(--tab-h) - var(--safe-b) - 26px), 780px);
+  }
+  .hero .cap { padding: 0 18px 30px; }
+  .hero .cap .eyebrow { display: none; }
+  .hero .cap h1 { font-size: 30px; font-weight: 600; line-height: 1.14; letter-spacing: -.024em; max-width: 15ch; }
+  .hero .dots { left: 18px; right: auto; bottom: 12px; }
+  /* «Explore Collection» — обводка по стеклу, не белая плашка */
+  .hero .cta {
+    margin-top: 18px;
+    background: rgba(255, 255, 255, .05);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .42);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    box-shadow: 0 0 30px -16px rgba(126, 196, 255, .7);
+    font-weight: 600;
+  }
+  .hero .cta:active { transform: scale(.98); }
+}
+@media (min-width: 768px) {
+  .hero .cta {
+    background: rgba(255, 255, 255, .05); color: #fff;
+    border: 1px solid rgba(255, 255, 255, .36); box-shadow: none;
+  }
+}
+
+/* ── 5. экран каталога: баннер, чипы, строки коллекций ────────────────── */
+.catalog-banner { aspect-ratio: 16 / 10; border-radius: 24px; border: 1px solid var(--line-soft); }
+.catalog-banner > div { padding: 16px 18px 18px; background: linear-gradient(0deg, rgba(5, 7, 13, .92) 12%, rgba(5, 7, 13, .28) 58%, transparent); }
+.catalog-banner h1 { font-size: 26px; letter-spacing: -.03em; }
+.catalog-banner p { color: #c2ccdd; font-size: 13px; line-height: 1.4; max-width: 32ch; }
+
+.chips { gap: 6px; }
+.chip {
+  position: relative; height: 36px; min-height: 36px; padding: 0 14px;
+  font-size: 12.5px; border-color: rgba(255, 255, 255, .16);
+}
+.chip::after { content: ""; position: absolute; inset: -5px; }
+
+.coll-row { gap: 14px; padding: 12px 14px; border-radius: 20px; }
+.coll-row .th { width: 68px; height: 68px; border-radius: 16px; }
+.coll-row .t { display: grid; gap: 1px; }
+.coll-row .t .kicker {
+  font-size: 9px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dim);
+}
+.coll-row .t b { font-size: 15.5px; }
+.coll-row .t > span:not(.kicker) { margin-top: 2px; font-size: 12px; line-height: 1.35; color: #8b95a9; }
+.coll-row svg { width: 15px; height: 15px; }
+
+/* ── 6. экран товара ──────────────────────────────────────────────────── */
+.pview .stage {
+  aspect-ratio: 4 / 5;
+  background:
+    radial-gradient(64% 34% at 50% 84%, rgba(88, 134, 214, .2), transparent 72%),
+    var(--bg);
+}
+.pview .stage .pshot img { padding: 7% 5% 5%; }
+/* свет сцены больше не прячем: он горит постоянно (см. п. 1) */
+.pview .stage .rim { display: block; opacity: 1; }
+.pinfo { padding: 14px 18px 0; }
+.pinfo h1 { font-size: 27px; margin: 0; letter-spacing: -.03em; }
+.pinfo .ptype { margin: 3px 0 0; color: var(--mut); font-size: 14px; font-weight: 550; }
+.pinfo .desc { margin-top: 12px; font-size: 13.5px; line-height: 1.55; color: #8f9ab0; }
+.specrow { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 18px; }
+.specrow .spec {
+  background: none; border: 0; border-radius: 0; padding: 6px 2px 6px 10px;
+  align-items: center; min-width: 0;
+}
+.specrow .spec:first-child { padding-left: 0; }
+.specrow .spec + .spec { border-left: 1px solid var(--line-soft); }
+.specrow .spec .ic { color: #d7e6ff; }
+.pmeta {
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-soft);
+}
+.pmeta .ic { color: var(--accent); width: 20px; height: 20px; flex: none; }
+.pmeta .ic svg { width: 20px; height: 20px; }
+.pmeta small { display: block; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); font-weight: 700; }
+.pmeta b { font-size: 13.5px; font-weight: 600; }
+.pcod { margin-top: 10px; font-size: 12px; color: var(--dim); letter-spacing: .06em; }
+.pprice { margin: 18px 0 8px; }
+.pprice .price { flex-direction: column; align-items: flex-start; gap: 2px; }
+.pprice .price .aed { font-size: 24px; letter-spacing: -.03em; }
+.pprice .price .usd { font-size: 12.5px; }
+@media (min-width: 768px) {
+  .pinfo { padding: 18px 28px 0; }
+  .specrow { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: 520px; }
+}
+
+/* ── 7. корзина: две строки цены, доверие без карточек ────────────────── */
+.cline .price { flex-direction: column; align-items: flex-end; gap: 1px; }
+.cline .price .aed { font-size: 15px; }
+.cline .price .usd { font-size: 11.5px; color: var(--mut); font-weight: 550; }
+.cline .t b { font-size: 15px; }
+.totals {
+  margin-top: 12px; padding: 14px 2px 2px;
+  background: none; border: 0; border-radius: 0;
+  border-top: 1px solid var(--line-soft);
+}
+.trust { margin-top: 18px; gap: 4px; }
+.trust .prop {
+  background: none; border: 0; border-radius: 0; padding: 8px 2px; align-items: center;
+}
+.trust .prop .ic {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255, 255, 255, .05); border: 1px solid var(--line); color: var(--ice);
+}

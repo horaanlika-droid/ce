@@ -1,19 +1,22 @@
 /**
  * Каталог: список коллекций + поиск; детальная страница коллекции.
  */
-import { h, esc, coverImg } from '../ui.js';
+import { h, esc, coverImg, plural } from '../ui.js';
 import { assetUrl } from '../assets.js';
 import { icons } from '../icons.js';
 import { state } from '../state.js';
-import { navbar, productCard, emptyState } from '../components.js';
+import { navbar, productCard, emptyState, navActions, collectionRow } from '../components.js';
 
 export async function renderList() {
   const el = h(`<div>
-    ${navbar({ brand: true, right: `<button class="nav-btn" data-go="/support" aria-label="Support">${icons.chat}</button>` })}
+    ${navbar({ brand: true, right: navActions({ search: true }) })}
     <div class="scroll">
-      <div class="wrap" style="padding-top: 14px; display: grid; gap: 14px;">
-        <section class="catalog-banner"><img src="${assetUrl('assets/app/collections.jpg')}" alt="" decoding="async"><div><h1>Collections</h1><p>Signature glassware for every serve.</p></div></section>
-        <div class="searchbar">${icons.search}<input placeholder="Search glassware…" data-q></div>
+      <div class="wrap" style="padding-top: 12px; display: grid; gap: 12px;">
+        <section class="catalog-banner">
+          <img src="${assetUrl('assets/app/collections.jpg')}" alt="" decoding="async">
+          <div><h1>Collections</h1><p>Signature glassware sets for every mood and occasion.</p></div>
+        </section>
+        <div class="searchbar" data-search hidden>${icons.search}<input placeholder="Search glassware…" data-q></div>
         <div class="chips" data-chips>
           <button class="chip on" data-group="">All</button>
           <button class="chip" data-group="cocktail">Cocktail</button>
@@ -26,8 +29,16 @@ export async function renderList() {
   </div>`);
 
   const list = el.querySelector('[data-list]');
+  const search = el.querySelector('[data-search]');
   const input = el.querySelector('[data-q]');
   let group = '';
+
+  // референс: поиска на экране нет — он вызывается иконкой в навбаре
+  const openSearch = () => {
+    search.hidden = false;
+    input.focus();
+  };
+  el.addEventListener('click', (e) => { if (e.target.closest('[data-nav-search]')) openSearch(); });
 
   function draw() {
     const q = input.value.trim().toLowerCase();
@@ -39,14 +50,7 @@ export async function renderList() {
         && (!q || p.name.toLowerCase().includes(q) || c.title.toLowerCase().includes(q)));
       if (!items.length) continue;
       shown += items.length;
-      const cover = items[0];
-      list.appendChild(h(`
-        <button class="coll-row" data-go="/collection/${c.id}">
-          <span class="th">${coverImg(c.id, cover)}</span>
-          <span class="t"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></span>
-          <span class="cnt">${items.length}</span>
-          ${icons.chev}
-        </button>`));
+      list.appendChild(collectionRow(c, items));
     }
     if (!shown) list.appendChild(emptyState('search', 'Nothing found', 'Try a different request or reset filters'));
   }
@@ -72,9 +76,9 @@ export async function renderCollection({ id }) {
     ${navbar({ title: cat.title, back: true })}
     <div class="scroll">
       <div class="wrap" style="padding-top: 16px;">
-        <span class="eyebrow">${esc(cat.subtitle)}</span>
+        <span class="eyebrow">${esc(cat.group || 'Collection')} · ${items.length} ${plural(items.length, 'piece', 'pieces')}</span>
         <h1 style="font-size: 30px; margin: 8px 0 6px; letter-spacing: -0.03em;">${esc(cat.title)}</h1>
-        <p class="mut" style="margin: 0 0 16px; font-size: 14.5px; max-width: 46ch;">${esc(cat.blurb || '')}</p>
+        <p class="mut" style="margin: 0 0 16px; font-size: 14.5px; max-width: 46ch;">${esc(cat.blurb || cat.subtitle || '')}</p>
         <div class="coll-hero">${coverImg(id, items[0], 'wide')}</div>
         <div class="grid" data-grid></div>
       </div>
