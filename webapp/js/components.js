@@ -2,7 +2,7 @@
  * Переиспользуемые компоненты витрины.
  */
 import { icons } from './icons.js';
-import { h, esc, priceHtml, productImg } from './ui.js';
+import { h, esc, priceHtml, productImg, coverImg, plural } from './ui.js';
 import { state, toggleFavorite, addToCart, cartCount } from './state.js';
 import { go } from './router.js';
 import { tg } from './tg.js';
@@ -33,11 +33,23 @@ export function navbar({ title, back: showBack = false, right = '', brand = fals
     </header>`).outerHTML;
 }
 
+/**
+ * Правые кнопки навбара по референсу (IMG_1441): круглый аватар-профиль
+ * и, на экране каталога, поиск. Обе — реальные кнопки с тап-целью 44 px.
+ */
+export function navActions({ search = false } = {}) {
+  const searchBtn = search
+    ? `<button class="nav-btn" data-nav-search aria-label="Search glassware">${icons.search}</button>`
+    : '';
+  return `${searchBtn}<button class="nav-btn avatar" data-go="/profile" aria-label="Profile">${icons.user}</button>`;
+}
+
 export function tabbar(active) {
   const count = cartCount();
+  // раунд 10 (референс IMG_1441): пункт каталога — бокал, подпись в единственном числе
   const tabs = [
     ['/', 'home', 'Home'],
-    ['/collections', 'grid', 'Collections'],
+    ['/collections', 'glass', 'Collection'],
     ['/cart', 'bag', 'Cart'],
     ['/profile', 'user', 'Profile'],
   ];
@@ -87,6 +99,27 @@ export function productCard(product) {
 }
 
 const filledHeart = () => icons.heart.replace('<svg', '<svg fill="currentColor"');
+
+/**
+ * Строка коллекции: миниатюра с постоянным свечением, «PREMIUM», название,
+ * описание и шеврон — как в референсе IMG_1441. Общий для rail на главной
+ * и списка в каталоге, чтобы экраны не разъезжались.
+ */
+export function collectionRow(cat, products) {
+  const cover = products[0];
+  const n = products.length;
+  return h(`
+    <button class="coll-row" data-go="/collection/${esc(cat.id)}"
+            aria-label="${esc(cat.title)} — ${esc(cat.subtitle)}, ${n} ${plural(n, 'piece', 'pieces')}">
+      <span class="th">${coverImg(cat.id, cover)}</span>
+      <span class="t">
+        <span class="kicker">Premium</span>
+        <b>${esc(cat.title)}</b>
+        <span>${esc(cat.subtitle)}</span>
+      </span>
+      ${icons.chev}
+    </button>`);
+}
 
 export function grid(products) {
   return h(`<div class="grid">${products.map((p) => productCard(p).outerHTML).join('')}</div>`);

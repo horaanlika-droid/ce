@@ -9,8 +9,13 @@ import { tg, inTelegram } from '../tg.js';
 import { go, stackDepth } from '../router.js';
 
 export async function render() {
+  // референс: корзина — лист с крестиком справа, а не стрелкой назад
+  const closable = stackDepth() > 1;
   const el = h(`<div>
-    ${navbar({ title: 'Your Cart', back: stackDepth() > 1 })}
+    ${navbar({
+      title: 'Your Cart',
+      right: closable ? `<button class="nav-btn" data-act="back" aria-label="Close cart">${icons.x}</button>` : '',
+    })}
     <div class="scroll">
       <div class="wrap" style="padding-top: 16px;" data-body></div>
     </div>
@@ -44,10 +49,9 @@ export async function render() {
           <div class="totals">
             <div class="tr"><span>Items</span><b>${cartCount()}</b></div>
             <div class="tr"><span>Subtotal</span><b class="num">${money(t.subtotalAed)}</b></div>
-            <div class="tr"><span style="font-size:12px">≈ USD</span><b class="num" style="color:var(--mut)">${t.subtotalUsd}</b></div>
             <div class="grand">
               <span class="lbl">Total</span>
-              <span class="val num">${money(t.subtotalAed)}<small>delivery at checkout</small></span>
+              <span class="val num">${money(t.subtotalAed)}<small>USD ${t.subtotalUsd ?? 0} · delivery at checkout</small></span>
             </div>
           </div>
           <div class="trust">
@@ -57,22 +61,27 @@ export async function render() {
           </div>
         </div>
       </div>
-      <div class="sticky-cta"><button class="btn block" data-checkout>Proceed to checkout ${icons.arrow}</button></div></div>
+      <div class="sticky-cta"><button class="btn block" data-checkout>Proceed to Checkout ${icons.arrow}</button></div></div>
     `));
 
     const lines = body.querySelector('[data-lines]');
     for (const it of items) {
       const st = stepper(it.id, it.qty);
+      const coll = state.categories.find((c) => c.id === it.product.collection);
       const line = h(`
         <div class="cline">
           <div class="th" data-product="${it.product.id}">${productImg(it.product)}</div>
           <div class="t">
-            <b>${esc(it.product.name)}</b>
-            <span class="sub">${esc(it.product.collection)} · COD ${esc(it.product.id)}</span>
+            <b>${esc(coll?.title || it.product.name)}</b>
+            <span class="sub">${esc(it.product.name)} · COD ${esc(it.product.id)}</span>
           </div>
           <div class="right">
             <button class="rm" data-rm="${it.id}" aria-label="Remove">${icons.x}</button>
-            <div class="price"><span class="aed num">${money((it.product.priceAed || 0) * it.qty)}</span></div>
+            <div class="price">
+              <span class="aed num">${money((it.product.priceAed || 0) * it.qty)}</span>
+              ${it.product.priceUsd != null
+                ? `<span class="usd num">USD ${Math.round(it.product.priceUsd * it.qty * 10) / 10}</span>` : ''}
+            </div>
           </div>
         </div>`);
       line.querySelector('.t').appendChild(st);

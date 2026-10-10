@@ -1,11 +1,11 @@
 /**
  * Главная: hero-слайдер, коллекции, популярное, ценности бренда.
  */
-import { h, esc, productImg, coverImg, withExt } from '../ui.js';
+import { h, esc } from '../ui.js';
 import { icons } from '../icons.js';
 import { assetUrl, imageSources } from '../assets.js';
 import { state } from '../state.js';
-import { navbar, productCard } from '../components.js';
+import { navbar, productCard, navActions, collectionRow } from '../components.js';
 import { go } from '../router.js';
 
 const HEROES = ['01', '02', '03', '04', '05'];
@@ -32,7 +32,7 @@ export async function render() {
   const popular = (featured.length ? featured : state.products).slice(0, 8);
 
   const el = h(`<div>
-    ${navbar({ brand: true, right: `<button class="nav-btn" data-go="/support" aria-label="Support">${icons.chat}</button>` })}
+    ${navbar({ brand: true, right: navActions() })}
     <div class="scroll">
       <section class="hero" data-hero aria-roledescription="carousel"
                aria-label="Cocktail Embassy — light and glass" aria-live="off">
@@ -49,7 +49,7 @@ export async function render() {
                 <span class="eyebrow">${esc(brand.tagline)}</span>
                 <h1>${esc(texts.welcome)}</h1>
                 <p>${esc(brand.subtitle || '')}</p>
-                <button class="btn cta" data-go="/collections">Explore collection ${icons.arrow}</button>
+                <button class="btn cta" data-go="/collections">Explore Collection ${icons.arrow}</button>
               </div>` : `
               <div class="cap">
                 <span class="eyebrow">Cocktail Embassy · ${esc(brand.location || 'Dubai')}</span>
@@ -110,16 +110,8 @@ export async function render() {
   // collections rail
   const rail = el.querySelector('[data-coll-rail]');
   for (const c of state.categories) {
-    const count = state.products.filter((p) => p.collection === c.id).length;
-    const cover = state.products.find((p) => p.collection === c.id);
-    const row = h(`
-      <button class="coll-row"  data-go="/collection/${c.id}">
-        <span class="th">${coverImg(c.id, cover)}</span>
-        <span class="t"><b>${esc(c.title)}</b><span>${esc(c.subtitle)}</span></span>
-        <span class="cnt">${count}</span>
-        ${icons.chev}
-      </button>`);
-    rail.appendChild(row);
+    const items = state.products.filter((p) => p.collection === c.id);
+    if (items.length) rail.appendChild(collectionRow(c, items));
   }
 
   const pop = el.querySelector('[data-popular]');

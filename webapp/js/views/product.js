@@ -20,13 +20,11 @@ export async function render({ id }) {
   const specs = [
     p.volumeMl ? ['drop', 'Capacity', `${p.volumeMl} ml`] : null,
     p.heightMm ? ['ruler', 'Height', `${p.heightMm} mm`] : null,
-    p.diameterMm ? ['circle', 'Diameter', `Φ ${p.diameterMm} mm`] : null,
-    ['spark', 'Material', p.material || 'crystal glass'],
+    p.diameterMm ? ['circle', 'Ø', `${p.diameterMm} mm`] : null,
   ].filter(Boolean);
 
   const el = h(`<div>
     ${navbar({
-      title: cat?.title || '',
       back: true,
       right: `<button class="nav-btn" data-fav="${p.id}" aria-label="Favorite" style="color:${fav ? '#ff7d9d' : 'inherit'}">${fav ? icons.heart.replace('<svg', '<svg fill="currentColor"') : icons.heart}</button>`,
     })}
@@ -36,29 +34,31 @@ export async function render({ id }) {
           <div class="stage" data-stage>${productImg(p, '', 'full')}</div>
         </div>
         <div class="pinfo">
-          <span class="coll">${esc(cat?.title || p.collection)}</span>
-          <h1>${esc(p.name)}</h1>
+          <h1>${esc(cat?.title || p.name)}</h1>
+          <p class="ptype">${esc(cat ? p.name : (p.type || 'Crystal glassware'))}</p>
           <p class="desc">${esc(p.description || '')}</p>
+          <div class="specs specrow">
+            ${specs.map(([ic, label, val]) => `
+              <div class="spec"><span class="ic">${icons[ic]}</span><div><small>${label}</small><b>${esc(val)}</b></div></div>`).join('')}
+          </div>
+          <div class="pmeta">
+            <span class="ic">${icons.spark}</span>
+            <div><small>Material</small><b>${esc(p.material || 'Lead free crystal glass')}</b></div>
+          </div>
+          <div class="pcod">COD: ${esc(p.id)}</div>
           <div class="badges">
             ${p.craft ? `<i class="flag">${esc(p.craft)}</i>` : ''}
             ${p.note ? `<i class="flag">${esc(p.note)}</i>` : ''}
             ${p.isNew ? '<i class="flag new">New</i>' : ''}
           </div>
-          <div class="specs">
-            ${specs.map(([ic, label, val]) => `
-              <div class="spec"><span class="ic">${icons[ic]}</span><div><small>${label}</small><b>${esc(val)}</b></div></div>`).join('')}
-          </div>
-          <div style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px;">
-            ${priceHtml(p)}
-            <span class="dim" style="font-size: 12px;">COD ${esc(p.id)}</span>
-          </div>
+          <div class="pprice">${priceHtml(p)}</div>
         </div>
       </div>
 
       <div class="wrap">
         <div class="sticky-cta">
           <button class="btn block" data-main>
-            ${p.priceAed == null ? 'Request price' : `Add to cart · ${p.priceAed} AED`} ${icons.bag}
+            ${icons.bag}${p.priceAed == null ? 'Request price' : 'Add to Cart'}
           </button>
         </div>
 
