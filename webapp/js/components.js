@@ -74,7 +74,8 @@ export function productCard(product) {
       <div class="info">
         <span class="coll">${esc(coll?.title || product.collection)}</span>
         <span class="name">${esc(product.name)}</span>
-        <span class="spec">${product.volumeMl ? `${product.volumeMl} ml` : ''}${product.heightMm ? ` · H ${product.heightMm} mm` : ''}</span>
+        <span class="spec">${[product.volumeMl ? `${product.volumeMl} ml` : '', product.heightMm ? `H ${product.heightMm} mm` : '', product.diameterMm ? `Ø ${product.diameterMm} mm` : ''].filter(Boolean).join(' · ')}</span>
+        <span class="cod">COD: ${esc(product.id)}</span>
         <div class="foot">
           ${priceHtml(product)}
           <button class="add ${inCart ? 'in' : ''}" data-add="${product.id}" aria-label="Add to cart">

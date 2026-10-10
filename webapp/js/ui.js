@@ -53,8 +53,14 @@ export function toast(text) {
   toastTimer = setTimeout(() => toastEl.classList.remove('on'), 2400);
 }
 
-/** Frames are visible by default. The release manifest supplies only real
- * derivatives; custom images keep their URL exactly, including query strings. */
+/**
+ * Товарный кадр — обычный <img src="…jpg">. Никакого <picture>/<source>,
+ * lazy-loading и гейта по событию load: WebView Telegram и кэши SW иногда
+ * теряют эти события, и карточка оставалась пустой. JPEG-URL берётся из
+ * реестра релиза (с версией-хешем), поэтому кадр всегда адресуется напрямую.
+ * При ошибке загрузки initFrames() переключает на полный кадр и затем на
+ * placeholder — пустого места не остаётся.
+ */
 export function productImg(product, cls = '', variant = 'card') {
   const base = product.image || '';
   const fallback = published(`assets/products/fb-${product.id}.jpg`);
@@ -62,23 +68,21 @@ export function productImg(product, cls = '', variant = 'card') {
   const card = published(base.replace(/\.jpg$/, '-card.jpg')) || full;
   const src = variant === 'full' ? full : card;
   return `<span class="pshot ${cls}">
-    <picture>${sources(src)}
-      <img src="${esc(src)}" alt="${esc(product.name)}" loading="lazy" decoding="async"
-        data-full="${esc(full)}" data-fb="${esc(fallback)}">
-    </picture><i class="rim" aria-hidden="true"></i>
+    <img src="${esc(src)}" alt="${esc(product.name)}" decoding="async"
+      data-full="${esc(full)}" data-fb="${esc(fallback)}">
+    <i class="rim" aria-hidden="true"></i>
   </span>`;
 }
 
-/** Covers are separate artwork, including for an empty/custom collection. */
+/** Обложки коллекций — тот же прямой <img>, без кодеков и гейта. */
 export function coverImg(collId, product, cls = '') {
   const base = product?.image || '';
   const fb = published(base.replace(/\.jpg$/, '-card.jpg')) || assetUrl(base);
   const url = published(`assets/covers/${collId}.jpg`) || fb || '/assets/brand/placeholder.svg';
   return `<span class="pshot ccover ${cls}">
-    <picture>${sources(url)}
-      <img src="${esc(url)}" alt="${esc(product?.name || collId)}" loading="lazy" decoding="async"
-        data-fb="${esc(fb)}">
-    </picture><i class="rim" aria-hidden="true"></i>
+    <img src="${esc(url)}" alt="${esc(product?.name || collId)}" decoding="async"
+      data-fb="${esc(fb)}">
+    <i class="rim" aria-hidden="true"></i>
   </span>`;
 }
 
