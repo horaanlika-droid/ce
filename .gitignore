@@ -8,3 +8,10 @@ data/backups/
 .DS_Store
 .arena/pilot/
 __pycache__/
+server/data/
+server/media/
+server/__pycache__/
+*.pyc
+.venv/
+venv/
+

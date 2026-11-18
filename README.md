@@ -1,1064 +1,150 @@
-# Cocktail Embassy · Telegram Mini App + бот + витрина
+# Cocktail Embassy
 
-Премиальный магазин барного хрусталя (Dubai, HoReCa): витрина в стиле современного
-iOS-приложения (тёмная «хрустальная» тема), корзина, заказы, proforma-счёт в AED,
-чат поддержки и админ-панель в боте.
+A production-ready catalogue web app for **Cocktail Embassy** — hand-blown glassware
+and cocktail acids for bars, hotels and studios.
 
-Открывается где угодно: как Mini App в Telegram и как обычный сайт по ссылке —
-в браузере покупатель входит как гость (корзина и заказы сохраняются).
-
-Каталог (25 позиций, 10 коллекций, цены AED/USD и фото) собран автоматически
-из прайса `COCKTAIL EMBASSY - Google Диск.pdf`.
-
-Механика магазина (сервер, бот, админка, хранение) повторяет проверенную
-архитектуру проекта `posudnayalavka`.
+Live site: **https://horaanlika-droid.github.io/ce/**
 
 ---
 
-## Раунд 10: визуал по референсу IMG_1441 + постоянное свечение бокалов (10.10.2026)
+## Папки с фото бокалов и обложек (меняешь фото в папке — оно само меняется на сайте)
 
-**Этот раздел актуальнее всего, что ниже, включая правку 09.10.**
+Все фотографии каталога и обложек лежат прямо в корне репозитория по папкам:
 
-### Главное: glow теперь постоянный
+| Раздел | Папка в репозитории | Принцип |
+| --- | --- | --- |
+| **Бокалы (34 папки)** | [**`glasses/`**](./glasses/) | **1 папка = 1 бокал** (`glasses/levitating-martini/`, `glasses/champagne-saucer/`, …). Полная таблица соответствия — внутри [`glasses/README.md`](./glasses/README.md). |
+| **Обложки сайта (14 папок)** | [**`covers/`**](./covers/) | **1 папка = 1 обложка**: 4 слайда главного экрана (`hero-*`), 6 обложек категорий (`category-*`) и обложки разделов (`home-craft`, `info-banner`, `info-story`, `og-share`). Список — внутри [`covers/README.md`](./covers/README.md). |
+| **Кислоты, трубочки, эссенции (18 папок)** | [**`packaging/`**](./packaging/) | **1 папка = 1 позиция** (`packaging/citric-acid/`, `packaging/essence-mango/`, …). Список — внутри [`packaging/README.md`](./packaging/README.md). |
 
-Раньше свет по кромке стекла набирался только на hover/фокусе/тапе/`.picked`
-(и полностью скрывался на сцене товара: `.pview .stage .rim { display: none }`).
-Сейчас свечение горит **на всех кадрах всегда** — карточка сетки, rail,
-миниатюра коллекции, строка корзины, сцена товара. Выбор, hover и клавиша
-больше не «включают свет», а только докручивают яркость (`filter: brightness(1.32)`).
-
-Реализация (конец `webapp/css/app.css`, блок «Раунд 10»):
-
-- `.pshot .rim` — три радиальных слоя поверх кадра в `mix-blend-mode: screen`:
-  световое основание под ножкой (`.26`), широкая лужа (`.14`), холодная дымка
-  вокруг чаши (`.09`); `.pshot { isolation: isolate }`, чтобы смешивание
-  оставалось внутри кадра и не трогало тени карточки.
-- `.rim::before` — гало только *снаружи* силуэта (box-shadow по эллипсу
-  50%/46%, блюр `--rim-blur`, `filter: blur(12px)`), поэтому граница
-  фотографии по-прежнему не читается: прямоугольный rim и блюр-подложку
-  `.pshot::before` из раунда 9 не возвращаем.
-- `.pcard.picked` больше не «полусвечение» (`.45`) — свет у всех равный,
-  у позиции в корзине остаётся только усиленная рамка.
-- Внешний свет карточек тоже постоянный: `box-shadow` у `.pcard`, `.coll-row`,
-  `.cline` (на hover — та же тень, только сильнее).
-
-Альфы подобраны послойной эмуляцией CSS-света поверх реального кадра
-(`.arena/glow_tune.py`, `.arena/glow_scale.png`): средняя яркость кадра
-31.5 → **40.3**, тогда как на референсе строка коллекции даёт 37.4, а сцена
-товара — 42.3; доля «выбитых» пикселей при этом остаётся <1%. Блюр гало задан пропорционально размеру кадра (62px на ~173px карточки),
-иначе вместо светового поля получается заметное кольцо.
-
-### Экраны подогнаны под мокапы
-
-| Экран | Что изменилось |
-|---|---|
-| Home | hero full-bleed под прозрачным навбаром (`:has(.hero)`, только <768px), навбар — легенда + аватар вместо значка чата, заголовок 30/600 вместо 32/800, «Explore Collection» — пилюля-обводка вместо белой плашки, kicker скрыт на мобильном, слайд тянется на высоту экрана |
-| Навбар | значок бокала в `.nav-brand` убран (в референсе только название), аватар — светлый круглый `.nav-btn.avatar` |
-| Тап-бар | пункт каталога — бокал (`icons.glass`) и подпись «Collection», активный Home заливается |
-| Коллекции | баннер 16:10 с подписью референса, поиск скрыт за иконкой в навбаре, чипы 36px с тап-целью 44 через `::after`, строка коллекции = миниатюра 68 + kicker «PREMIUM» + название + описание + шеврон; счётчик позиций перенесён в `aria-label` и на страницу коллекции. Общий компонент `collectionRow()` для rail и списка |
-| Товар | h1 = коллекция, подзаголовок = тип бокала (было наоборот); характеристики в одну строку без карточек с волосками-разделителями; Material отдельной строкой, ниже COD, чип ремесла, цена AED+USD списком; CTA «Add to Cart» с иконкой; сцена 4:5 со световым основанием; в навбаре только «назад» и сердце |
-| Корзина | «Your Cart» + × справа (лист, как в референсе), в строке название коллекции + тип + COD, цена в две строки AED/USD, итоги без карточки, блок доверия без подложки — круглые иконки |
-
-### Что проверено в этой сессии
-
-- `npm test` — **9/9**; `npm run media:publish` — **73/73** обязательных кадра, 278 файлов.
-- `node --check` по всем `webapp/js/**`, баланс скобок и 480 правил в `app.css`.
-- Сервер поднят локально: `/`, `/collections`, `/css/app.css`,
-  `/assets/products/AG0015-card.jpg`, `/assets/app/hero-01-m.jpg` — 200.
-- Сила свечения — численно по кадрам и кропам референса (см. выше).
-
-### Честно про незакрытое
-
-Браузера (Chromium/Playwright) в песочнице нет, поэтому **живой рендер и
-скриншоты не снимались**: вёрстка правилась по CSS-математике и пиксельным
-кропам `IMG_1441`. Отсюда отдельные риски: `:has()` на very старых WebView,
-`mix-blend-mode` на Android WebView < 80, фактическая высота hero на
-устройствах с динамической адресной строкой.
-
-Осознанные отступления от мокапа: точки галереи на экране товара не добавлены
-(у позиции один мастер-кадр, фиктивные «1 из 3» делать не стали); поиск
-каталога живёт за иконкой, а не постоянной строкой; поддержка ушла из навбара
-в профиль (`/profile → Support`).
-
-### Задание следующей сессии (не выдавать за выполненное)
-
-1. **Снять реальные скриншоты** 393×852 / 320×640 / 1440×1000 на каждом из
-   четырёх экранов и сверить с `IMG_1441` по пикселям: высота hero и посадка
-   CTA над таб-баром, сила гало на миниатюрах 68px, длина строк в карточках.
-2. Прогнать `CHROMIUM_PATH=… npm run test:web` (нужен Chromium) — в этой сессии
-   не запускался; проверить 0 JS errors после правок навбара/поиска/корзины.
-3. Проверить в **Telegram iOS/Android**: прозрачный навбар над hero в
-   full-bleed (safe-area, «чёлка»), возврат из корзины по ×, поиск по иконке,
-   `mix-blend-mode` и `:has()` на реальных WebView.
-4. Галерея товара: если появятся второй/третий ракурсы позиции — добавить
-   точки 1/3 как в референсе; сейчас один кадр на позицию.
-5. Художественная оптика (продолжение п. 2 из раунда 9): более тонкие белые
-   блики и читаемость миниатюр всех 10 коллекций; генерация форм не выполнялась,
-   использованы существующие мастера. Product fade на баннеры не возвращать.
-6. Мобильные hero 2–5, landscape/iPad, увеличенный системный шрифт; полный
-   проход checkout → invoice; VoiceOver/TalkBack; Lighthouse.
-7. Service worker offline/update — обещание полной офлайн-витрины из раунда 8
-   по-прежнему не подтверждено.
-8. После проверок вернуться к исходному раунду 9 (shared transitions,
-   сортировка, swipe/undo, звук).
+### Как заменить фото (с компьютера или телефона в GitHub):
+1. Откройте нужную папку (например, `glasses/levitating-martini/` или `covers/hero-levitating-martini/`).
+2. Загрузите новое фото (`.webp`, `.png`, `.jpg` или `.jpeg` — **подходит любой формат и любое имя файла**):
+   - можно заменить `photo.webp` / `cover.webp` файлом с тем же именем, **или**
+   - просто загрузить свой файл (даже `IMG_1234.jpg` без удаления стандартного `photo.webp` — сайт автоматически увидит новый файл и поставит его главным; но старый при желании лучше удалить, чтобы в папке был порядок).
+3. Если в папку бокала загрузить **несколько ваших фото** (`1.jpg`, `2.jpg`, `3.jpg`), на странице этого бокала автоматически появится галерея ракурсов.
+4. Для главных обложек (`covers/hero-*`): если загрузить **одно** новое фото, оно сразу встанет и на компьютере, и на телефоне.
+5. Нажмите **Commit changes** — сайт сам подхватит новое фото и сбросит кэш браузера.
 
 ---
 
-## Предыдущее исправление: публикация кадров и видимость витрины (09.10.2026)
+| Part | Where it runs | What it does |
+| --- | --- | --- |
+| **Storefront** (`index.html`, `css/`, `js/`, `glasses/`, `covers/`, `packaging/`, `data/`) | GitHub Pages | iOS-style catalogue: hero carousel, shop with search/filters, product pages, categories, request form |
+| **Web Back Office** (`#/admin`) | Web browser | Панель управления каталогом, текстами, баннерами, фото и публикацией прямо на GitHub или через API |
+| **Back office** (`server/`) | BotHost / Docker | REST API (FastAPI) + Telegram admin bot + SQLite |
+| **Node.js runtime** (`src/`) | Node.js | Express API + Telegram bot (GrammY) + proforma invoice + checkout |
 
-**Раздел ниже описывает публикацию кадров и скролл; визуальные правила
-раунда 10 (свет, навбар, hero) — выше и приоритетнее.**
+---
 
-### Что исправлено
+## Design reference — 1697–1702 (master)
 
-- **Корневая причина обрезания каталога:** в роутере экран содержит дополнительную
-  страницу-обёртку, а CSS задавал скролл только прямому `.screen > .scroll`.
-  Теперь `.page` ограничена flex-высотой, `.scroll` — настоящий скроллпорт с `min-height: 0`.
-  Позиции ниже hero доступны и lazy loading получает корректную область просмотра.
-- **Кадры видны без событий загрузки.** Убрано `opacity: 0` до класса `.ready`.
-  Картинка из кэша, переход назад и потерянное событие `load` больше не скрывают стекло.
-- **Публикация по реестру, не по догадкам:** `src/media.js` создаёт снимок существующих
-  файлов до запуска HTTP-сервера. `/api/config.media` передаёт URL с SHA-256 по содержимому
-  каждого файла; AVIF/WebP используются только при наличии в реестре.
-  Нет замены `.jpg` на выдуманный `-card.jpg` у внешних фото админа.
-  URL локальных кадров абсолютные — прямой заход на `/product/...` не ломает пути.
-- **Честный 404:** отсутствующие `/assets`, `/js`, `/css`, `/api` больше не получают HTML
-  главной со статусом 200. Ошибка кодека сначала убирает `<source>` и пробует JPEG,
-  затем полный кадр/резерв, затем локальный placeholder. Обложка не зависит от наличия товара.
-- **Кэш:** версии по содержимому вместо mtime checkout. Mutable-файлы revalidate,
-  а не `immutable` на неделю; SW обновлён, online JS/CSS идут network-first,
-  не кэшируются HTML-ответы вместо изображений. API — `no-store` и ограниченное ожидание.
-  Ошибка корзины/избранного при boot не закрывает публичную витрину.
-- **Сцены приложения отдельно от позиций:** `scripts/build_app_images.py` →
-  `webapp/assets/app/` (5 desktop hero 1920×1080, 5 mobile 1080×1350,
-  баннер каталога 1920×1080, отдельный фон страницы 1600×1000; JPG/AVIF/WebP).
-  10 обложек 1280×720 обновлены тем же отдельным сценическим профилем.
-  Силуэты — из существующих мастеров посуды, свет — `IMG_1440.png`;
-  композиция — `IMG_1440/1441`, без вжжённых текста/кнопок и без перерисовки товара.
-  Product `clear/fade` повторно к групповым сценам **не применяется**.
-- **Вёрстка:** hero имеет 16:9 desktop / 4:5 mobile, посуда справа / в верхней зоне;
-  подпись её не перекрывает. Кнопки ≥44 px, цены карточек AED/USD в две строки,
-  характеристики не наследуют оформление больших инфоблоков. CTA выше таб-бара,
-  `hidden` соблюдается, настоящий Telegram определяется по `initData`, а не наличию SDK.
-  Убраны дублирующий blur-фон товара и прямоугольный rim в большой сцене.
-- **Корзина:** checkout больше не отбрасывается функцией `h()` как второй корневой узел;
-  cleanup страницы переносится в роутер (таймеры и подписки не копятся).
+> **Everything is matte black, app included, in a Tesla-like key.**
+> The interface is a flat black room: no gradients, no glows, no drop shadows.
+> Depth comes from three surface steps (`#0b0b0b` → `#141414` → `#1c1c1c`) and
+> 1 px hairlines; corners are 2–8 px, labels are wide-tracked uppercase 10.5 px,
+> the primary action is solid white on black, and the accent is silver — no blue
+> anywhere in the UI.
+>
+> **The photography stage is DEEP MATTE BLACK too.** Lighting law
+> unchanged: page background `#000000`, hairlines and light neutral, one cold
+> silver accent. Plates are finished WebP/PNG: the deep-black stage, its light
+> and the piece are already in the file. Shape, engraving, wall
+> and base thickness stay 100 % those of the price list — checked by edge
+> correlation (≥ 0.98).
 
-### Как публиковать теперь
+`IMG_1697.png … IMG_1702.png` в корне репозитория —
+**главные референсы по дизайну и съёмке стекла**. Любая визуальная работа сверяется с ними:
+свет, тени, отражение, текстура стекла, глубина чёрного, посадка предмета на поверхность.
+Подробный разбор — в [`docs/design-reference.md`](./docs/design-reference.md) и [`docs/audit-navy.md`](./docs/audit-navy.md).
 
+---
+
+## The storefront
+
+Plain static files — no build step, no dependencies. Hash routing (`#/shop`, `#/product/…`, `#/admin`)
+means it works identically on GitHub Pages, BotHost, or from a local folder.
+
+* **Design** — a black room with the product photography as the only picture. The
+  hero shows the piece's own catalogue plate (`assets/products/*.webp`), whole and
+  never cropped, so its black edges dissolve into the page. Chrome wordmark, oversized negative
+  tracking typography.
+  iOS-native details: bottom tab bar, safe-area insets, sheet dialogs (drag them down
+  to dismiss), spring easing, 44 px touch targets.
+* **Catalogue** — six categories (Highball & Collins, Rocks & Tumblers, Cocktail &
+  Martini, Wine & Serve, Acids & Essentials, Essences). Every piece lives in exactly one category.
+  Search covers names, copy, categories and article numbers; sort by featured, price,
+  name, volume or newest; filters for new pieces, stock and a price ceiling, all kept
+  in the URL so a filtered view can be shared. Every piece carries an article number
+  (AG/AC/PC/FE/ST + four digits) printed on the card and the product page.
+* **Mechanics**:
+  * **Opening curtain** — the chrome lockup and a single hairline progress bar,
+    with `app by @stonym0ntana` set at the bottom.
+  * **iOS screen motion** — a piece *pushes* in from the right, going back *pops* in from the left, tab switches cross-fade.
+  * **Bar** — the current piece name fades into the top bar as you scroll, and a back chevron appears on deep screens.
+  * **Running line** — ticker under the bar carries trade announcements and contact lines across the top; kinetic display band on the home page.
+  * **Press states** — tactile spring answers to touch, like a native list.
+* **Responsive** — single column + tab bar on phones, split hero and 4-up grid on desktop, sticky product stage at ≥ 900 px.
+* **Catalogue** — 52 pieces in six categories, generated from the trade price list.
+* **Requests, not checkout** — pieces are added to a request and submitted with contact details; shop owner receives it in Telegram / email.
+* **Data flow** — `API → bundled data/content.json → localStorage cache`. With no API configured the site is a fully working static catalogue.
+
+---
+
+## Web Admin Panel (`#/admin`)
+
+Веб-панель управления встроена прямо в витрину по адресу `#/admin`.
+Вход защищён паролем (`embassy2026` по умолчанию, настраивается в панели).
+
+В админке доступно:
+* **Товары** — редактирование цен, описаний, характеристик, артикулов, фото, статусов наличия.
+* **Категории** — редактирование описаний и обложек.
+* **Слайды главного экрана** — выбор товаров, заголовков и фонов.
+* **Бегущие строки** — оперативное редактирование текста анонсов и тикеров.
+* **Контакты и тексты сайта** — условия доставки, реквизиты, телефоны, email.
+* **Публикация на GitHub** — сохранение правок напрямую в репозиторий через GitHub Personal Access Token без поднятия сервера!
+
+---
+
+## Local development
+
+### Static storefront:
 ```bash
-pip install pillow pillow-avif-plugin
-# Если менялись мастера/прайс: подготовить их по историческим инструкциям ниже.
-python3 scripts/build_photos.py --only 'AG*'  # только позиции (4K + карточки)
-python3 scripts/build_app_images.py          # отдельно сцены, обложки и фон приложения
-npm run media:publish                       # 73 обязательных JPEG, отсутствующие → exit 1
-npm test
-# Затем commit/push/deploy целого готового набора и перезапуск процесса.
+python3 -m http.server 4173
+# open http://localhost:4173
 ```
 
-`npm start` запускает эту проверку автоматически через `prestart`. Node-деплой не требует
-Pillow: готовые активы закоммичены. Генераторы заменяют файлы атомарно после записи;
-**не запускать генерацию поверх живой production-статики** — сначала закончить сборку,
-проверить, затем развернуть весь релиз. Реестр — снимок процесса, а не архив предыдущих
-версий. Если запускать напрямую `node src/index.js`, проверку нужно выполнить отдельно.
+### Python backend (FastAPI + Telegram bot):
+```bash
+cd server
+python3 main.py
+# API on :8080, bot polling in the same process
+```
 
-### Проверено в этой сессии
-
-- `npm test`: **9/9** (включая стабильность hash при смене mtime, отсутствие кодеков,
-  внешние URL, пустые коллекции, реальные 404 и HTTP-тип JPEG).
-- `npm run media:publish`: **73/73 обязательных изображения**, 278 файлов в реестре.
-- Настоящий headless Chromium: **320×640, 393×852, 1440×1000** — home → каталог →
-  Retro Asia → позиция, 10 коллекций / 8 популярных / 4 позиции Retro Asia, **0 JS errors**.
-- Отдельный сценарий: глубокая ссылка, блокировка всех AVIF → JPEG, добавление в корзину,
-  видимость checkout/CTA, возврат на главную из тёплого кэша — пройден.
-- Товарные JPEG/AVIF/WebP **не менялись**; новых зависимостей production нет.
-
-Браузерный smoke-тест сохранён: `scripts/check_webapp.mjs`.
-Он требует отдельно установленный `playwright-core`, работающий сервер и Chromium:
-`CHROMIUM_PATH=/path/to/chromium npm run test:web`.
-Дополнительно для single-process окружения можно задать `CHROMIUM_SINGLE_PROCESS=1`.
-По умолчанию сервер `http://127.0.0.1:3000`, меняется через `WEBAPP_TEST_URL`.
-
-### Задание той сессии (список устарел: актуальный — в разделе раунда 10 выше)
-
-1. Проверить **реальный Telegram iOS/Android** после деплоя: очистка старого WebView-кэша,
-   cold/warm start, все 25 позиций и 10 коллекций, нативная MainButton и возврат назад.
-   В sandbox проверен браузер; Telegram и production-хостинг здесь не проверялись.
-2. Довести художественную оптику до референса: более белые тонкие блики и световые
-   основания, читаемость миниатюр каждой коллекции. Сейчас использованы существующие
-   мастера; новые фотографии/генерация форм не выполнялись. Не возвращать product fade
-   на баннеры. Геометрия по PDF и отсутствие жидкости обязательны.
-3. Сверить все 5 hero в реальном устройстве, landscape/iPad и увеличенный системный шрифт;
-   полный проход checkout → invoice, VoiceOver/TalkBack, Lighthouse. Эти метрики пока не сняты.
-4. Проверить настоящий service worker offline/update. Offline-каталог пока не сохраняется:
-   старое обещание полной офлайн-витрины из раунда 8 не считать подтверждённым.
-5. После этих проверок вернуться к исходному раунду 9 (shared transitions, поиск/сортировка,
-   swipe/undo, звук). Он **не реализован** этой правкой.
-
-## Что внутри
-
-| Часть | Путь | Описание |
-|---|---|---|
-| Витрина | `webapp/` | Сайт и Mini App без сборки: чистый ES-модульный JS, iOS-навигация (push/pop, blur-навбар, таб-бар, safe-area, хаптики, MainButton/BackButton), адаптив iPhone / iPad / Android / desktop |
-| API | `src/server.js` | Каталог, корзина, избранное, заказы, оплата, поддержка, печатная форма счёта A4 |
-| Бот | `src/bot/` | Клиентские команды + админ-панель: заказы, поддержка, каталог, магазин, статистика, рассылка |
-| Данные | `data/catalog.json` | Товары из PDF; правки админа живут отдельно в `data/db.json` (не коммитится) |
-| Генератор каталога | `scripts/build_catalog.py` | Пересобирает каталог и фото товаров из нового прайса |
-| Фото-пайплайн | `scripts/build_photos.py`, `scripts/compose_masters.py`, `scripts/scenes.py` | Один конвейер на все активы: товары (4K + карточка), hero desktop/mobile, обложки коллекций, og:image; `--only` (маски `AG*`, `hero-*`, `covers/*`, `og`), `--dry`, реестр поправок `data/photo_overrides.json` |
-| Обложки коллекций | `webapp/assets/covers/` | 10 кадров 1280×720 в свете товаров (раунд 7) |
-| Референсы UI | `IMG_1431.jpeg`, `IMG_1440.png`, `IMG_1441.png` | Мок-апы премиального UI (mobile / desktop) |
-| Контент бренда | `IMG_1420.png`, `IMG_1421.png` | Скриншоты Instagram @cocktail_embassy_dxb — референсы света и коллекций; hero с раунда 7 собираются из мастеров, а не из кроков |
-
-Всё работает в **одном процессе** (`npm start`).
-
----
-
-## Быстрый старт
-
+### Node.js backend (Express + Grammy bot):
 ```bash
 npm install
-cp .env.example .env      # заполнить BOT_TOKEN и ADMIN_IDS
-npm start
+npm test       # run test suite
+npm start      # starts Express on :3000
 ```
 
-Открыть `http://localhost:3000`. Сайт работает и без `BOT_TOKEN`
-(покупатели заходят как гости), бот при этом не запускается.
-
-Проверить, что всё поднимается (старт бота, загрузка каталога, занятый порт,
-`/health`): `npm test` — тесты не требуют ни токена, ни сети.
-
 ---
 
-## Деплой на BotHost (bothost.ru)
-
-Всё настроено так, что **в переменных окружения хостинга вводятся только
-две переменные: `BOT_TOKEN` и `ADMIN_IDS`**.
-
-Как это работает:
-
-| Что нужно | Откуда берётся |
-|---|---|
-| Порт | `PORT` от платформы; если не задан — слушаем 80, 3000 и 8080 |
-| Публичный URL (кнопка Mini App, ссылки, og-теги) | домен хостинга: из `PUBLIC_URL`/`DOMAIN`, а если платформа не прокидывает переменную — **сам из заголовка Host** первого запроса к витрине |
-| Имя бота (`@…`) | сам из `getMe` при старте (`BOT_USERNAME` не нужен) |
-| Режим Telegram | `polling` по умолчанию — вебхук настраивать не нужно |
-| Каталог (`catalog.json`) | `DATA_DIR`, а если там файла нет — закоммиченный `./data/catalog.json` |
-| Данные (`db.json`) | `./data/` в проекте; для персистентности — `DATA_DIR` на volume |
-
-### Пошагово
-
-1. **Код** — подключите этот репозиторий GitHub к проекту на bothost.ru
-   (Git Deploys). Платформа сама определит Node.js по `package.json`
-   (скрипт `start`) и поставит зависимости из `package-lock.json`.
-   Версия Node задаётся в `.nvmrc` (20).
-2. **Переменные окружения** (в панели Bothost) — две:
-   - `BOT_TOKEN` — токен от @BotFather;
-   - `ADMIN_IDS` — ваш Telegram ID (узнать: @userinfobot), нескольких
-     через запятую.
-3. **Запуск** — деплой/перезапуск. В логах ждём:
-   `[bot] @yourbot · режим: polling` и `[web] Mini App on http://0.0.0.0:…`.
-4. **Первый визит** — откройте выдаваемый Bothost URL в браузере один раз:
-   бот подхватит домен, поставит кнопку Mini App (слева от поля ввода)
-   и все ссылки на счета/витрину начнут работать. Дальше — ничего
-   настраивать не нужно.
-5. **Данные** — на бесплатном тарифе Bothost данные в контейнере
-   стираются при перезапуске. Для магазина нужен тариф с Volume
-   (Basic и выше): укажите в `DATA_DIR` точку монтирования volume,
-   и заказы/настройки переживут деплой. Страховка — кнопка
-   «Экспорт БД (JSON)» в `/admin → 💾 Данные`: резервную копию можно
-   скачать прямо в Telegram.
-
-### Опционально: свой домен и вебхук
-
-- Свой домен → задайте `PUBLIC_URL=https://ваш-домен` (иначе URL
-  определится сам, но от домена хостинга).
-- Вебхук вместо polling (если Bothost даёт SSL-адрес):
-  `TELEGRAM_MODE=webhook` + `TELEGRAM_WEBHOOK_SECRET=любая-строка`.
-  Роут `/webhook/telegram` уже в сервере.
-
-### Обновление
-
-Пуш в подключённую ветку → Bothost пересоберёт и перезапустит бота.
-Правки каталога/настроек, сделанные в `/admin`, живут в `db.json`
-и не затираются деплоем (кроме бесплатного тарифа без volume).
-
-### Что должно быть в логах
-
-При старте приложение печатает сводку одной строкой:
+## Repository layout
 
 ```
-[web] Mini App on http://0.0.0.0:3000
-[web] data dir: /app/data
-[bot] @yourbot · режим: polling · URL появится из запросов к витрине
-[boot] mode=all · web=ok:3000 · bot=ok:@yourbot · каталог=25 поз. из /app/data/catalog.json
+index.html              storefront entry (GitHub Pages root)
+manifest.webmanifest    PWA manifest
+sw.js                   offline shell
+css/app.css             design tokens + all components (matte black)
+js/                     config, api, store, views, router, icons, admin
+glasses/                per-item photo folders (34 glassware SKUs)
+covers/                 hero, category, and site covers (14 folders)
+packaging/              acids, essences, and straws folders (18 SKUs)
+assets/                 whole-scene webp plates, brand marks, scenes, archive
+data/                   content.json (seed catalogue), defaults, audit
+docs/                   design reference docs, photography audits
+server/                 FastAPI API + Telegram admin bot + SQLite
+src/                    Node.js Express + Grammy server
+tools/                  Python catalog & image processing tools
 ```
-
-Если что-то не поднялось, в строке `[boot]` это видно сразу:
-`web=НЕТ ПОРТА`, `bot=НЕ ЗАПУЩЕН`, `каталог=НЕ ЗАГРУЖЕН`. Те же данные
-отдаёт `GET /health`.
-
-### Частые проблемы в логах
-
-| Строка в логе | Что это значит | Что делать |
-|---|---|---|
-| `[web] порт 3000: EADDRINUSE` | Порт уже занят **другим процессом** контейнера (например, приложение стартует дважды или рядом работает чужой HTTP-сервер). Само приложение при этом не падает, но и не слушает. | Проверьте команду запуска (Dockerfile/`start`) — процесс должен быть один. Если порт проксирует платформа, задайте `PORT` её значением |
-| `[catalog] .../catalog.json — нет файла` | В контейнере нет `data/catalog.json` (пустой volume поверх `./data` или файл не попал в сборку) | Приложение само берёт каталог из второго пути; если файла нет нигде — пересоберите `npm run catalog` и убедитесь, что `data/` попадает в деплой |
-| `[bot] токен отклонён Telegram (401)` | `BOT_TOKEN` неверный или отозван | Возьмите новый токен у @BotFather |
-| `[bot] getMe не удался (попытка 1/3)` | Нет сети до `api.telegram.org` в момент старта | Ничего: приложение повторит через 5 и 15 с, веб-витрина работает сразу |
-| Одни и те же строки по кругу | Контейнер перезапускается. Раньше так и было: приложение завершалось, когда не поднимался ни порт, ни бот | Сейчас процесс остаётся жить и печатает `[boot]` — смотрите причину выше по логу |
-
----
-
-## Переменные окружения
-
-Для запуска на Bothost достаточно **двух переменных** — остальное
-определяется автоматически или имеет дефолт (см. «Деплой на BotHost»).
-
-| Переменная | Обязательно | Назначение |
-|---|---|---|
-| `BOT_TOKEN` | да (бот) | Токен от @BotFather |
-| `ADMIN_IDS` | да (админка) | ID администраторов через запятую (@userinfobot) |
-| `PUBLIC_URL` | нет | `https://ваш-домен` — только при своём домене; иначе URL подхватывается из домена хостинга / из Host запроса |
-| `BOT_USERNAME` | нет | Имя бота без `@` — определяется самим из `getMe` |
-| `PORT` | нет | Порт веб-сервера; если хостинг не задаёт — слушаем 80/3000/8080 |
-| `DATA_DIR` | для volume | Каталог данных (точки монтирования хостинга), иначе `./data`. Пустой volume каталог не ломает: `catalog.json` берётся из `./data` |
-| `CATALOG_FILE` | нет | Явный путь к `catalog.json`; если не задан — ищем в `DATA_DIR`, затем в `./data` |
-| `MODE` | нет | `all` / `web` / `bot` (по умолчанию `all`) |
-| `TELEGRAM_MODE` | нет | `polling` (по умолчанию) / `webhook` |
-| `YOOKASSA_*` | для карты | Эквайринг включается только при заданных ключах |
-| `SELLER_*` | для счетов | Реквизиты продавца (см. `.env.example`) |
-| `FREE_SHIPPING_FROM` | нет | Бесплатная доставка UAE от суммы, AED (1500) |
-| `SHIPPING_COST` | нет | Стоимость доставки UAE, AED (35) |
-
----
-
-## Функции магазина (для клиента)
-
-- **Главная** — hero-слайдер бренда, коллекции, «Popular now», ценности, о бренде.
-- **Каталог** — 10 коллекций, поиск, фильтры Cocktail / Bar / Accessories.
-- **Карточка товара** — сцена с фото, характеристики (объём, высота, Φ, материал),
-  бейджи hand blowing, цена AED + USD, похожие позиции, избранное.
-- **Корзина** — количество, прогресс до бесплатной доставки, итоги AED/USD.
-- **Оформление** — контакты, доставка (Dubai pickup / UAE courier / worldwide),
-  оплата: proforma-счёт для компаний (печатная форма A4, `/invoice/:id`)
-  или карта онлайн (если подключён эквайринг).
-- **Заказы** — статус-таймлайн (New → Paid → Packing → Shipped → Delivered),
-  состав, счёт, отмена, проверка оплаты.
-- **Избранное**, **Профиль**, **Чат поддержки** (ответы менеджеров из бота).
-
-Адаптив: iPhone (таб-бар, safe-area, нативные кнопки Telegram), iPad (сетки 3 кол.,
-split-корзина), desktop (топ-навигация, 4 колонки, split-карточка), Android (жест «назад»).
-
----
-
-## Админ-панель (в боте, `/admin`)
-
-Доступна только ID из `ADMIN_IDS`. В меню — счётчики (новые заказы,
-непрочитанная поддержка) и сводка дня. Навигация кнопками, списки
-с пагинацией, поиск, ввод с подтверждением и отменой.
-
-- 📦 **Заказы** — фильтры (новые/активные/оплаченные/счета/все),
-  поиск по ID/клиенту/телефону, карточка с составом и историей,
-  смена статуса в один тап (клиент получает уведомление),
-  «отметить оплаченным», открыть счёт, написать клиенту.
-- 💬 **Поддержка** — диалоги с непрочитанными и превью последнего
-  сообщения, ответ в один тап; плюс быстрый ответ reply-м прямо на
-  уведомление «Поддержка #<id>» в личке.
-- 🍸 **Каталог** — коллекции (создать/переименовать/скрыть/вернуть),
-  поиск по товарам; у товара: цена, название, описание, объём, высота,
-  фото по ссылке, перенос в другую коллекцию, наличие, скрытие,
-  удаление и возврат из «Удалённое»; **создание новой позиции**
-  пошагово (название → цена → коллекция → объём → высота → фото →
-  описание), в т.ч. «цена по запросу».
-- 👥 **Клиенты** — список покупателей с заказом/выручкой, профиль
-  (история заказов, premium, последнее посещение), написать.
-- 🏪 **Магазин** — tagline/subtitle, WhatsApp, Instagram, телефон,
-  email, локация; бесплатная доставка от, стоимость доставки,
-  мин. заказ; **курс USD/AED**; реквизиты счёта (legal name, TRN,
-  банк/IBAN/SWIFT, подпись); тексты витрины (welcome/about/footer).
-- 📊 **Аналитика** — периоды 24 ч / 7 дн / 30 дн / всё время: заказы,
-  выручка (оплачено) и «в работе», средний чек, новые клиенты,
-  диалоги поддержки, топ-5 товаров по выручке.
-- 📣 **Рассылка** — всем или только покупателям, предпросмотр с
-  подтверждением, покротечная отправка длинных текстов.
-- 💾 **Данные** — экспорт всей БД в JSON (бэкап в Telegram) и
-  выгрузка заказов в CSV (RU-Excel).
-- 🏠 **Открыть магазин** — ссылка на витрину прямо из панели.
-
-Уведомления админам: новый заказ (с кнопкой «открыть»), обращение в
-поддержку (с `#id` для быстрого reply).
-
----
-
-## Обновление каталога
-
-Положить новый прайс (PDF из Google Sheets) в корень и выполнить:
-
-```bash
-pip install pymupdf pillow
-python3 scripts/build_catalog.py NEW_PRICE.pdf
-```
-
-Скрипт пересоберёт `data/catalog.json`, разложит исходные фото товаров
-(`webapp/assets/products/src-*.png`) и нарежет hero-кроки из скриншотов Instagram
-в `webapp/assets/brand/hero-*.jpg`. Ручные правки админа не затираются.
-
-Фото товаров в витрине: `webapp/assets/products/<COD>.jpg` — тёмная студия
-с лёгким glow по кромкам (финишная обработка `scripts/build_photos.py`,
-мастер-кадр хранится в `st-<COD>.jpg`). Если файла нет, витрина автоматически
-показывает галерейную панель `fb-<COD>.jpg`, собранную из фото поставщика.
-
----
-
-## Раунд 2 (закрыт в раундах 5–6) — футуристичный флер
-
-**Статус (история).** На момент постановки: 20 студийных кадров раунда 1 и 5 позиций без кадров
-(AG0021–AG0026, кроме AG0022) — для них витрина показывала белые фолбэк-панели `fb-<COD>.jpg`.
-**Сейчас закрыто полностью:** 25 из 25 позиций имеют студийный кадр (раунды 5–6: 4K + кадр карточки,
-AG0026 доснят, AG0027 — без чая). Промт, референсы и правила света отсюда по-прежнему действуют;
-оптика и разрешение — в разделах раундов 5–6. `fb-<COD>.jpg` оставлены как фолбэк и требуют
-решения (см. раунд 7, п. 6 порядка работы).
-
-### Цель
-
-Все 25 позиций в стиле референсов, с футуристичным флером:
-
-1. **Glow сильнее.** Мягкий ледяной ореол за стеклом и яркие блики по кромке. Ореол не выжигает белое пятно: блики читаются как контур, а не как засвет.
-2. **Фон очень нежно размыт.** Мелкая глубина резкости: стекло в фокусе, задник и пол в мягком боке. Жёсткой линии горизонта нет. Палитра остаётся полуночно-синей, детали фона не читаются.
-3. **Стекло тонкое и невесомое.** Тонкие стенки и ободок, блики тонкими линиями. Бокал парит: мягкая тень-эллипс под основанием вместо тяжёлого контакта с полом, отражение короче и мягче (как в референсе Levitating).
-4. **Футуристичный флер.** Холодная палитра: полуночный синий `#0a0e18` → `#13203a`, ледяной `#cfe1ff`, циановый акцент `#7fe3ff` в ореоле. Тонкие световые контуры, лёгкая атмосферная дымка. В кадре нет текста, людей, посторонних предметов, облаков и дыма.
-5. **Фон — как на референсах, в числах.** Замеры пустых участков фона (`IMG_1440.png`, окно 430,100,948,478): ровное сталь-синее поле
-   `(14,34,59) → (28,43,68) → (82,98,123) → (34,50,76)` по высоте, т.е. свет мягкий и распределён по всему кадру.
-   У сырых генераций было `(2,5,13) … (95,118,148) … (4,7,17)` — «прожектор»: чёрные углы и световой диск с читаемым краем.
-   Разница устраняется не только промтом, но и шагом `--bg-ref` в `build_photos.py` (см. «Постобработка»).
-6. **Кадр живёт в карточке, а не сам по себе.** Фото 2:3 с большими полями нигде не обрезается: в карточке (3:4),
-   в сцене карточки товара и в миниатюрах кадр лежит целиком (`contain`) поверх сильно размытой копии самого себя
-   (блюр-подложка продолжает сцену по краям), слегка приближённый через `--zoom`, с мягкой радиальной маской по краям.
-   См. `.pshot` в `webapp/css/app.css` и `productImg()` в `webapp/js/ui.js`. В CSS-блоке задаётся и сила зума на контекст:
-   карточка `1.16`, сцена `1.06`, миниатюры `1.04–1.06`. 
-
-### Референсы
-
-Опорные кропы делаются из файлов в корне репозитория. Текст и интерфейс в кадр не попадают:
-
-| Файл | Окно `(left, top, right, bottom)` | Что берём |
-|---|---|---|
-| `IMG_1440.png` (десктоп) | `(422, 92, 960, 490)` | кристальное стекло, белые блики, глянцевый пол |
-| `IMG_1441.png` (мобильный) | `(560, 200, 880, 440)` | чистые блики, тёмно-синий градиент |
-| `IMG_1431.jpeg` (Levitating) | `(180, 395, 740, 1000)` | парящие бокалы и мягкое голубое гало; окно ниже заголовка |
-
-Карточку товара из `IMG_1440.png` не брать: в ней есть текст интерфейса.
-
-```bash
-pip install pillow
-python3 - <<'EOF'
-from PIL import Image
-import os
-os.makedirs('/tmp/refs', exist_ok=True)
-crops = {
-    'ref_desktop_hero.png': ('IMG_1440.png', (422, 92, 960, 490)),
-    'ref_mobile_home.png': ('IMG_1441.png', (560, 200, 880, 440)),
-    'ref_levitating.png': ('IMG_1431.jpeg', (180, 395, 740, 1000)),
-}
-for out, (src, box) in crops.items():
-    Image.open(src).convert('RGB').crop(box).save('/tmp/refs/' + out)
-EOF
-```
-
-### Промт
-
-Английский шаблон (генератор с ним работает стабильнее). Плейсхолдеры в `{}`:
-
-- `{OBJ}`: тип бокала, например `footed highball glass`;
-- `{FEATS}`: силуэт из таблицы ниже;
-- `{DIMS}`: реальные размеры, например `height 180 mm, rim diameter 58 mm, 390 ml`.
-
-```text
-Photorealistic luxury studio product photo for the brand Cocktail Embassy (hand-blown crystal bar glassware). ONE single {OBJ}, centred in a vertical 2:3 frame, the glass occupying about {FILL}% of the frame height. FORM: reconstruct it strictly from image 1 — the supplier photo from the price-list PDF; use only its geometry, ignore its background: {FEATS}; real proportions: {DIMS}. Do not redesign the glass and do not take a different shape from images 2-4. COLOUR, LIGHT AND HIGHLIGHTS: follow the brand references in images 2-4 — deep midnight-navy palette #0a0e18 to #13203a, ice-blue #cfe1ff key light, faint cyan #7fe3ff inside the glow, crisp thin white specular highlights tracing the rim and running down the wall as fine lines, glossy dark navy floor. The background is a clean, smooth, evenly blurred navy gradient: no cloud wisps, no smoke, no grain, no visible horizon seam, no floor edge; the halo behind the glass is a soft gradient with no circular edge and never burns to white; the reflection under the glass is short, dim and blurred. Only the glass is sharp. The glass is very thin-walled, delicate and weightless, hovering a hair above the floor with a soft elliptical floating shadow, no heavy contact shadow. No text, no logos, no UI, no props, no people, no other glasses, no white or grey background, no star-shaped caustics at the base, no liquid. Dark space above and below.
-```
-
-`{FILL}` — 72 для высоких позиций (стаканы, бокалы на ножке), 62 для низких (рокс, шот), 74 для гравированных
-(гравировку должно читаться). Для гравировок добавить в промт: `The engraved pattern from image 1 must stay on the
-glass and read as fine bright line-work catching the light — do not remove it and do not invent a different pattern.`
-
-
-
-Изображения: `1` — `webapp/assets/products/src-<COD>.png` (форма), `2–4` — `/tmp/refs/ref_desktop_hero.png`, `ref_mobile_home.png`, `ref_levitating.png` (стиль).
-
-Параметры:
-- `images`: `[src-<COD>.png, ref_desktop_hero, ref_mobile_home, ref_levitating]`;
-- `file_path`: `/tmp/gen/<COD>.jpg`. В репозиторий кадр попадает только после проверки;
-- `offer_options`: `false` (ассеты внутри сборки);
-- результат примерно 848×1264, то есть 2:3;
-- инструмент выдаёт не больше 10 изображений за ход: работать партиями по ≤10 и смотреть результаты между партиями.
-
-Особые случаи:
-- **AG0027 (чайник).** Чай и жидкость в кадре **не нужны**: посуда пустая и сухая, сквозь неё
-  видно фон. Реальные материалы сохраняем только деревянные — ручка, knob крышки и кольцо
-  инфьюзера; янтарный tint, пар и тёплый glow отменены. Свет, фон и стекло — по общему стилю.
-- **AG0011–AG0014 (гравировка).** Рисунок на стенках сохраняем как в `src`. Каждая гравировка должна читаться бликом.
-- **AG0004, AG0019, AG0027.** Исходники на чёрно-белом или тёмном фоне: фон игнорировать, брать только силуэт.
-  Для них в `.arena/prep_refs.py` задан ручной кроп (`AG0004`: 46,44,100,104; `AG0019`: 18,8,128,130).
-- **Белый фон у `src`.** Чтобы генератор не утащил белый фон и цвет исходника, референс формы собирается нейтрально-серым:
-  автоконтраст по каналам яркости, апскейл LANCZOS, `UnsharpMask`, и только геометрия — весь свет и цвет из `images 2-4`.
-  Файлы `.arena/shape/shape-<COD>.png` пересобираются скриптом `.arena/prep_refs.py` (`.arena/` не коммитится).
-- **Каустики у основания** должны быть тонкими. Звёздообразные блики у основания — артефакт (наблюдали в тесте на AG0021), такие кадры отбраковываем.
-- **Облака и дым за бокалом** — артефакт, отбраковываем.
-
-### Постобработка и glow
-
-1. Мастер → `webapp/assets/products/st-<COD>.jpg`, рядом копия `<COD>.jpg` (`build_photos.py` обрабатывает только существующие `AG*.jpg`).
-2. `python3 scripts/build_photos.py` — дефолт раунда 2 уже вшит в скрипт, он делает три шага подряд:
-   - `--bg-blur 10` — боке по маске граней: где нет резких рёбер (фон, дымка, пол) дополнительно размывается, стекло резкое;
-   - `--bg-ref IMG_1440.png --bg-box 430,100,948,478 --bg-w 0.8` — световое поле фона приводится к референсу:
-     правка знакомая (gain/loss по низкочастотному слою), поэтому блики и отражение не «съедаются»;
-     прожектор, световой диск, шов горизонта и чёрная виньетка уходят;
-   - `--near 0.5 --wide 0.24` — bloom по хайлайтам (ближний и широкий ореол).
-3. Подбирать по контактному листу «до / после» и по замерам фона (`probe` в `.arena/`): ореол и блики заметны, пересвета нет,
-   фон по каналу R держится в пределах ~14–80 и не уходит в черноту углов.
-4. Приём «detail = im − low» для замены фона не использовать: он обнуляет отрицательную разницу и вымывает стекло
-   (было опробовано, кадр получается «призрачным»). Только знако-точная сборка gain/loss.
-
-### Позиции
-
-| COD | Позиция | Коллекция | Высота × Ø, мм | Объём | Форма (ориентир; точная форма — по `src`) |
-|---|---|---|---|---|---|
-| AG0001 | Highball Glass | flowers | 110 × 85 | 370 мл | стакан, сужается к низу |
-| AG0002 | Cocktail Glass | flowers | 190 × 85 | 150 мл | V-конус на длинной ножке |
-| AG0003 | Rocks Glass | flowers | 85 × 95 | 330 мл | расширяется к краю, округлое дно |
-| AG0004 | Rocks Glass | replicate | 80 × 75 | 330 мл | прямой стакан, толстое дно |
-| AG0006 | Coupethini | coupethini | 170 × 80 | 145 мл | стройная чаша на длинной ножке |
-| AG0008 | Chalet Glass | bullet | 145 × 97 | 210 мл | широкая чаша на ножке |
-| AG0009 | Highball Glass | bullet | 133 × 74 | 410 мл | высокий прямой стакан |
-| AG0010 | Rocks Glass | bullet | 75 × 85 | 390 мл | низкий широкий стакан |
-| AG0011 | Cocktail Glass | retro-asia-engraved | 115 × 73 | 140 мл | V-конус, гравировка точками |
-| AG0012 | Rocks Glass | retro-asia-engraved | 80 × 73 | 270 мл | стакан, гравировка кольцами |
-| AG0013 | Highball Glass | retro-asia-engraved | 110 × 70 | 310 мл | высокий стакан, гравировка точками |
-| AG0014 | Shot Glass | retro-asia-engraved | 73 × 30 | 60 мл | шот, гравировка точками |
-| AG0015 | Cocktail Glass | retro-asia | 115 × 73 | 140 мл | V-конус, витой стебель |
-| AG0016 | Rocks Glass | retro-asia | 80 × 73 | 270 мл | прямой стакан, утяжелённое дно |
-| AG0017 | Highball Glass | retro-asia | 110 × 70 | 310 мл | высокий прямой стакан |
-| AG0018 | Shot Glass | retro-asia | 73 × 30 | 60 мл | узкий шот |
-| AG0019 | Cocktail Glass | two-sips | 150 × 90 | 85 мл | коупе на ножке |
-| AG0020 | Super Pony | levitating | 208 × 70 | 140 мл | глубокая чаша на очень длинной ножке |
-| AG0021 | Rocks Glass | levitating | 100 × 76 | 300 мл | стакан на короткой толстой ножке |
-| AG0022 | Highball Glass | levitating | 180 × 58 | 390 мл | высокий стакан на ножке |
-| AG0023 | Mini Martini | shorties | — | 150 мл | мини-мартини на короткой ножке |
-| AG0024 | Daisy Coupe | shorties | — | 150 мл | мелкое коупе на короткой ножке |
-| AG0025 | Modern Margo | shorties | — | 200 мл | ступенчатый ободок, чаша на ножке |
-| AG0026 | Lil’ NORA | shorties | — | 160 мл | округлая чаша на короткой ножке |
-| AG0027 | Teapot | soon-teapot | — | 500 мл | стеклянный чайник, ореховая ручка, янтарный чай |
-
-### Критерии готовности
-
-- 25 из 25 позиций: новые `<COD>.jpg` в стиле раунда 2. Форма совпадает с `src-<COD>.png`, проверено контактным листом «src | новое».
-- Glow заметно сильнее текущего, фон мягко размыт, стекло тонкое, бокал парит с тенью-эллипсом.
-- Ни один кадр не содержит текста, интерфейса, посторонних предметов, облаков и белого или серого фона.
-- Удалены все `fb-<COD>.jpg`. В devtools нет запросов к `fb-*.jpg`.
-- Из README убрано упоминание фолбэка. По желанию убрать `onerror`-фолбэк из `webapp/js/ui.js`, `webapp/js/views/home.js` и `webapp/js/views/collections.js`.
-
-### Порядок работы
-
-1. Кропы референсов (см. выше).
-2. Тест на трёх позициях: `AG0015` (V-конус), `AG0022` (тонкий высокий стакан, проверка «невесомости»), `AG0027` (чайник). Сравнить с референсами и подобрать силу ореола и боке в промте. Остальные позиции запускать только после этого.
-3. Остальные позиции партиями по ≤10 изображений.
-4. Мастера, копии, `build_photos.py --near 0.6 --wide 0.3`, подбор параметров.
-5. Контактные листы «src | новое» и «до | после». Точечная перегенерация отдельных позиций.
-6. Удалить `fb-*.jpg`, перевести этот раздел в историю, сделать коммит.
-
-**Вне скоупа раунда 2:** данные каталога, вёрстка и цены (hero-слайды и обложки ушли в раунд 3).
-
----
-
----
-
-## Раунд 3 (закрыт в раунде 7) — свет бренда на hero, обложках коллекций и og:image
-
-> ✅ **Закрыт.** Задачи раунда выполнены в раунде 7 с оптикой раундов 5–6 (однородное поле без
-> граней, кромка = `--bg`, без пола и отражения): hero собраны из новых мастеров, у всех 10
-> коллекций обложки, `og:image` на месте. Состав кадров — по таблице ниже; актуальная история —
-> в разделе «Раунд 7 (закрыт)».
-
-**Предварительно.** Закрыть раунд 2: доснять 12 позиций (`AG0013 AG0014 AG0016 AG0017 AG0018 AG0019 AG0020 AG0021
-AG0023 AG0024 AG0025 AG0026`), прогнать `build_photos.py`, удалить `fb-<COD>.jpg` и `onerror`-фолбэки
-(`webapp/js/ui.js`, `webapp/js/views/home.js`, `webapp/js/views/collections.js`).
-
-**Проблема.** Товарные кадры теперь живут в полуночно-синем свете референсов, а всё остальное — нет:
-hero-слайды на главной это сырые кроки из `IMG_1420/1421.png` (свет, цвет и зерно чужие), у страницы
-коллекции нет обложки вообще, `og:image` нет — ссылка из Telegram и WhatsApp разворачивается серым прямоугольником.
-
-### Цель
-
-1. **Hero — из новых мастеров, а не из Instagram.** 5 слайдов: 2–3 бокала из одного кадра серии на том же световом поле.
-   Десктоп 16:9 (1920×1080), мобильный 4:5 (1080×1350); раскладка `IMG_1440.png` (текст слева, стекло справа) и
-   `IMG_1441.png` (стекло по центру, подпись снизу).
-2. **Обложки коллекций.** 10 кадров 16:9 (1280×720) — по одному на коллекцию, в `webapp/assets/covers/<coll-id>.jpg`;
-   ставить их в шапку `renderCollection()` и в рельс `.coll-row` вместо миниатюры товара.
-3. **og:image.** `webapp/assets/brand/og.jpg` 1200×630 + `<meta property="og:image">`, `og:title`, `og:description`,
-   `twitter:card` в `webapp/index.html`, и `link rel="image_src"` для старых клиентов.
-4. **Один свет на весь магазин.** Низкочастотное поле фона во всех новых кадрах приводится к тому же референсу,
-   что и товары: `--bg-ref IMG_1440.png --bg-box 430,100,948,478`. Проверка — пробы R-канала фона в пределах 14–82.
-
-### Состав кадров
-
-| Актив | Размер | Состав (позиции из каталога) |
-|---|---|---|
-| `brand/hero-01.jpg` | 1920×1080 | AG0008 + AG0021 + AG0009 — пара «витринная», как в `IMG_1440` |
-| `brand/hero-02.jpg` | 1920×1080 | AG0002 + AG0006 — две длинные ножки, силуэты |
-| `brand/hero-03.jpg` | 1920×1080 | AG0015 + AG0016 + AG0012 — Retro Asia, гравировка в контровом |
-| `brand/hero-04.jpg` | 1920×1080 | AG0020 + AG0022 — Levitating, «невесомость» |
-| `brand/hero-05.jpg` | 1920×1080 | AG0027 — чайник, единственный тёплый акцент |
-| `brand/hero-0N-m.jpg` | 1080×1350 | те же составы, вертикальная нарезка под мобильный hero |
-| `covers/retro-asia.jpg` … | 1280×720 | флагман коллекции + одна позиция рядом; список коллекций — `COLLECTIONS` в `scripts/build_catalog.py` |
-| `brand/og.jpg` | 1200×630 | AG0015 + AG0008 + AG0009, слева оставляем чистое место под `og:title` (текст не вжигать) |
-
-### Как собирать
-
-Композиция собирается скриптом из готовых мастеров, генератор нужен только если требуется новый свет или фон:
-
-```bash
-python3 .arena/prep_refs.py                                   # референсы света и формы
-python3 scripts/build_photos.py --only hero,covers,og         # боке + bg-match + bloom на новых активах
-```
-
-В `scripts/build_photos.py` для этого нужен флаг `--only` — список масок имён вместо `AG*.jpg`
-(`AG*` — товары, `hero-*`, `covers/*`, `og`). Мастер для hero и обложек — `st-<имя>.jpg` рядом с файлом,
-чтобы шаг оставался идемпотентным.
-
-Промт для генерации фона/сцены (если одного композита мало) — тот же, что в раунде 2, только вместо
-одного бокала — группа и горизонтальный кадр:
-
-```text
-Photorealistic luxury studio scene for the brand Cocktail Embassy. TWO {OBJS} grouped on a glossy dark navy floor,
-off-centre to the right in a horizontal 16:9 frame, left half of the frame kept empty and dark for a headline.
-Each glass is reconstructed faithfully from its supplier photo: {FEATS}. Shared light: deep midnight-navy backdrop
-#0a0e18 to #13203a, ice-blue #cfe1ff key light, faint cyan #7fe3ff rim, crisp thin white highlights along rims and
-walls, soft even glow across the whole background (no spotlight hotspot, no black corners, no visible horizon seam),
-gently blurred backdrop, thin atmospheric haze. Very thin-walled, weightless, soft elliptical floating shadows.
-No text, no logos, no props, no people, no clouds or smoke, no liquid.
-```
-
-### Критерии готовности
-
-- `webapp/assets/brand/hero-01..05.jpg` и вертикальные `-m`-версии собраны из новых мастеров, пропорции 16:9 и 4:5;
-  в `home.js` больше нет прямых ссылок на кроки Instagram, старые `hero-06..12.jpg` удалены.
-- 10 обложек в `webapp/assets/covers/`, шапка страницы коллекции и рельс `.coll-row` рендерят их (с фолбэком на
-  `productImg()`, если обложки нет).
-- `og.jpg` 1200×630, `og:image` доступен по абсолютному URL (`PUBLIC_URL`), валидатор Telegram/WhatsApp отдаёт картинку.
-- Пробы R-канала фона во всех новых кадрах — 14…82, как у товаров; ни один кадр не темнее `(8,10,18)` по углам.
-- Текст и интерфейс в генерируемые кадры не попадают: надпись hero остаётся HTML (`hero .cap`), в PNG её нет.
-
-### Вне скоупа
-
-Новые ракурсы и анимации, 3D, видеоподложка, цены и данные каталога, рассылка.
-
----
-
-## Фото товаров: раунд 5 (4K) и раунд 6 (парение в фоне витрины)
-
-**Статус.** Все 25 позиций перегнаны: `<COD>.jpg` — 4K (2576×3840, JPEG q95,
-4:4:4, progressive), `<COD>-card.jpg` — тот же кадр в размере карточки
-(859×1280, ≈64 KB). Мастер `st-<COD>.jpg` остаётся единственного исходника:
-пайплайн идемпотентен и всегда стартует с него.
-
-Правила кадра, зафиксированные раундами 5–6 (всё это дефолт
-`python3 scripts/build_photos.py`):
-
-1. **Оптика масштабируется с разрешением.** Все радиусы, толщины полос и окна
-   морфологии в скрипте заданы для кадра 848×1264 (`REF_LONG = 1264`) и
-   умножаются на `S = long_side / REF_LONG`; мастер поднимается LANCZOS-ом
-   шагами не более ×2 и получает лёгкий micro-contrast. Поэтому 4K-кадр —
-   тот же кадр, а не «мыло, растянутое до 3840».
-2. **Фон — одно однородное размытое поле без граней.** Шаги `--bg-ref`
-   (замена низкочастотного слоя полем референса) плюс `--bg-smooth`
-   (всё вне предмета — один большой радиус размытия, подмешанный к полю на
-   `--bg-mix`) вычищают и «прожектор», и «волокно» генератора, и шов горизонта.
-   Защиту по прямоугольнику bbox использовать нельзя: по её периметру читается
-   граница зоны размытия — та самая грань. Маска предмета закрывается
-   морфологией (Max→Min), чтобы внутри чаши не оставалось «окошек» с резким
-   фоном.
-3. **Посуда прозрачная.** `--clear` пересаживает низкочастотный тон нутра
-   предмета на поле фона (частотное разделение, `--refract` — лёгкая
-   рефракция), поэтому сквозь чашу и дно видно фон, а не молочно-синяя
-   заливка мастера. Пристенные полосы, ободок, блики и каустика (`--bg-wall`,
-   `--clear-detail`) остаются резкими: без них стекло превращается в контурный
-   рисунок без объёма.
-4. **Пола, отражения и контактной тени больше нет** (`--surface`, `--refl`,
-   `--shadow` по умолчанию выключены). Глянец с горизонтом и световой
-   прямоугольник отражения под основанием — это ровно те границы, из-за которых
-   кадр нельзя незаметно вшить в интерфейс. Посуда парит, как в референсе
-   Levitating. Флаги остались для баннеров и печати:
-   `--surface --refl .55 --shadow .45`.
-5. **Кромка кадра = цвет фона приложения.** `--fade` сводит последние ~30%
-   полуоси к `--bg #05070d`: спад считается по двум осям smoothstep-ом и
-   складывается экраном (максимум рисовал ромб по диагоналям), маска не
-   размывается (блюр снимает максимум ровно на границе). Проверка —
-   `.arena/probe_blend.py`: отклонение кромки от `--bg` ≤ 1.0 (было 85 на
-   кадрах с глянцем), энергия граней в полосе ≤ 0.7.
-6. **Bloom без кольца.** Порог маски ореола поднимается автоматически, когда
-   предмет сам по себе яркий (чайник, гравировки): иначе ореол набирается от
-   всего тела и вокруг предмета видно кольцо с краем.
-7. **Витрина не тянет 4K в ленту.** `productImg(product, cls, variant)`
-   ставит `<COD>-card.jpg` в сетки, рельсы и миниатюры, а 4K — только в сцену
-   карточки товара. Подложка-блюр всегда берёт маленький кадр. Так как
-   имена файлов при перегонке стиля не меняются, `/assets/*` кэшируются на
-   неделю (`immutable`), а свежие кадры доносит `?v=<метка>` — `assetsVersion()`
-   в `src/config.js` считает её по самому свежему mtime каталога кадров и
-   отдаёт через `/api/config` (`assetsV`).
-
-**Что делать после перегонки кадров:** `python3 scripts/build_photos.py`
-(≈5 с на кадр) → `.arena/probe_blend.py AG0015 AG0010 AG0027` → коллаж
-всех 25 кадров. `data/catalog.json` править не нужно: путь к картинке
-в нём — на 4K-файл, карточка выводится заменой суффикса.
-
-Задание на следующий раунд:
-
-1. **Тонкое дно у всей посуды.** Дно стаканов и основание ножки — hairline-тонкие,
-   как стенки («base as thin as the walls»). Пилот отработан на AG0001/AG0004/AG0015;
-   нужно перегенерировать мастера всех товаров с этим акцентом и прогнать пайплайн.
-2. **Проверить «читаемость» мелких позиций на карточке.** Shot-стаканы и
-   гравировки после прозрачности стали заметны меньше: при `--clear 0.72`
-   поднять `--near` до 0.6 и проверить по мок-карточкам
-   (`.arena/probe_blend.py` рисует ровно то, что видит браузер).
-3. **По решению:** привести запасную галерею `fb-<COD>.jpg` к тому же фону
-   (`--bg` по кромке), иначе фолбэк-панель всё равно даст видимый прямоугольник.
-
-Критерии готовности: у всех 25 товаров 4K-кадр и кадр карточки; фон без граней
-и без горизонта (`grad` ≤ 0.7 и `seam` ≈ 0 в `.arena/probe_bg.py`); посуда
-прозрачная и парит; отклонение кромки от `--bg` ≤ 1.5 (`.arena/probe_blend.py`);
-ни одного кадра с чаем/жидкостью внутри. Правило «R-канала фона 14…82» из
-раунда 2 теперь относится к световому полю вокруг предмета: у самой кромки
-кадра R ≈ 5 — там фон приложения и должен быть, это и есть растворение.
-
----
-
-## Витрина: свет кадра и rim glow выбранной позиции
-
-- **Растворение вместо рамки.** Кадр не обрезают (`object-fit: contain` +
-  `--zoom`), не маскируют эллипсом и не обкладывают тенью: `drop-shadow` по
-  альфе прямоугольника и радиальная `mask-image` как рисовали границу
-  «картинки». Теперь кромка кадра = `--bg` (см. раунд 6), а контейнеры
-  `.pcard .ph`, `.pview .stage`, `.coll-row .th`, `.cline .th` имеют фон
-  `var(--bg)` — стекло парит прямо в интерфейсе.
-- **Rim glow набирает силу плавно.** При выборе позиции (hover, фокус с
-  клавиатуры, нажатие, `.lit` на экране товара) свечение по кромке кадра
-  разгоняется за 450–600 мс: гало — по `opacity` и `scale(.88 → 1)`,
-  холодная линия контура — с задержкой 60 мс, яркость и насыщенность самого
-  стекла — своим слоем. Никакого «вспыхнуло» — только нарастание интенсивности.
-  Позиция, уже выбранная (в корзине, `.picked`), держит 45% силы, а наведение
-  докручивает до максимума. `prefers-reduced-motion` выключает разгон.
-  Слой `.rim` добавляет `productImg()`, поэтому свечение есть и в карточке,
-  и в сцене товара, и в рельсе коллекций.
-
----
-
-## Раунд 7 (закрыт) — витрина целиком в одном свете
-
-**Статус: закрыт.** Товарные кадры жили в растворённом в интерфейсе свете раунда 6, а всё остальное —
-нет: hero были сырыми кроками Instagram (`IMG_1420/1421.png`) с чужим светом и зерном, у страницы
-коллекции обложки не было, `og:image` не было. Теперь все активы — 25 товаров, 5 hero ×2 (desktop +
-mobile), 10 обложек и `og.jpg` — выходят из одного пайплайна и лежат на одном световом поле.
-
-**Как собрано.** Композитные мастера `scripts/compose_masters.py` вырезают предметы из готовых
-`st-<COD>.jpg` (фон каждого мастера предварительно приведён к полю референса — вклейка без шва) и
-раскладывают их по таблице `scripts/scenes.py` (авто-раскладка в ряд на общей базовой линии). Мастер
-сцены лежит рядом с финалом — `st-<имя>.jpg` — шаг остаётся идемпотентным. Дальше
-`scripts/build_photos.py --only hero,covers,og` прогоняет их через ту же оптику (bg-smooth, clear,
-bloom, rim, fade), что и товары.
-
-**Пайплайн (раунд 7):**
-
-- `--only` принимает маски: `AG*` (товары), `hero-*`, `covers/*`, `og` (сокращения `hero`, `covers`);
-- `--dry` печатает эффективные параметры по каждому заданию и ничего не пишет;
-- `data/photo_overrides.json` — реестр точечных отклонений по позициям/сценам: у AG0027 `clear 0.45`
-  (иначе съедается деревянная ручка), у гравировок AG0011–AG0014 `clear 0.55 / near 0.62 /
-  clear_detail 1.05` (блики узора читаются и в карточке 212×282), у шота AG0018 `clear 0.60`;
-  этим же закрыт пункт «читаемость мелких позиций» из задания раундов 5–6;
-- у сцен фон собирается с `bg_mix 0.92` и более поздним `fade_start` (в широком кадре группа стекла
-  доходит до 0.8–0.9W — товарный старт 0.30 затемнял бы правое стекло); у товаров исторический
-  дефолт 0.6 не тронут (идемпотентность);
-- веса: hero ≤ 350 КБ, hero-m ≤ 250 КБ, обложки/og ≤ 200 КБ — `save_fit` сам подбирает качество.
-
-**Витрина.** `home.js` — слайды через `<picture>`: десктоп берёт `hero-NN.jpg` (1920×1080), мобильный
-`hero-NN-m.jpg` (1080×1350), оба через `assetUrl()`; рельс `.coll-row` и шапка `renderCollection()`
-получили обложки (`coverImg()` в `ui.js`, фолбэк на карточку товара через `onerror`); `index.html` —
-`og:image`, `og:title`, `og:description`, `twitter:card`, `link rel="image_src"`; сервер подставляет
-абсолютный `PUBLIC_URL` в og-теги на лету (валидаторам превью нужен абсолютный). `assetsVersion()`
-считает метку `?v=` по всем трём каталогам кадров (products, brand, covers). Старые кроки
-`hero-06..12.jpg` удалены; запасная галерея `fb-<COD>.jpg` оставлена как аварийный фолбэк, но её
-кромка приведена к `--bg` (пункт 3 задания раундов 5–6): фолбэк-панель больше не даёт прямоугольника.
-
-**Замеры (пробы те же, что в раундах 5–6):** кромка = `--bg` (отклонение 1.0 у всех новых кадров),
-`grad` 0.45–0.66 (hero 1920: 0.52; обложки 1280: 0.45; og: 0.66), `seam` ≤ 0.08, поле R 14…30 вокруг
-предмета и ≈ 5 у кромки (растворение). Веса: hero 93–132 КБ, hero-m 79–99 КБ, обложки 49–74 КБ,
-og 46 КБ.
-
-### Цель
-
-1. **Hero — из новых мастеров, а не из Instagram.** 5 слайдов: группа из 2–3 позиций одного ряда на том
-   же световом поле. Десктоп 1920×1080, мобильный 1080×1350 (`hero-NN.jpg` / `hero-NN-m.jpg`);
-   раскладка как в `IMG_1440.png` (текст слева, стекло справа) и `IMG_1441.png` (стекло по центру,
-   подпись снизу). Надпись остаётся HTML (`.hero .cap`) — в PNG текста нет.
-2. **Обложки коллекций.** 10 кадров 1280×720 в `webapp/assets/covers/<coll-id>.jpg` (список коллекций —
-   `COLLECTIONS` в `scripts/build_catalog.py`, он же в `data/catalog.json`): флагман коллекции + одна
-   позиция рядом. Ставить в шапку `renderCollection()` и в рельс `.coll-row` вместо миниатюры товара,
-   с фолбэком на `productImg()`.
-3. **og:image.** `webapp/assets/brand/og.jpg` 1200×630 (без вжоженного текста, слева чистое место под
-   заголовок) + `og:image`, `og:title`, `og:description`, `twitter:card` и `link rel="image_src"`
-   в `webapp/index.html`.
-4. **Один пайплайн на все активы.** `scripts/build_photos.py --only` должен принимать не только коды
-   товаров: маски `AG*` (товары), `hero-*`, `covers/*`, `og`; мастер — `st-<имя>.jpg` рядом с файлом,
-   чтобы шаг оставался идемпотентным.
-5. **Реестр поправок по позициям** — `data/photo_overrides.json`: точечные отклонения от дефолтов
-   (`{"AG0027": {"clear": 0.45}, "AG0014": {"clear": 0.55, "near": 0.62}}`). Причина: `--clear` и bloom
-   одинаково относятся к тонкому хрусталю и к дереву/гравировке — у AG0027 `--clear` съедает деревянную
-   ручку, у шотов и гравировок (AG0011–AG0014, AG0018) блики узора пропадают. Флаг `--dry` — напечатать
-   эффективные параметры по каждой позиции и ничего не писать.
-
-### Правила кадра (обязательны для всех новых активов, иначе «грань» вернётся)
-
-| Шаг | Значение | Зачем |
-|---|---|---|
-| `--fade` | вкл, кромка = `--bg #05070d` | hero и обложки лежат на фоне страницы: любой другой тон по краю = прямоугольник |
-| `--surface`, `--refl`, `--shadow` | выкл | пол, отражение и тень дают линию горизонта и световой прямоугольник |
-| `--bg-smooth` / `--bg-mix` | 150 / 0.92 | фон — одно однородное поле, без «прожектора» и волокона генератора |
-| `--near` / `--wide` / `--rim` | 0.55 / 0.30 / 0.5 | ореол мягкий, без кольца с краем (порог маски поднимается сам на ярких телах) |
-| `--clear` | 0.72 (позиции — из реестра) | посуда пустая и прозрачная: ни чая, ни жидкости, ни молочно-синей заливки |
-| разрешение | 1920 / 1080 / 1280 / 1200 по макету, q90…95 | 4K нужен карточке товара; слайду достаточно ширины макета, иначе главная весит мегабайты |
-| вес | hero ≤ 350 КБ, `-m` ≤ 250 КБ, обложка ≤ 200 КБ, `og.jpg` ≤ 200 КБ | первый экран на мобильном |
-| в кадре нет | текста, интерфейса, людей, props, облаков и дыма, жидкости, звездообразных каустик | как в раунде 2 |
-
-Замеры перед коммитом — те же пробы: `.arena/probe_bg.py` (`grad` ≤ 0.7, `seam` ≤ 0.1, R-канал поля
-14…82) и `.arena/probe_blend.py` (отклонение кромки от `--bg` ≤ 1.5).
-
-### Состав кадров
-
-| Актив | Размер | Состав |
-|---|---|---|
-| `brand/hero-01.jpg` (+`-m`) | 1920×1080 / 1080×1350 | AG0008 + AG0021 + AG0009 — «витринная» пара, как в `IMG_1440` |
-| `brand/hero-02.jpg` | 1920×1080 | AG0002 + AG0006 — две длинные ножки, силуэты |
-| `brand/hero-03.jpg` | 1920×1080 | AG0015 + AG0016 + AG0012 — Retro Asia, гравировка в контровом |
-| `brand/hero-04.jpg` | 1920×1080 | AG0020 + AG0022 — Levitating, «невесомость» |
-| `brand/hero-05.jpg` | 1920×1080 | AG0027 — чайник, единственный тёплый акцент (пустой, без чая) |
-| `covers/<coll-id>.jpg` | 1280×720 | по коллекции: флагман + сосед; 10 файлов |
-| `brand/og.jpg` | 1200×630 | AG0015 + AG0008 + AG0009, слева чистое место под заголовок |
-
-Композиция собирается из готовых мастеров (кадры уже в одном свете — `src`-положение предмета,
-общий `--bg-smooth`/`--fade`), генератор нужен только если требуется новая сцена:
-
-```text
-Photorealistic luxury studio scene for the brand Cocktail Embassy. TWO {OBJS} grouped in a horizontal
-16:9 frame, off-centre to the right, the left half of the frame empty for a headline. Shared light:
-smooth even midnight-navy field #0a0e18 to #13203a, ice-blue #cfe1ff key light, faint cyan #7fe3ff rim,
-crisp thin white highlights along rims and walls. No floor, no horizon line, no glossy surface, no
-reflection under the glasses, no contact shadow: the glasses levitate in a soft gradient field that
-fades to #05070d at every edge of the frame. Only the glasses are sharp; the field is uniform, without
-spotlight disc, halo ring with a visible edge, black corners, clouds or smoke. Glasses are empty — no
-liquid, no tea. Perfectly clear colourless crystal, thin walls. No text, no logos, no UI, no props,
-no people, no star-shaped caustics.
-```
-
-### Порядок работы (выполнен; воспроизведение)
-
-1. `python3 .arena/prep_refs.py` — референсы света и силуэты (если менялся прайс).
-2. Собрать композиты мастеров hero/обложек/og, разложить `st-<имя>.jpg` рядом с целевым файлом.
-3. `python3 scripts/build_photos.py --only hero,covers,og --dry` — сверить эффективные параметры,
-   затем без `--dry`.
-4. Врезка в витрину: `home.js` (слайды из `brand/hero-NN[-m].jpg` через `assetUrl`, `srcset` на
-   десктоп/мобильный), `collections.js` (обложка в шапку), `index.html` (мета-теги), `.coll-row`
-   (обложка вместо миниатюры).
-5. Пробы + коллаж всех 25 товаров и 5 слайдов; точечная перегенерация спорных позиций.
-6. Удалить `hero-06..12.jpg` (старые кроки Instagram) и, если принято решение, `fb-<COD>.jpg` вместе
-   с `onerror`-фолбэками в `webapp/js/ui.js`, `webapp/js/views/home.js`, `webapp/js/views/collections.js`.
-7. Закрыть хвосты раунда 4: hairline-дно у всей посуды (перегенерация мастеров с «base as thin as the
-   walls») — если мастер не меняется, прогнать `--clear-detail 1.05` и проверить шоты мок-карточкой.
-
-### Критерии готовности (все выполнены)
-
-- Все 25 товаров + 5 hero + 10 обложек + `og.jpg` идут из одного пайплайна; у новых кадров кромка
-  = `--bg` (отклонение ≤ 1.5), `grad` ≤ 0.7, `seam` ≤ 0.1, R-канала поля 14…82.
-- `home.js` не ссылается на кроки Instagram, `hero-06..12.jpg` удалены; hero и обложки проходят через
-  `assetUrl()` (недельный кэш + `?v=`).
-- В devtools нет ни одного запроса к файлу, которого нет в репозитории; `curl -sI $PUBLIC_URL/assets/brand/og.jpg` → 200,
-  превью-валидатор Telegram отдаёт кадр.
-- `--only` принимает маски `hero-*`, `covers/*`, `og`; `--dry` печатает параметры; `data/photo_overrides.json`
-  применяется (проверка: `--dry` по AG0027 показывает понижённый `--clear`).
-- Гравировки AG0011–AG0014 читаются и в карточке 212×282 (мок из `.arena/probe_blend.py`), чайник пустой.
-- README: раздел раунда 3 помечен закрытым, этот раздел перенесён в историю.
-
-### Вне скоупа
-
-Новые ракурсы кадра, видеоподложка, цены и данные каталога, загрузка своих
-фото в админке, рассылка.
-
----
-
-## Раунд 8 (закрыт) — живой свет и невесомость интерфейса
-
-**Статус: закрыт.** Всё, что ниже в «Цели», реализовано и замерено (таблица в конце раздела).
-Оптику кадров не трогали — добавили поведение: tilt, blur-up, AVIF/WebP, PWA, a11y.
-
-**Проблема.** Кадры, hero, обложки и og живут в одном свете и растворены в фоне, но сам интерфейс
-статичен: стекло не отвечает на руку, кадр при загрузке «включается» прямоугольником, а лента тянет
-JPEG даже там, где браузер давно умеет AVIF. Приложение будущего — это свет, который следует за
-взглядом, контент без рывков и вес, которого не чувствуешь. Оптику кадров не трогаем — добавляем
-поведение.
-
-### Цель
-
-1. **Tilt-параллакс карточки товара.** `pointermove` (и `deviceorientation` на телефоне): кадр
-   поворачивается не более чем на 2.5°, слой `.rim` и блюр-подложка `--shot` смещаются навстречу на
-   4–6 px — свет «плывёт» по стеклу; при уходе указателя — возврат за 450 мс тем же smoothstep, что
-   и rim glow раунда 6. На экране товара амплитуда ×1.5. Только `transform`/`opacity` (композитор),
-   один rAF-контроллер на все карточки, троттлинг 1 кадра. `prefers-reduced-motion` и тач без
-   гиро — выключено. Критерий: в DevTools Performance на tilt — ноль `Paint`/`Layout`, 60 fps на
-   среднем Android.
-2. **Blur-up проявление кадров.** Пока `<img>` едет, контейнер держит подложку `--shot` (она уже
-   есть); кадр приходит не «включается», а проявляется: `opacity 0→1` + `scale 1.04→1` за 500 мс,
-   без layout-прыжка (`aspect-ratio` заданы). Hero и обложки — тот же прояв + shimmer-скелетон до
-   первого слайда. Критерий: CLS = 0, LCP ≤ 2.5 s на 4G (Lighthouse mobile).
-3. **AVIF/WebP-производные.** `build_photos.py` пишет рядом с финалом `.avif` (q≈55) и `.webp`
-   (q≈70) — из того же финального кадра, оптика не меняется; `productImg()`, `coverImg()` и hero
-   получают `<picture>` с `source type="image/avif"` / `image/webp`, JPEG остаётся фолбэком
-   (WebView Telegram и старые браузеры). `assetsVersion()` учитывает новые расширения, пробы
-   раундов 5–7 не меняются (кромка у производных та же). Критерий: лента из 25 карточек ≤ 1.2 МБ
-   вместо ≈1.6 МБ; hero-01 avif ≤ 90 КБ.
-4. **PWA-невесомость.** `manifest.webmanifest` (иконки из `brand/`, `theme_color #05070d`,
-   `display: standalone`) + service worker: precache оболочки (html/css/js/иконки), runtime-кэш
-   кадров stale-while-revalidate с LRU-потолком 120 файлов. Критерий: повторное открытие без сети
-   показывает витрину и открытые ранее кадры; установка с Android/Chrome проходит. В Telegram
-   WebView SW не регистрируем (свой кэш) — проверка `window.Telegram?.WebApp`.
-5. **A11y-проход.** Hero — `aria-roledescription="carousel"`, стрелки и точки кнопками с
-   `aria-label`, автослайд ставится на паузу по фокусу/наведению; контраст `--mut` на `--bg`
-   довести до ≥ 4.5:1; тап-цели ≥ 44 px; порядок фокуса по экранам checkout без ловушек. Критерий:
-   Lighthouse Accessibility ≥ 98 и ручной проход VoiceOver/TalkBack по потокам
-   «карточка → корзина → заказ → счёт».
-
-### Правила
-
-- Оптика и веса JPEG-оригиналов не меняются: производные — отдельные файлы, пробы раундов 5–7
-  зелёные до и после.
-- Всё новое — без зависимостей и без сборки (чистый ES-модульный JS, как сейчас).
-- Каждая метрика (fps, CLS, веса, Lighthouse) фиксируется в PR скриншотом/таблицей.
-
-### Порядок работы
-
-1. `build_photos.py`: флаги `--avif`/`--webp` (по умолчанию вкл), `save_fit` для производных,
-   маски `--only` те же; перегонка 25 товаров + 21 сцены.
-2. `ui.js`: `<picture>` в `productImg()`/`coverImg()`; `home.js`: `<source type=…>` у hero.
-3. `tilt.js` — делегированный контроллер; подключить в `components.js` (карточка) и `product.js`
-   (сцена).
-4. `manifest.webmanifest` + `sw.js` + регистрация в `app.js` (вне Telegram WebView).
-5. A11y-правка разметки и контраста (`base.css`/`app.css`).
-6. Прогон Lighthouse mobile/desktop, пробы раундов 5–7, коллаж; README: раунд 8 в историю.
-
-### Критерии готовности
-
-- Lighthouse mobile: Performance ≥ 95, Accessibility ≥ 98, CLS = 0.
-- Лента 25 карточек ≤ 1.2 МБ (avif-браузер); hero-01 avif ≤ 90 КБ; JPEG-фолбэк отдаётся 200 всем.
-- Tilt: 60 fps, ноль paint-событий; выключен при `prefers-reduced-motion`.
-- Офлайн-повтор: витрина и закэшированные кадры открываются без сети; `?v=` доносит свежие кадры
-  и сквозь SW (проверка версии в кэш-ключе).
-- Пробы: кромка ≤ 1.5, `grad`/`seam` в нормах раунда 7 — у JPEG и у производных.
-- README: раздел раунда 8 помечен закрытым, этот раздел перенесён в историю.
-
-### Вне скоупа
-
-3D-рендер стекла и видео-подложка (тяжёлые для WebView), fuzzy-поиск по фото, свои фото в админке,
-рассылка, webp для og-тегов (валидаторам соцсетей нужен jpg).
-
-### Итог и замеры (раунд 8)
-
-| Метрика | Цель | Факт | Как меряли |
-|---|---|---|---|
-| Лента 25 карточек | ≤ 1.2 МБ | **266 КБ** (AVIF) / 321 КБ (WebP) вместо 1504 КБ JPEG | сумма файлов `*-card.*` |
-| `hero-01` AVIF | ≤ 90 КБ | **18 КБ** (jpg 127 КБ) | размер файла |
-| 4K-кадры (25 шт.) | — | 1.0 МБ AVIF вместо 15.8 МБ JPEG | сумма файлов |
-| CLS | 0 | **0** | PerformanceObserver layout-shift, mobile 393×852 |
-| LCP (4G/mobile) | ≤ 2.5 s | **0.32 s** | PerformanceObserver LCP |
-| Tilt | 60 fps, 0 layout | **62 fps, LayoutCount Δ0** | CDP Performance.getMetrics во время pointermove |
-| Кромка производных | ≤ 1.5 | 2.0 (норма 0–3, «виден край» > 8) | `.arena/probe_blend.py` на .avif/.webp |
-
-- Производные пишет `scripts/build_photos.py --derive-only` из уже записанного JPEG
-  (оптика и веса JPEG не меняются вовсе); `<picture>` отдаёт AVIF→WebP→JPEG-фолбэк
-  (`ui.js`), hero — те же три формата по desktop/mobile (`home.js`).
-- `webapp/js/tilt.js`: один rAF-контроллер, только transform/opacity, возврат 450 мс smoothstep;
-  выключен при `prefers-reduced-motion`, на таче — `deviceorientation`.
-- Blur-up: `.pshot picture` / `.hero .slide picture` проявляются `opacity+scale` (`.ready`),
-  hero держит shimmer-скелетон до первого слайда; аспекты заданы → CLS 0.
-- PWA: `manifest.webmanifest` + иконки 192/512/maskable, `sw.js` — precache оболочки,
-  stale-while-revalidate кадров с LRU-потолком 120, кэш-ключ с `?v=`; не регистрируется в
-  Telegram WebView. (В серверном headless-Chromium офлайн не проверяется: сборка без SW —
-  см. ниже «Вне скоупа проверки».)
-- A11y: hero — `aria-roledescription="carousel"`, стрелки/точки — кнопки ≥ 44 px, автослайд на
-  паузе по hover/focus + `aria-live`; `--dim` поднят до 4.5:1; тап-цели ≥ 44 px; label↔поле и
-  radiogroup проставляет общий проход `a11y()` (`ui.js`).
-- Попутно прогоном в реальном браузере найдены и починены два скрытых бага, которые не видели
-  прошлые раунды (моки собирались в Pillow, не в браузере): `navbar()` подставлялся в шаблон как
-  HTMLElement → «[object HTMLElement]» на каждом экране; относительные `href` в `index.html`
-  ломали глубокие маршруты.
-
-**Вне скоупа проверки:** серверный headless-Chromium поднимается в single-process и не поднимает
-service worker, поэтому офлайн-повтор PWA в песочнице не воспроизводится; в реальном браузере SW
-регистрируется вне Telegram WebView. Скриншоты «различных версий» — `.arena/r8_devices.png`
-(iPhone SE / iPhone 15 Pro / iPad 11 / desktop × home / collections / product).
-
----
-
-## Следующая задача: раунд 9 — витрина, которую можно потрогать
-
-**Проблема.** Раунд 8 дал свет и невесомость, но витрина всё ещё «читается глазами»: переходы
-экранов и появление карточек не собраны в единую хореографию, а подбор стекла — линейный список.
-Следующий шаг премиального интерфейса — отклик на каждое действие и навигация, которую не надо
-объяснять.
-
-### Цель
-
-1. **Хореография переходов.** Shared-element: кадр товара из карточки «перелетает» в сцену
-   `/product/:id` (View-Transitions API с фолбэком на текущий push/pop), стаггер появления сетки
-   (60–80 мс на карточку, только transform/opacity), пружина таб-бара при смене вкладки. Критерий:
-   60 fps, `prefers-reduced-motion` выключает всё.
-2. **Живой поиск и фильтры.** Поиск по названию/коллекции с дебаунсом 150 мс и подсветкой
-   совпадения, комбинация чипсов фильтра и поиска без перезагрузки, «недавние» в localStorage.
-   Критерий: первый результат ≤ 100 мс после ввода, CLS 0 при появлении выдачи.
-3. **Свайп-корзина.** В корзине свайп строки влево — удалить (с undo-тостом 5 с), вниз по строке —
-   степпер; на desktop — hover-действия. Критерий: undo восстанавливает позицию и qty.
-4. **Сортировка и «дешевле/дороже».** Селект сортировки в каталоге (new / price↑ / price↓ / hit),
-   синхронизирован с URL-hash, чтобы шарилась ссылка. Критерий: позиция сохраняется при back/forward.
-5. **Микро-хаптика и звук.** На поддерживающих устройствах — лёгкие хаптики на add/fav/tilt-пик и
-   опциональный «клик» стекла (WebAudio, выключен по умолчанию, тумблер в профиле).
-
-### Правила
-
-- Без зависимостей и сборки; только transform/opacity для анимаций; всё уважает
-  `prefers-reduced-motion`.
-- Каждая метрика — скриншотом/таблицей в PR; пробы раундов 5–7 зелёные до и после.
-
-### Порядок работы
-
-1. `router.js`/`app.js`: хук переходов + View-Transitions с фолбэком.
-2. `collections.js`: поиск/фильтры/сортировка, hash-sync.
-3. `cart.js`: свайпы + undo.
-4. `tg.js`/`profile.js`: хаптика и тумблер звука.
-5. Прогон метрик, коллаж устройств; README: раунд 9 в историю.
-
-### Критерии готовности
-
-- Переходы 60 fps, CLS 0, поиск ≤ 100 мс, undo восстанавливает корзину, сортировка в hash.
-- README: раздел раунда 9 помечен закрытым, этот — в историю.
-
-### Вне скоупа
-
-3D-стекло, видео, fuzzy-поиск по фото, свои фото в админке, рассылка.
-
----
-
-## Технические детали
-
-- Зависимости: `express` и `grammy` — без сборки и нативных модулей.
-- Хранилище: JSON `data/db.json` с атомарной записью.
-- Авторизация: в Telegram проверяется подпись `initData` (HMAC-SHA256);
-  в браузере — гостевой профиль с подписанной cookie.
-- Бот: long polling (вебхук опционально).
-- Витрина: системные шрифты SF/Segoe/Roboto, тёмная тема бренда,
-  blur-навигация, iOS-переходы экранов, тактильная отдача.
