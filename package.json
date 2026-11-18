@@ -13,6 +13,7 @@
     "web": "MODE=web node src/index.js",
     "bot": "MODE=bot node src/index.js",
     "catalog": "python3 scripts/build_catalog.py",
+    "content:snapshot": "node scripts/build_content_snapshot.mjs",
     "test": "node --test test/*.test.mjs",
     "media:publish": "node scripts/publish_media.mjs",
     "prestart": "npm run media:publish",

@@ -1,7 +1,7 @@
 /**
  * Data layer.
- * Priority: live API (BotHost / local server) → admin local override → bundled data/content.json → offline cache.
- * The bundled file guarantees GitHub Pages always renders a complete catalogue,
+ * Priority: live API → admin local override → data/content.json → offline cache → recovery snapshot.
+ * The generated JS snapshot keeps first visits working even if the JSON request fails,
  * while the local override lets #/admin edit & preview immediately even without a backend.
  */
 import { icon } from "./icons.js";
@@ -14,6 +14,10 @@ const CONTENT_KEY = "ce.content.v1";
 const GH_TREE_KEY = "ce.gh.tree.v1";
 const GH_TOKEN_KEY = "ce.admin.ghToken"; // saved by the admin panel's GitHub publisher
 const CACHE_MAX_AGE = 1000 * 60 * 60 * 24 * 3; // 3 days
+// Resolve files relative to this module, not the page's current/deep-link URL.
+const CONTENT_URL = new URL("../data/content.json", import.meta.url).href;
+const FOLDER_DEFAULTS_URL = new URL("../data/folder-defaults.json", import.meta.url).href;
+const STATIC_TIMEOUT = 2500;
 /** Every raster format a photo dropped into glasses/|covers/|packaging/ may use.
  *  PNG is fully supported — single source of truth for the tree filter, the
  *  <img> onerror fallback in app.js and the render checks. */
@@ -128,7 +132,7 @@ function readCache() {
     const raw = localStorage.getItem(CONTENT_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (!parsed || !parsed.data) return null;
+    if (!parsed || !parsed.data || !Number.isFinite(parsed.at)) return null;
     if (Date.now() - parsed.at > CACHE_MAX_AGE) return null;
     return parsed.data;
   } catch {
@@ -238,9 +242,22 @@ export function clearLocalOverride() {
   contentPromise = null;
 }
 
+/** Optional module, not a startup dependency: JSON/network failures cannot hide the shop. */
+async function loadSnapshotRaw() {
+  const { default: snapshot } = await import("./content-snapshot.js");
+  // Folder discovery and admin edits mutate settings; never mutate the recovery master.
+  return JSON.parse(JSON.stringify(snapshot));
+}
+
 export async function loadBundledRaw() {
   if (bundledCache) return JSON.parse(JSON.stringify(bundledCache));
-  const raw = await fetchJSON("data/content.json", { cache: "no-cache" });
+  let raw;
+  try {
+    raw = await fetchJSON(CONTENT_URL, { cache: "no-cache", timeoutMs: STATIC_TIMEOUT });
+    normalize(raw); // An HTML error or malformed payload must not poison the in-memory cache.
+  } catch {
+    raw = await loadSnapshotRaw();
+  }
   bundledCache = raw;
   return JSON.parse(JSON.stringify(raw));
 }
@@ -415,7 +432,7 @@ export function detectGitHubRepo() {
 async function loadFolderDefaults() {
   if (folderDefaultsCache) return folderDefaultsCache;
   try {
-    folderDefaultsCache = await fetchJSON("data/folder-defaults.json", { cache: "no-cache" });
+    folderDefaultsCache = await fetchJSON(FOLDER_DEFAULTS_URL, { cache: "no-cache", timeoutMs: STATIC_TIMEOUT });
   } catch {
     folderDefaultsCache = {};
   }
@@ -493,9 +510,9 @@ async function resolveRepoFolders(data) {
   return applyFolderFiles(data, files, defaults);
 }
 
-async function fetchJSON(url, options = {}) {
+async function fetchJSON(url, { timeoutMs = 7000, ...options } = {}) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 7000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(url, {
       ...options,
@@ -509,10 +526,29 @@ async function fetchJSON(url, options = {}) {
   }
 }
 
+async function withRepoFolders(data) {
+  try {
+    return await resolveRepoFolders(data);
+  } catch (err) {
+    // Photo discovery is optional; it must never discard an otherwise valid catalogue.
+    console.warn("[CE] folder discovery unavailable, keeping bundled photo paths", err);
+    return data;
+  }
+}
+
+function useContent(data, contentSource) {
+  state.content = data;
+  state.online = contentSource === "api";
+  source = contentSource;
+  if (contentSource === "api" || contentSource === "static") writeCache(data);
+  return data;
+}
+
 export function loadContent({ force = false } = {}) {
   if (contentPromise && !force) return contentPromise;
+  state.loading = true;
 
-  contentPromise = (async () => {
+  const pending = (async () => {
     await probeSameOriginApi();
     const base = apiBase();
 
@@ -520,13 +556,7 @@ export function loadContent({ force = false } = {}) {
     if (base) {
       try {
         const raw = await fetchJSON(`${base}/api/content`, { cache: "no-store" });
-        const data = normalize(raw);
-        state.content = data;
-        state.online = true;
-        state.loading = false;
-        source = "api";
-        writeCache(data);
-        return data;
+        return useContent(normalize(raw), "api");
       } catch (err) {
         console.warn("[CE] API unavailable, falling back to local/static data", err);
       }
@@ -536,48 +566,47 @@ export function loadContent({ force = false } = {}) {
     const override = readLocalOverride();
     if (override) {
       try {
-        const data = await resolveRepoFolders(normalize(override));
-        state.content = data;
-        state.online = false;
-        state.loading = false;
-        source = "local";
-        return data;
+        return useContent(await withRepoFolders(normalize(override)), "local");
       } catch (err) {
         console.warn("[CE] local override malformed, ignoring", err);
       }
     }
 
-    // 3. Bundled JSON
+    // 3. Published JSON (always try the latest version, including on force refresh).
     try {
-      const raw = await fetchJSON("data/content.json", { cache: "no-cache" });
+      const raw = await fetchJSON(CONTENT_URL, { cache: "no-cache", timeoutMs: STATIC_TIMEOUT });
+      const data = normalize(raw);
       bundledCache = raw;
-      const data = await resolveRepoFolders(normalize(raw));
-      state.content = data;
-      state.online = false;
-      state.loading = false;
-      source = "static";
-      writeCache(data);
-      return data;
+      return useContent(await withRepoFolders(data), "static");
     } catch (err) {
       console.warn("[CE] bundled data failed", err);
     }
 
-    // 4. Cache
+    // 4. A recent cache can contain newer prices than the recovery snapshot.
     const cached = readCache();
     if (cached) {
-      const data = await resolveRepoFolders(normalize(cached));
-      state.content = data;
-      state.online = false;
-      state.loading = false;
-      source = "cache";
-      return data;
+      try {
+        return useContent(await withRepoFolders(normalize(cached)), "cache");
+      } catch (err) {
+        console.warn("[CE] cached data malformed, ignoring", err);
+      }
     }
 
-    state.loading = false;
-    throw new Error("Catalogue unavailable");
-  })();
+    // 5. First visit, private mode, cleared/corrupt storage, JSON blocked or mid-deploy.
+    const raw = await loadSnapshotRaw();
+    const data = normalize(raw);
+    bundledCache = raw;
+    return useContent(await withRepoFolders(data), "static");
+  })().finally(() => {
+    if (contentPromise === pending) state.loading = false;
+  });
 
-  return contentPromise;
+  contentPromise = pending;
+  // A failed load must not permanently memoize a rejected promise.
+  pending.catch(() => {
+    if (contentPromise === pending) contentPromise = null;
+  });
+  return pending;
 }
 
 export function dataSource() {

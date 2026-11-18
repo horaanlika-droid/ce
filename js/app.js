@@ -459,10 +459,20 @@ async function boot() {
   app.innerHTML = shellHTML();
   updateBadges();
 
+  // Update a stale worker even if catalogue loading fails. Registering only after
+  // a successful boot traps visitors behind the same broken cached response.
+  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+    navigator.serviceWorker
+      .register("sw.js?v=19")
+      .then((reg) => reg.update().catch(() => {}))
+      .catch(() => {});
+  }
+
   let data;
   try {
     data = await loadContent();
   } catch (err) {
+    console.error("[CE] all catalogue sources failed", err);
     document.getElementById("view").innerHTML = `<div class="wrap"><section class="section empty" style="min-height:60dvh;align-content:center">
       ${icon("warning")}
       <h1 class="h2" style="color:var(--ink)">Catalogue temporarily unavailable</h1>
@@ -562,13 +572,6 @@ async function boot() {
   } finally {
     // Always release the opening curtain, even if rendering or image decoding fails.
     bootReady = true;
-  }
-
-  if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-    navigator.serviceWorker
-      .register("sw.js?v=18")
-      .then((reg) => reg.update().catch(() => {}))
-      .catch(() => {});
   }
 }
 

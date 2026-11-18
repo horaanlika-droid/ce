@@ -87,7 +87,7 @@ means it works identically on GitHub Pages, BotHost, or from a local folder.
 * **Responsive** — single column + tab bar on phones, split hero and 4-up grid on desktop, sticky product stage at ≥ 900 px.
 * **Catalogue** — 52 pieces in six categories, generated from the trade price list.
 * **Requests, not checkout** — pieces are added to a request and submitted with contact details; shop owner receives it in Telegram / email.
-* **Data flow** — `API → bundled data/content.json → localStorage cache`. With no API configured the site is a fully working static catalogue.
+* **Data flow** — `API → local admin edits → data/content.json → recent localStorage cache → recovery snapshot`. With no API configured the site is a fully working static catalogue. If the JSON request fails on a first visit (including private mode), `js/content-snapshot.js` supplies the complete catalogue without a JSON fetch. Live/published data and recent cached prices always take priority.
 
 ---
 
@@ -113,6 +113,15 @@ means it works identically on GitHub Pages, BotHost, or from a local folder.
 python3 -m http.server 4173
 # open http://localhost:4173
 ```
+
+After manually editing `data/content.json`, regenerate the committed recovery copy:
+```bash
+npm run content:snapshot
+npm run content:snapshot -- --check  # verify it is up to date
+node --test test/storefront*.test.mjs
+```
+The GitHub Pages workflow regenerates this snapshot automatically before every deployment,
+including catalogue changes published from the web admin panel. The JSON file remains the source of truth.
 
 ### Python backend (FastAPI + Telegram bot):
 ```bash
