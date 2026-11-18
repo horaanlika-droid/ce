@@ -1,14 +1,15 @@
 /* Cocktail Embassy — offline shell.
    Code, catalogue JSON, and per-item photo folders (glasses/, covers/, packaging/)
    use network-first so replaced repository photos appear on the very first reload. */
-const CACHE = "ce-shell-v18";
+const CACHE = "ce-shell-v19";
 const SHELL = [
   "./",
   "index.html",
-  "css/app.css?v=18",
-  "js/app.js?v=18",
-  "js/config.js?v=18",
+  "css/app.css?v=19",
+  "js/app.js?v=19",
+  "js/config.js?v=19",
   "js/api.js",
+  "js/content-snapshot.js",
   "js/admin.js",
   "js/store.js",
   "js/ui.js",
@@ -27,7 +28,9 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(SHELL).catch(() => {}))
+      // Cache independently: one missing JSON/photo must not cancel the entire
+      // offline shell, including the fetch-independent recovery catalogue.
+      .then((cache) => Promise.allSettled(SHELL.map((url) => cache.add(url))))
       .then(() => self.skipWaiting())
   );
 });
@@ -60,14 +63,21 @@ self.addEventListener("fetch", (event) => {
     // Network-first so code/JSON and folder photography updates land immediately.
     event.respondWith(
       fetch(request, { cache: "no-cache" })
-        .then((response) => {
+        .then(async (response) => {
           if (response && response.ok) {
             const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy));
+            event.waitUntil(caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {}));
+            return response;
           }
-          return response;
+          // HTTP 404/5xx do not reject fetch(). Keep a known-good cached file
+          // during a deployment/outage instead of returning an error over it.
+          return (await caches.match(request)) || response;
         })
-        .catch(() => caches.match(request))
+        .catch(async (err) => {
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          throw err;
+        })
     );
     return;
   }
