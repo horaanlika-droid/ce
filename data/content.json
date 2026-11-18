@@ -122,7 +122,257 @@
       "infoBanner": "covers/info-banner/cover.webp",
       "infoStory": "covers/info-story/cover.webp",
       "ogShare": "covers/og-share/cover.jpg"
-    }
+    },
+    "partners": [
+      {
+        "id": "galaxy-bar",
+        "name": "Galaxy Bar",
+        "location": "Dubai · DIFC",
+        "badge": "World’s 50 Best Bars",
+        "logo": "assets/partners/galaxy-bar.png",
+        "file": "IMG_7312.jpeg"
+      },
+      {
+        "id": "atlantis-the-royal",
+        "name": "Atlantis The Royal",
+        "location": "Dubai · Palm Jumeirah",
+        "badge": "Ultra-Luxury Resort",
+        "logo": "assets/partners/atlantis-the-royal.png",
+        "file": "IMG_7316.jpeg"
+      },
+      {
+        "id": "atlantis-the-palm",
+        "name": "Atlantis The Palm",
+        "location": "Dubai · Palm Jumeirah",
+        "badge": "Iconic Resort",
+        "logo": "assets/partners/atlantis-the-palm.png",
+        "file": "IMG_7315.jpeg"
+      },
+      {
+        "id": "krasota-dubai",
+        "name": "Krasota",
+        "location": "Dubai · Downtown",
+        "badge": "Gastro-Theatre",
+        "logo": "assets/partners/krasota-dubai.png",
+        "file": "IMG_7343.jpeg"
+      },
+      {
+        "id": "roka",
+        "name": "Roka",
+        "location": "Dubai · Business Bay",
+        "badge": "Robatayaki",
+        "logo": "assets/partners/roka.png",
+        "file": "IMG_7339.jpeg"
+      },
+      {
+        "id": "sakhalin-dubai",
+        "name": "Sakhalin",
+        "location": "Dubai · J1 Beach",
+        "badge": "MediterrAsian",
+        "logo": "assets/partners/sakhalin-dubai.png",
+        "file": "IMG_7313.jpeg"
+      },
+      {
+        "id": "baoli-dubai",
+        "name": "Bâoli",
+        "location": "Dubai · J1 Beach",
+        "badge": "Luxury Lounge",
+        "logo": "assets/partners/baoli-dubai.png",
+        "file": "IMG_7314.jpeg"
+      },
+      {
+        "id": "blind-tiger",
+        "name": "Blind Tiger",
+        "location": "Dubai · Jumeirah Al Naseem",
+        "badge": "Modern Speakeasy",
+        "logo": "assets/partners/blind-tiger.png",
+        "file": "IMG_7326.jpeg"
+      },
+      {
+        "id": "patina-maldives",
+        "name": "Patina Maldives",
+        "location": "Fari Islands · Maldives",
+        "badge": "Luxury Resort",
+        "logo": "assets/partners/patina-maldives.png",
+        "file": "IMG_7334.jpeg"
+      },
+      {
+        "id": "mayabay",
+        "name": "MayaBay",
+        "location": "Dubai · Jumeirah Al Naseem",
+        "badge": "Thai - Japanese",
+        "logo": "assets/partners/mayabay.png",
+        "file": "IMG_7330.jpeg"
+      },
+      {
+        "id": "fairmont",
+        "name": "Fairmont Hotels & Resorts",
+        "location": "Dubai & Global",
+        "badge": "Luxury Hotels",
+        "logo": "assets/partners/fairmont.png",
+        "file": "IMG_7336.jpeg"
+      },
+      {
+        "id": "five-hotels",
+        "name": "FIVE Hotels & Resorts",
+        "location": "Dubai · Palm Jumeirah & JVC",
+        "badge": "Lifestyle Hotels",
+        "logo": "assets/partners/five-hotels.png",
+        "file": "IMG_7329.jpeg"
+      },
+      {
+        "id": "sirene-by-gaia",
+        "name": "Sirene by Gaia",
+        "location": "Dubai · J1 Beach",
+        "badge": "Beach Club & Dining",
+        "logo": "assets/partners/sirene-by-gaia.png",
+        "file": "IMG_7325.jpeg"
+      },
+      {
+        "id": "flamingo-room",
+        "name": "Flamingo Room by Tashas",
+        "location": "Dubai · Jumeirah Al Naseem",
+        "badge": "Dining Lounge",
+        "logo": "assets/partners/flamingo-room.png",
+        "file": "IMG_7340.jpeg"
+      },
+      {
+        "id": "akira-back",
+        "name": "Akira Back",
+        "location": "Dubai · Palm Jumeirah",
+        "badge": "Michelin Star Chef",
+        "logo": "assets/partners/akira-back.png",
+        "file": "IMG_7341.jpeg"
+      },
+      {
+        "id": "moli-by-shi",
+        "name": "Moli by Shi",
+        "location": "Dubai Hills",
+        "badge": "Fine Chinese Dining",
+        "logo": "assets/partners/moli-by-shi.png",
+        "file": "IMG_7319.jpeg"
+      },
+      {
+        "id": "shi",
+        "name": "SHI",
+        "location": "Dubai · Bluewaters",
+        "badge": "Fine Dining",
+        "logo": "assets/partners/shi.png",
+        "file": "IMG_7320.jpeg"
+      },
+      {
+        "id": "chalet-berezka",
+        "name": "Chalet Berezka",
+        "location": "Dubai · Palm Jumeirah",
+        "badge": "Restaurant & Lounge",
+        "logo": "assets/partners/chalet-berezka.png",
+        "file": "IMG_7328.jpeg"
+      },
+      {
+        "id": "uchi",
+        "name": "Uchi",
+        "location": "Dubai · DIFC",
+        "badge": "Japanese Dining",
+        "logo": "assets/partners/uchi.png",
+        "file": "IMG_7335.jpeg"
+      },
+      {
+        "id": "the-cullinan",
+        "name": "The Cullinan",
+        "location": "Dubai",
+        "badge": "Fine Steakhouse",
+        "logo": "assets/partners/the-cullinan.png",
+        "file": "IMG_7324.jpeg"
+      },
+      {
+        "id": "angel-cakes",
+        "name": "Angel Cakes",
+        "location": "Dubai · Bluewaters & Mall",
+        "badge": "Artisan Cafe",
+        "logo": "assets/partners/angel-cakes.png",
+        "file": "IMG_7322.jpeg"
+      },
+      {
+        "id": "mimi-mei-fair",
+        "name": "Mìmì Mei Fàir",
+        "location": "Dubai & London",
+        "badge": "Chinese Empress",
+        "logo": "assets/partners/mimi-mei-fair.png",
+        "file": "IMG_7338.jpeg"
+      },
+      {
+        "id": "timeless",
+        "name": "Timeless Luxury Lounges",
+        "location": "Dubai",
+        "badge": "Luxury Lounge",
+        "logo": "assets/partners/timeless.png",
+        "file": "IMG_7321.jpeg"
+      },
+      {
+        "id": "oltremare",
+        "name": "Oltremare",
+        "location": "Dubai · Palm Jumeirah",
+        "badge": "Italian Coastal",
+        "logo": "assets/partners/oltremare.png",
+        "file": "IMG_7331.jpeg"
+      },
+      {
+        "id": "himitsu",
+        "name": "Himitsu",
+        "location": "Dubai",
+        "badge": "Secret Lounge",
+        "logo": "assets/partners/himitsu.png",
+        "file": "IMG_7337.jpeg"
+      },
+      {
+        "id": "sai-kin-do",
+        "name": "Sai Kin Dō",
+        "location": "Dubai",
+        "badge": "Japanese Concept",
+        "logo": "assets/partners/sai-kin-do.png",
+        "file": "IMG_7332.jpeg"
+      },
+      {
+        "id": "sobremesa",
+        "name": "Sobremesa",
+        "location": "Dubai",
+        "badge": "Culinary Club",
+        "logo": "assets/partners/sobremesa.png",
+        "file": "IMG_7342.jpeg"
+      },
+      {
+        "id": "nahate",
+        "name": "Nahaté",
+        "location": "Dubai",
+        "badge": "More Than Home",
+        "logo": "assets/partners/nahate.png",
+        "file": "IMG_7318.jpeg"
+      },
+      {
+        "id": "marcella",
+        "name": "Marcella",
+        "location": "Dubai",
+        "badge": "Dining Room",
+        "logo": "assets/partners/marcella.png",
+        "file": "IMG_7317.jpeg"
+      },
+      {
+        "id": "myata-platinum",
+        "name": "Myata Platinum",
+        "location": "Dubai",
+        "badge": "Platinum Lounge",
+        "logo": "assets/partners/myata-platinum.png",
+        "file": "IMG_7327.jpeg"
+      },
+      {
+        "id": "1863-ac",
+        "name": "1863 AC",
+        "location": "Dubai",
+        "badge": "Heritage Bar",
+        "logo": "assets/partners/1863-ac.png",
+        "file": "IMG_7333.jpeg"
+      }
+    ]
   },
   "categories": [
     {

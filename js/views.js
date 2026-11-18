@@ -152,6 +152,40 @@ function categoryTile(data, category) {
   </a>`;
 }
 
+/* ------------------------------------------------------------------- partners */
+
+export function partnerCard(p) {
+  const logo = p.logo || (p.file ? `assets/partners/${p.file}` : "");
+  const logoUrl = logo ? mediaUrl(logo) : "";
+  return `<div class="partner-card">
+    <div class="partner-card__logo-wrap">
+      ${logoUrl ? `<img class="partner-card__logo" src="${attr(logoUrl)}" alt="${attr(p.name)}" loading="lazy" decoding="async">` : ""}
+    </div>
+    <span class="partner-card__name">${esc(p.name)}</span>
+    <span class="partner-card__loc">${esc(p.location || "Dubai")}</span>
+    ${p.badge ? `<span class="partner-card__badge">${esc(p.badge)}</span>` : ""}
+  </div>`;
+}
+
+export function partnersMarqueeHTML(partners) {
+  if (!partners || !partners.length) return "";
+  const items = partners
+    .map((p) => {
+      const logo = p.logo || (p.file ? `assets/partners/${p.file}` : "");
+      const logoUrl = logo ? mediaUrl(logo) : "";
+      return `<div class="partner-logo-item">
+        ${logoUrl ? `<img src="${attr(logoUrl)}" alt="${attr(p.name)}" loading="lazy" decoding="async">` : ""}
+        <span>${esc(p.name)}</span>
+      </div>`;
+    })
+    .join("");
+  return `<div class="partners-marquee" aria-hidden="true">
+    <div class="partners-marquee__track">
+      ${items}${items}
+    </div>
+  </div>`;
+}
+
 /* ------------------------------------------------------------------- home */
 
 export function homeView(data) {
@@ -161,9 +195,10 @@ export function homeView(data) {
     .filter((slide) => slide.product);
   const first = slides[0];
   const featured = selectors.featured(data);
-  const grid = (featured.length ? featured : data.products.filter((p) => !p.comingSoon)).slice(0, 4);
+  const signaturePieces = (featured.length ? featured : data.products.filter((p) => !p.comingSoon)).slice(0, 8);
   const categories = data.categories.filter((c) => selectors.productsByCategory(data, c.slug).length);
   const kinetic = kineticHTML(settings);
+  const partners = settings.partners || [];
 
   const heroHTML = first
     ? `<section class="hero" data-hero>
@@ -220,6 +255,17 @@ export function homeView(data) {
     </div>
 
     <div class="wrap">
+      <section class="section reveal" aria-labelledby="featured-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Signature pieces</p>
+            <h2 class="h2" id="featured-title" style="margin-top:8px">Hand-blown crystal</h2>
+          </div>
+          ${arrowLink("#/shop", `All ${data.products.length} pieces`)}
+        </div>
+        <div class="grid">${signaturePieces.map((p) => productCard(data, p)).join("")}</div>
+      </section>
+
       <section class="section reveal" aria-labelledby="categories-title">
         <div class="section-head">
           <div>
@@ -229,6 +275,57 @@ export function homeView(data) {
           ${arrowLink("#/shop", "All pieces")}
         </div>
         <div class="catgrid">${categories.map((c) => categoryTile(data, c)).join("")}</div>
+      </section>
+
+      <section class="section reveal" aria-labelledby="catalog-title" data-home-catalog>
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">The collection</p>
+            <h2 class="h2" id="catalog-title" style="margin-top:8px">Explore all positions</h2>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="muted" style="font-size:13.5px" data-home-catalog-count>${data.products.length} pieces</span>
+            ${arrowLink("#/shop", "Shop with filters")}
+          </div>
+        </div>
+        <div class="home-catalog__chips">
+          <button class="chip" type="button" data-home-chip="all" aria-pressed="true">All (${data.products.length})</button>
+          ${categories
+            .map(
+              (c) =>
+                `<button class="chip" type="button" data-home-chip="${attr(c.slug)}" aria-pressed="false">${esc(
+                  c.name
+                )} (${selectors.productsByCategory(data, c.slug).length})</button>`
+            )
+            .join("")}
+        </div>
+        <div class="grid" data-home-grid>
+          ${data.products.map((p) => productCard(data, p)).join("")}
+        </div>
+        <div style="text-align:center;margin-top:28px">
+          <a class="btn btn--ghost" href="#/shop">Open full catalogue &amp; filters ${icon("arrowRight")}</a>
+        </div>
+      </section>
+
+      <section class="section reveal" aria-labelledby="partners-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Our partners</p>
+            <h2 class="h2" id="partners-title" style="margin-top:8px">Trusted by the finest bars &amp; hotels</h2>
+          </div>
+          <span class="muted" style="font-size:13.5px">Dubai · Maldives · Worldwide</span>
+        </div>
+        ${partnersMarqueeHTML(partners)}
+        <div class="partners-grid" style="margin-top:18px">
+          ${partners.slice(0, 18).map((p) => partnerCard(p)).join("")}
+        </div>
+        ${partners.length > 18 ? `
+        <div style="text-align:center;margin-top:20px">
+          <button class="btn btn--ghost btn--sm" type="button" data-partners-toggle>Show all ${partners.length} partner venues</button>
+        </div>
+        <div class="partners-grid" data-partners-extra style="display:none;margin-top:14px">
+          ${partners.slice(18).map((p) => partnerCard(p)).join("")}
+        </div>` : ""}
       </section>
 
       <section class="section split reveal" aria-labelledby="craft-title">
@@ -274,7 +371,40 @@ export function homeView(data) {
       </section>
     </div>`;
 
-  return { title: settings.brand || "Cocktail Embassy", html, mount: (root) => mountHero(root, slides) };
+  return { title: settings.brand || "Cocktail Embassy", html, mount: (root) => mountHome(root, slides, data) };
+}
+
+function mountHome(root, slides, data) {
+  mountHero(root, slides);
+
+  const catSection = root.querySelector("[data-home-catalog]");
+  if (catSection && data && data.products) {
+    const gridEl = catSection.querySelector("[data-home-grid]");
+    const countEl = catSection.querySelector("[data-home-catalog-count]");
+    const chips = catSection.querySelectorAll("[data-home-chip]");
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const cat = chip.dataset.homeChip;
+        chips.forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+        const filtered = cat === "all" ? data.products : data.products.filter((p) => p.categorySlug === cat);
+        if (countEl) countEl.textContent = `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"}`;
+        if (gridEl) {
+          gridEl.innerHTML = filtered.map((p) => productCard(data, p)).join("");
+        }
+      });
+    });
+  }
+
+  const toggleBtn = root.querySelector("[data-partners-toggle]");
+  const extraGrid = root.querySelector("[data-partners-extra]");
+  if (toggleBtn && extraGrid) {
+    toggleBtn.addEventListener("click", () => {
+      const isHidden = extraGrid.style.display === "none";
+      extraGrid.style.display = isHidden ? "grid" : "none";
+      toggleBtn.textContent = isHidden ? "Show fewer partner venues" : `Show all ${data.settings?.partners?.length || 31} partner venues`;
+    });
+  }
 }
 
 function mountHero(root, slides) {
@@ -1109,6 +1239,20 @@ export function infoView(data) {
           <h2 class="h2">A small house with a long memory.</h2>
           <p>Cocktail Embassy is a Dubai house supplying bars, hotels and studios across the Gulf and beyond. Every piece is blown by hand, one at a time, in our partner workshops in China — then checked here against the shape and the weight it has to hit.</p>
           <p>Editions stay small and specifications are published honestly — because the bar manager with a broken stem at midnight needs a real answer, not a marketing line.</p>
+        </div>
+      </section>
+
+      <section class="section reveal" aria-labelledby="info-partners-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Trade partners</p>
+            <h2 class="h2" id="info-partners-title" style="margin-top:8px">Trusted across Dubai &amp; the Gulf</h2>
+          </div>
+          <span class="muted" style="font-size:13.5px">${(settings.partners || []).length} partner venues</span>
+        </div>
+        ${partnersMarqueeHTML(settings.partners || [])}
+        <div class="partners-grid" style="margin-top:20px">
+          ${(settings.partners || []).map((p) => partnerCard(p)).join("")}
         </div>
       </section>
 

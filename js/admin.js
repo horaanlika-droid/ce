@@ -1324,6 +1324,43 @@ function categoriesView(data, rerender) {
   };
 }
 
+/* --------------------------------------------------------- Partners tab */
+
+function partnersView(data, rerender) {
+  const partners = data.settings?.partners || [];
+  const rows = partners
+    .map((p) => {
+      const logoUrl = mediaUrl(p.logo || (p.file ? `assets/partners/${p.file}` : ""));
+      return `
+        <div class="admin__product-row" style="align-items:center">
+          <div style="width:68px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border-radius:6px;padding:4px">
+            ${logoUrl ? `<img src="${attr(logoUrl)}" alt="" style="max-width:100%;max-height:100%;object-fit:contain">` : ""}
+          </div>
+          <div class="admin__product-info" style="flex:1">
+            <div style="font-weight:600;font-size:14px;color:#fff">${esc(p.name)}</div>
+            <div style="font-size:12px;color:#8a8a8a">${esc(p.location || "Dubai")}${p.badge ? ` · <span style="color:#d4a853">${esc(p.badge)}</span>` : ""}</div>
+          </div>
+          <div style="font-size:11.5px;color:#707070;font-family:monospace">${esc(p.logo || p.file || "")}</div>
+        </div>
+      `;
+    })
+    .join("");
+
+  return {
+    title: "Партнёры — Админ-панель",
+    html: `
+      <div class="admin__section-head">
+        <div>
+          <h2 class="admin__section-title">Партнёры (${partners.length})</h2>
+          <p class="admin__section-desc">Премиальные заведения, бары и отели, использующие посуду Cocktail Embassy.</p>
+        </div>
+      </div>
+      <div class="admin__list">${rows || '<div class="admin__empty">Партнёров пока нет</div>'}</div>
+    `,
+    mount() {},
+  };
+}
+
 /* --------------------------------------------------------- Settings tab */
 
 function settingsView(data, rerender) {
@@ -2081,6 +2118,7 @@ export function adminView(initialData) {
   const tabs = [
     { key: "products", label: "Товары" },
     { key: "categories", label: "Категории" },
+    { key: "partners", label: "Партнёры" },
     { key: "settings", label: "Настройки" },
     { key: "requests", label: "Заявки" },
     { key: "sync", label: "Публикация" },
@@ -2092,6 +2130,7 @@ export function adminView(initialData) {
   };
 
   if (active === "categories") subView = categoriesView(data, rerender);
+  else if (active === "partners") subView = partnersView(data, rerender);
   else if (active === "settings") subView = settingsView(data, rerender);
   else if (active === "requests") subView = requestsView(data, rerender);
   else if (active === "sync") subView = syncView(data, rerender);
