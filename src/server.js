@@ -304,7 +304,7 @@ export function createServer() {
     res.type('html').send(renderInvoiceHtml(order));
   });
 
-  app.get('/health', (req, res) => {
+  const healthHandler = (req, res) => {
     // Всегда 200 — иначе хостинг начнёт перезапускать контейнер по кругу
     // из-за проблемы, которую перезапуск не лечит (например, нет catalog.json).
     // Подробности видны в теле ответа и в логах старта.
@@ -316,22 +316,74 @@ export function createServer() {
       catalog: { ok: cat.ok, products: cat.products, file: cat.file, error: cat.error },
       dataDir: config.dataDir,
     });
+  };
+  app.get('/health', healthHandler);
+  app.get('/api/health', healthHandler);
+
+  app.get('/api/content', (req, res) => {
+    const contentPath = path.join(ROOT, 'data', 'content.json');
+    if (fs.existsSync(contentPath)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
+        return res.json(data);
+      } catch (err) {
+        return res.status(500).json({ error: 'failed to read content.json' });
+      }
+    }
+    res.status(404).json({ error: 'content.json not found' });
   });
+
+  app.post('/api/requests', express.json(), (req, res) => {
+    const b = req.body || {};
+    const ref = `CE-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 900 + 100)}`;
+    const id = Date.now();
+    console.log(`[request] New trade request ${ref} from ${b.email || b.name} (${(b.items || []).length} items)`);
+    res.json({ ok: true, id, reference: ref });
+  });
+
+  // Mount per-item photography folders and repo assets (glasses, covers, packaging, data)
+  for (const dir of ['glasses', 'covers', 'packaging', 'data']) {
+    const dirPath = path.join(ROOT, dir);
+    if (fs.existsSync(dirPath)) {
+      app.use(`/${dir}`, express.static(dirPath, {
+        setHeaders(res, filePath) {
+          if (filePath.endsWith('.avif')) res.setHeader('Content-Type', 'image/avif');
+          else if (filePath.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
+          else if (filePath.endsWith('.webmanifest')) res.setHeader('Content-Type', 'application/manifest+json');
+          res.setHeader('Cache-Control', 'no-cache');
+        },
+      }));
+    }
+  }
+
+  // Root assets, css, js
+  const staticHeaders = (isAsset) => (res, filePath) => {
+    if (filePath.endsWith('.avif')) res.setHeader('Content-Type', 'image/avif');
+    else if (filePath.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
+    else if (filePath.endsWith('.webmanifest')) res.setHeader('Content-Type', 'application/manifest+json');
+    if (isAsset) res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    else res.setHeader('Cache-Control', 'no-cache');
+  };
+
+  const rootAssets = path.join(ROOT, 'assets');
+  if (fs.existsSync(rootAssets)) {
+    app.use('/assets', express.static(rootAssets, { setHeaders: staticHeaders(true) }));
+  }
+
+  const rootCss = path.join(ROOT, 'css');
+  if (fs.existsSync(rootCss)) {
+    app.use('/css', express.static(rootCss, { setHeaders: staticHeaders(false) }));
+  }
+
+  const rootJs = path.join(ROOT, 'js');
+  if (fs.existsSync(rootJs)) {
+    app.use('/js', express.static(rootJs, { setHeaders: staticHeaders(false) }));
+  }
 
   // index: false — корень отдаёт app.get('*') ниже, с абсолютными og-тегами
   app.use(express.static(WEBAPP_DIR, {
     index: false,
-    setHeaders(res, filePath) {
-      // раунд 8: старый mime в express не знает .avif — отдаём верный тип,
-      // иначе <picture> получит octet-stream и пропустит производный кадр
-      if (filePath.endsWith('.avif')) res.setHeader('Content-Type', 'image/avif');
-      else if (filePath.endsWith('.webp')) res.setHeader('Content-Type', 'image/webp');
-      else if (filePath.endsWith('.webmanifest')) res.setHeader('Content-Type', 'application/manifest+json');
-      // Hash URLs identify release bytes, but filenames are mutable. Revalidate
-      // rather than pinning an old photo for a week in a Telegram WebView.
-      if (/assets\//.test(filePath)) res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
-      else res.setHeader('Cache-Control', 'no-cache');
-    },
+    setHeaders: staticHeaders(false),
   }));
 
   // Missing assets/modules are real 404s, never HTML masquerading as an image.
@@ -343,7 +395,10 @@ export function createServer() {
   app.get('*', (req, res) => {
     // og:image в файле относительный; превью-валидаторам Telegram/WhatsApp
     // нужен абсолютный — подставляем PUBLIC_URL на лету
-    let html = fs.readFileSync(path.join(WEBAPP_DIR, 'index.html'), 'utf8');
+    const rootIndex = path.join(ROOT, 'index.html');
+    const webappIndex = path.join(WEBAPP_DIR, 'index.html');
+    const targetFile = fs.existsSync(rootIndex) ? rootIndex : webappIndex;
+    let html = fs.readFileSync(targetFile, 'utf8');
     const pub = config.publicUrl;
     if (pub) {
       html = html.split('content="/assets/').join(`content="${pub}/assets/`)
