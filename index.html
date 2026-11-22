@@ -9,6 +9,33 @@
     <meta name="color-scheme" content="dark">
     <link rel="canonical" href="https://horaanlika-droid.github.io/ce/">
 
+    <script>
+      // Deep-path fallback: a path-like URL (e.g. /ce/admin typed at the end of
+      // the address bar) opens the catalogue on the matching hash route instead
+      // of a bare 404 / blank page. Mirrors the GitHub Pages 404.html redirect
+      // and works on every host (GitHub Pages, BotHost/Docker, local folder).
+      (function () {
+        var segments = (location.pathname || "/").split("/").filter(Boolean);
+        var last = segments[segments.length - 1] || "";
+        // a file in the last segment (e.g. /photos/x.png) — real 404, stay
+        if (!segments.length || last.indexOf(".") !== -1) return;
+        // hash already names an in-app route — the SPA router owns this URL
+        if (location.hash) return;
+        // the site is usually served under a platform prefix (e.g. /ce/):
+        // a first segment that is not an app route is the base, not a route
+        var route = segments.join("/");
+        var base = "/";
+        if (!/^(admin|shop|product|request|info)$/.test(segments[0])) {
+          // platform-prefixed site — first segment is the base, not a route
+          base = "/" + segments[0] + "/";
+          route = segments.slice(1).join("/");
+        }
+        // the site root itself (/ce/ or /) — stay on the home page
+        if (!route) return;
+        location.replace(base + "#/" + route + location.search);
+      })();
+    </script>
+
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Cocktail Embassy">
     <meta property="og:title" content="Cocktail Embassy — Hand-blown glassware">

@@ -599,6 +599,22 @@ async def value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
 
 
 # ---------------------------------------------------- storefront static mount
+# The catalogue may be served under a platform prefix (e.g. /ce/ on
+# GitHub-Pages-style hosts). Strip one leading prefix segment for static asset
+# requests so the root mounts respond; app routes and /api traffic pass through.
+_STATIC_PREFIX_DIRS = {"css", "js", "assets", "data", "glasses", "covers", "packaging", "media"}
+_STATIC_PREFIX_FILES = {"sw.js", "manifest.webmanifest", "favicon.ico", "robots.txt"}
+
+
+@app.middleware("http")
+async def strip_platform_prefix(request: Request, call_next):
+    if request.method == "GET":
+        segments = [s for s in request.url.path.split("/") if s]
+        if len(segments) >= 2 and (segments[1] in _STATIC_PREFIX_DIRS or segments[1] in _STATIC_PREFIX_FILES):
+            request.scope["path"] = "/" + "/".join(segments[1:])
+    return await call_next(request)
+
+
 _INDEX_FILE = cfg.ROOT_DIR / "index.html"
 if _INDEX_FILE.exists():
     for _dir_name in ("css", "js", "assets", "data", "glasses", "covers", "packaging"):
@@ -621,6 +637,23 @@ if _INDEX_FILE.exists():
     @app.get("/manifest.webmanifest")
     async def storefront_manifest() -> FileResponse:
         return FileResponse(cfg.ROOT_DIR / "manifest.webmanifest", media_type="application/manifest+json")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def storefront_catch_all(request: Request) -> FileResponse:
+        """Deep paths serve the SPA instead of a bare 404 (e.g. /admin, /shop).
+
+        The storefront is a hash-routed single-page app; its real router keeps
+        the path out of the URL. The page performs the redirect to the matching
+        hash route on load, mirroring the GitHub Pages 404.html fallback.
+        File-like paths (last segment has a dot) stay real 404s, as does /api/*.
+        """
+        if request.url.path.startswith("/api/"):
+            raise HTTPException(status_code=404, detail="not-found")
+        segments = [s for s in request.url.path.split("/") if s]
+        last = segments[-1] if segments else ""
+        if not segments or ("." in last and last != "index.html"):
+            raise HTTPException(status_code=404, detail="not-found")
+        return FileResponse(_INDEX_FILE, headers={"Cache-Control": "no-cache"})
 else:
     @app.get("/")
     async def index() -> dict[str, Any]:
