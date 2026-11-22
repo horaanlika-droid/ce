@@ -341,6 +341,21 @@ export function createServer() {
     res.json({ ok: true, id, reference: ref });
   });
 
+  // The catalogue may be served under a platform prefix (e.g. /ce/ on
+  // GitHub-Pages-style hosts). Strip one leading prefix segment for static
+  // asset requests so the root mounts respond; real app routes and /api traffic
+  // are left untouched.
+  const STATIC_PREFIX_DIRS = new Set(['css', 'js', 'assets', 'data', 'glasses', 'covers', 'packaging', 'media']);
+  const STATIC_PREFIX_FILES = new Set(['sw.js', 'manifest.webmanifest', 'favicon.ico', 'robots.txt']);
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    const segments = req.path.split('/').filter(Boolean);
+    if (segments.length >= 2 && (STATIC_PREFIX_DIRS.has(segments[1]) || STATIC_PREFIX_FILES.has(segments[1]))) {
+      req.url = '/' + segments.slice(1).join('/');
+    }
+    next();
+  });
+
   // Mount per-item photography folders and repo assets (glasses, covers, packaging, data)
   for (const dir of ['glasses', 'covers', 'packaging', 'data']) {
     const dirPath = path.join(ROOT, dir);
@@ -393,6 +408,16 @@ export function createServer() {
   });
 
   app.get('*', (req, res) => {
+    // A file in the last segment (e.g. /photos/x.png) is a real 404, never the
+    // HTML shell masquerading as a missing asset. /index.html is served on purpose.
+    const segments = req.path.split('/').filter(Boolean);
+    const lastSegment = segments[segments.length - 1] || '';
+    const isExplicitIndex = lastSegment === 'index.html';
+    if (lastSegment.includes('.') && !isExplicitIndex) {
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(404).json({ error: 'not-found' });
+    }
+
     // og:image в файле относительный; превью-валидаторам Telegram/WhatsApp
     // нужен абсолютный — подставляем PUBLIC_URL на лету
     const rootIndex = path.join(ROOT, 'index.html');
