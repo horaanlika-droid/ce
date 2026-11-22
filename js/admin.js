@@ -283,7 +283,28 @@ async function refreshStorefront() {
   return fresh;
 }
 
+function savedOperationToast(result, successMessage) {
+  const imagesStripped = lastSaveStrippedImages();
+  toast(
+    imagesStripped
+      ? "Сохранено. Фото не влезли в черновик браузера — нажмите «Опубликовать на сайт» (вкладка «Публикация»), чтобы залить их в репозиторий"
+      : result.localDraft
+        ? "Сохранено в браузере. Нажмите «Опубликовать на сайт» во вкладке «Публикация», чтобы обновить сайт"
+        : successMessage,
+    {
+      iconName: imagesStripped || result.localDraft ? "warning" : "checkCircle",
+      duration: imagesStripped || result.localDraft ? 6000 : 2600,
+    }
+  );
+}
+
 async function saveSettingsOp(settingsPatch, data) {
+  const saveDraft = () => {
+    const copy = cloneContent(data);
+    copy.settings = { ...copy.settings, ...settingsPatch };
+    return { updated: saveLocalOverride(copy), localDraft: true };
+  };
+
   if (!isStatic()) {
     try {
       await api("/api/admin/settings/bulk", {
@@ -292,110 +313,150 @@ async function saveSettingsOp(settingsPatch, data) {
         body: JSON.stringify({ settings: settingsPatch }),
       });
     } catch {
-      for (const [key, value] of Object.entries(settingsPatch)) {
-        await api("/api/admin/settings", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key, value }),
-        });
+      // Older/misconfigured API deployments may not have the settings endpoint.
+      // Try the legacy per-setting route first, then keep the edits as a local
+      // draft so a missing API route doesn't block image changes/publication.
+      try {
+        for (const [key, value] of Object.entries(settingsPatch)) {
+          await api("/api/admin/settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key, value }),
+          });
+        }
+      } catch (singleError) {
+        if (singleError.status !== 404) throw singleError;
+        return saveDraft();
       }
     }
-    return await refreshStorefront();
+    return { updated: await refreshStorefront(), localDraft: false };
   }
-  const copy = cloneContent(data);
-  copy.settings = { ...copy.settings, ...settingsPatch };
-  return saveLocalOverride(copy);
+  return saveDraft();
 }
 
 async function saveProductOp(existingSlug, payload, data) {
-  if (!isStatic()) {
+  const saveDraft = () => {
+    const copy = cloneContent(data);
     if (existingSlug) {
-      await api(`/api/admin/products/${encodeURIComponent(existingSlug)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const idx = copy.products.findIndex((p) => p.slug === existingSlug);
+      const nextSlug = payload.slug || existingSlug;
+      const merged = { ...(idx >= 0 ? copy.products[idx] : {}), ...payload, slug: nextSlug };
+      if (idx >= 0) copy.products[idx] = merged;
+      else copy.products.push(merged);
     } else {
-      await api("/api/admin/products", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      let baseSlug = slugify(payload.slug || payload.name);
+      let candidate = baseSlug;
+      let n = 2;
+      while (copy.products.some((p) => p.slug === candidate)) {
+        candidate = `${baseSlug}-${n++}`;
+      }
+      const maxSort = copy.products.reduce((m, p) => Math.max(m, Number(p.sort) || 0), 0);
+      copy.products.push({
+        ...payload,
+        slug: candidate,
+        sort: Number.isFinite(payload.sort) ? payload.sort : maxSort + 1,
       });
     }
-    return await refreshStorefront();
-  }
-  const copy = cloneContent(data);
-  if (existingSlug) {
-    const idx = copy.products.findIndex((p) => p.slug === existingSlug);
-    const nextSlug = payload.slug || existingSlug;
-    const merged = { ...(idx >= 0 ? copy.products[idx] : {}), ...payload, slug: nextSlug };
-    if (idx >= 0) copy.products[idx] = merged;
-    else copy.products.push(merged);
-  } else {
-    let baseSlug = slugify(payload.slug || payload.name);
-    let candidate = baseSlug;
-    let n = 2;
-    while (copy.products.some((p) => p.slug === candidate)) {
-      candidate = `${baseSlug}-${n++}`;
+    return { updated: saveLocalOverride(copy), localDraft: true };
+  };
+
+  if (!isStatic()) {
+    try {
+      if (existingSlug) {
+        await api(`/api/admin/products/${encodeURIComponent(existingSlug)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await api("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      return { updated: await refreshStorefront(), localDraft: false };
+    } catch (err) {
+      if (err.status !== 404) throw err;
+      return saveDraft();
     }
-    const maxSort = copy.products.reduce((m, p) => Math.max(m, Number(p.sort) || 0), 0);
-    copy.products.push({
-      ...payload,
-      slug: candidate,
-      sort: Number.isFinite(payload.sort) ? payload.sort : maxSort + 1,
-    });
   }
-  return saveLocalOverride(copy);
+  return saveDraft();
 }
 
 async function deleteProductOp(slug, data) {
+  const saveDraft = () => {
+    const copy = cloneContent(data);
+    copy.products = copy.products.filter((p) => p.slug !== slug);
+    return { updated: saveLocalOverride(copy), localDraft: true };
+  };
   if (!isStatic()) {
-    await api(`/api/admin/products/${encodeURIComponent(slug)}`, { method: "DELETE" });
-    return await refreshStorefront();
+    try {
+      await api(`/api/admin/products/${encodeURIComponent(slug)}`, { method: "DELETE" });
+      return { updated: await refreshStorefront(), localDraft: false };
+    } catch (err) {
+      if (err.status !== 404) throw err;
+      return saveDraft();
+    }
   }
-  const copy = cloneContent(data);
-  copy.products = copy.products.filter((p) => p.slug !== slug);
-  return saveLocalOverride(copy);
+  return saveDraft();
 }
 
 async function saveCategoryOp(existingSlug, payload, data) {
   const cleanSlug = slugify(payload.slug || existingSlug || payload.name);
   const fullPayload = { ...payload, slug: cleanSlug };
-  if (!isStatic()) {
-    await api(`/api/admin/categories/${encodeURIComponent(existingSlug || cleanSlug)}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(fullPayload),
-    });
-    return await refreshStorefront();
-  }
-  const copy = cloneContent(data);
-  if (existingSlug) {
-    const idx = copy.categories.findIndex((c) => c.slug === existingSlug);
-    if (idx >= 0) copy.categories[idx] = { ...copy.categories[idx], ...fullPayload };
-    else copy.categories.push(fullPayload);
-    if (existingSlug !== cleanSlug) {
-      copy.products.forEach((p) => {
-        if (p.categorySlug === existingSlug) p.categorySlug = cleanSlug;
-      });
+  const saveDraft = () => {
+    const copy = cloneContent(data);
+    if (existingSlug) {
+      const idx = copy.categories.findIndex((c) => c.slug === existingSlug);
+      if (idx >= 0) copy.categories[idx] = { ...copy.categories[idx], ...fullPayload };
+      else copy.categories.push(fullPayload);
+      if (existingSlug !== cleanSlug) {
+        copy.products.forEach((p) => {
+          if (p.categorySlug === existingSlug) p.categorySlug = cleanSlug;
+        });
+      }
+    } else {
+      copy.categories.push(fullPayload);
     }
-  } else {
-    copy.categories.push(fullPayload);
+    return { updated: saveLocalOverride(copy), localDraft: true };
+  };
+
+  if (!isStatic()) {
+    try {
+      await api(`/api/admin/categories/${encodeURIComponent(existingSlug || cleanSlug)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fullPayload),
+      });
+      return { updated: await refreshStorefront(), localDraft: false };
+    } catch (err) {
+      if (err.status !== 404) throw err;
+      return saveDraft();
+    }
   }
-  return saveLocalOverride(copy);
+  return saveDraft();
 }
 
 async function deleteCategoryOp(slug, data) {
+  const saveDraft = () => {
+    const copy = cloneContent(data);
+    copy.categories = copy.categories.filter((c) => c.slug !== slug);
+    copy.products.forEach((p) => {
+      if (p.categorySlug === slug) p.categorySlug = "";
+    });
+    return { updated: saveLocalOverride(copy), localDraft: true };
+  };
   if (!isStatic()) {
-    await api(`/api/admin/categories/${encodeURIComponent(slug)}`, { method: "DELETE" });
-    return await refreshStorefront();
+    try {
+      await api(`/api/admin/categories/${encodeURIComponent(slug)}`, { method: "DELETE" });
+      return { updated: await refreshStorefront(), localDraft: false };
+    } catch (err) {
+      if (err.status !== 404) throw err;
+      return saveDraft();
+    }
   }
-  const copy = cloneContent(data);
-  copy.categories = copy.categories.filter((c) => c.slug !== slug);
-  copy.products.forEach((p) => {
-    if (p.categorySlug === slug) p.categorySlug = "";
-  });
-  return saveLocalOverride(copy);
+  return saveDraft();
 }
 
 /** Resize/compress picked image file in browser, then upload to API or return compact data URL.
@@ -1097,9 +1158,9 @@ function productsView(data, rerender) {
           if (!item) return;
           if (!confirm(`Удалить «${item.name}»?`)) return;
           try {
-            const updated = await deleteProductOp(item.slug, data);
-            toast("Товар удалён");
-            rerender(updated);
+            const result = await deleteProductOp(item.slug, data);
+            savedOperationToast(result, "Товар удалён");
+            rerender(result.updated);
           } catch (err) {
             toast("Ошибка: " + errText(err), { iconName: "warning" });
           }
@@ -1148,15 +1209,10 @@ function productsView(data, rerender) {
         };
 
         try {
-          const updated = await saveProductOp(existingSlug, payload, data);
+          const result = await saveProductOp(existingSlug, payload, data);
           closeModal(modal);
-          toast(
-            lastSaveStrippedImages()
-              ? "Сохранено. Фото не влезли в черновик браузера — нажмите «Опубликовать на сайт» (вкладка «Публикация»), чтобы залить их в репозиторий"
-              : "Товар сохранён",
-            { iconName: lastSaveStrippedImages() ? "warning" : "checkCircle", duration: lastSaveStrippedImages() ? 6000 : 2600 }
-          );
-          rerender(updated);
+          savedOperationToast(result, "Товар сохранён");
+          rerender(result.updated);
         } catch (err) {
           toast("Ошибка сохранения: " + errText(err), { iconName: "warning" });
         }
@@ -1314,9 +1370,9 @@ function categoriesView(data, rerender) {
           if (!cat) return;
           if (!confirm(`Удалить категорию «${cat.name}»?`)) return;
           try {
-            const updated = await deleteCategoryOp(cat.slug, data);
-            toast("Категория удалена");
-            rerender(updated);
+            const result = await deleteCategoryOp(cat.slug, data);
+            savedOperationToast(result, "Категория удалена");
+            rerender(result.updated);
           } catch (err) {
             toast("Ошибка: " + errText(err), { iconName: "warning" });
           }
@@ -1337,15 +1393,10 @@ function categoriesView(data, rerender) {
           cover: String(fd.get("cover") || "").trim(),
         };
         try {
-          const updated = await saveCategoryOp(existingSlug, payload, data);
+          const result = await saveCategoryOp(existingSlug, payload, data);
           closeModal(modal);
-          toast(
-            lastSaveStrippedImages()
-              ? "Сохранено. Фото не влезли в черновик браузера — нажмите «Опубликовать на сайт» (вкладка «Публикация»), чтобы залить их в репозиторий"
-              : "Категория сохранена",
-            { iconName: lastSaveStrippedImages() ? "warning" : "checkCircle", duration: lastSaveStrippedImages() ? 6000 : 2600 }
-          );
-          rerender(updated);
+          savedOperationToast(result, "Категория сохранена");
+          rerender(result.updated);
         } catch (err) {
           toast("Ошибка: " + errText(err), { iconName: "warning" });
         }
@@ -1787,14 +1838,9 @@ function settingsView(data, rerender) {
           .filter((x) => x.productSlug);
 
         try {
-          const updated = await saveSettingsOp(patch, data);
-          toast(
-            lastSaveStrippedImages()
-              ? "Сохранено. Фото не влезли в черновик браузера — нажмите «Опубликовать на сайт» (вкладка «Публикация»), чтобы залить их в репозиторий"
-              : "Настройки сохранены",
-            { iconName: lastSaveStrippedImages() ? "warning" : "checkCircle", duration: lastSaveStrippedImages() ? 6000 : 2600 }
-          );
-          rerender(updated);
+          const result = await saveSettingsOp(patch, data);
+          savedOperationToast(result, "Настройки сохранены");
+          rerender(result.updated);
         } catch (err) {
           toast("Ошибка сохранения: " + errText(err), { iconName: "warning" });
         }
