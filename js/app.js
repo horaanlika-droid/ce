@@ -12,7 +12,6 @@ import {
   notFoundView,
   adminView,
 } from "./views.js";
-import { isAdmin, logout } from "./admin.js";
 
 const app = document.getElementById("app");
 const NAV_ITEMS = [
@@ -88,8 +87,7 @@ function tabbarInnerHTML() {
   return `<a class="tab" href="#/" data-tab="home">${icon("home")}<span>Home</span></a>
     <a class="tab" href="#/shop" data-tab="shop">${icon("shop")}<span>Shop</span></a>
     <a class="tab" href="#/request" data-tab="request">${icon("bag")}<span>Request</span><span class="tab__badge" data-tab-badge hidden>0</span></a>
-    <a class="tab" href="#/info" data-tab="info">${icon("info")}<span>Info</span></a>
-    ${isAdmin() ? `<a class="tab" href="#/admin" data-tab="admin">${icon("sliders")}<span>Admin</span></a>` : ""}`;
+    <a class="tab" href="#/info" data-tab="info">${icon("info")}<span>Info</span></a>`;
 }
 
 function shellHTML() {
@@ -106,7 +104,6 @@ function shellHTML() {
           (item) => `<a class="nav__link" href="${item.href}" data-navlink="${item.key}">${item.label}</a>`
         ).join("")}
         <a class="nav__link" href="#/request" data-navlink="request">Request</a>
-        <a class="nav__link" href="#/admin" data-navlink="admin">Admin</a>
       </nav>
       <a class="iconbtn" href="#/request" aria-label="Open request" data-cartbtn>
         ${icon("bag")}
@@ -157,7 +154,7 @@ function footerHTML(data) {
   </div>
   <div class="footer__base">
     <span>© ${new Date().getFullYear()} ${esc(s.brand || "Cocktail Embassy")}. All rights reserved.</span>
-    <span>${esc(s.priceNote || "")}${s.priceNote ? " · " : ""}<a href="#/admin" class="footer__admin-link">Admin</a></span>
+    <span>${esc(s.priceNote || "")}</span>
   </div>`;
 }
 
@@ -437,14 +434,6 @@ request.subscribe(updateBadges);
 window.addEventListener("scroll", () => updateNavTheme(), { passive: true });
 window.addEventListener("resize", () => updateNavTheme(), { passive: true });
 window.addEventListener("hashchange", render);
-window.addEventListener("ce-auth-changed", () => {
-  const tabbar = document.querySelector("[data-tabbar]");
-  if (tabbar) {
-    tabbar.innerHTML = tabbarInnerHTML();
-    updateBadges();
-    updateActiveNav(currentRoute);
-  }
-});
 window.addEventListener("ce-content-updated", () => {
   const data = state.content;
   if (!data) return;
@@ -463,7 +452,7 @@ async function boot() {
   // a successful boot traps visitors behind the same broken cached response.
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker
-      .register("sw.js?v=19")
+      .register("sw.js?v=20")
       .then((reg) => reg.update().catch(() => {}))
       .catch(() => {});
   }
