@@ -1328,36 +1328,43 @@ function categoriesView(data, rerender) {
 
 function partnersView(data, rerender) {
   const partners = data.settings?.partners || [];
-  const rows = partners
-    .map((p) => {
-      const logoUrl = mediaUrl(p.logo || (p.file ? `assets/partners/${p.file}` : ""));
-      return `
-        <div class="admin__product-row" style="align-items:center">
-          <div style="width:68px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border-radius:6px;padding:4px">
-            ${logoUrl ? `<img src="${attr(logoUrl)}" alt="" style="max-width:100%;max-height:100%;object-fit:contain">` : ""}
-          </div>
-          <div class="admin__product-info" style="flex:1">
-            <div style="font-weight:600;font-size:14px;color:#fff">${esc(p.name)}</div>
-            <div style="font-size:12px;color:#8a8a8a">${esc(p.location || "Dubai")}${p.badge ? ` · <span style="color:#d4a853">${esc(p.badge)}</span>` : ""}</div>
-          </div>
-          <div style="font-size:11.5px;color:#707070;font-family:monospace">${esc(p.logo || p.file || "")}</div>
-        </div>
-      `;
-    })
-    .join("");
-
+  const rows = partners.map((p, i) => `
+    <form class="admin__product-row" data-partner-form="${i}" style="align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="width:68px;height:48px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border-radius:6px;padding:4px;flex:none">
+        ${mediaUrl(p.logo || (p.file ? `assets/partners/${p.file}` : "")) ? `<img src="${attr(mediaUrl(p.logo || `assets/partners/${p.file || ""}`))}" alt="" style="max-width:100%;max-height:100%;object-fit:contain">` : ""}
+      </div>
+      <label class="admin__field" style="flex:1;min-width:150px"><span class="admin__label">Название</span><input class="admin__input" name="name" required value="${attr(p.name || "")}"></label>
+      <label class="admin__field" style="flex:1;min-width:130px"><span class="admin__label">Локация</span><input class="admin__input" name="location" value="${attr(p.location || "")}"></label>
+      <label class="admin__field" style="flex:1;min-width:130px"><span class="admin__label">Бейдж</span><input class="admin__input" name="badge" value="${attr(p.badge || "")}"></label>
+      <label class="admin__field" style="flex:2;min-width:180px"><span class="admin__label">Логотип (путь или URL)</span><input class="admin__input" name="logo" value="${attr(p.logo || (p.file ? `assets/partners/${p.file}` : ""))}"></label>
+      <div style="display:flex;gap:6px">${btn("Сохранить", "primary", "submit")}${btn("Удалить", "danger", "button", `data-partner-delete="${i}"`)}</div>
+    </form>`).join("");
   return {
     title: "Партнёры — Админ-панель",
-    html: `
-      <div class="admin__section-head">
-        <div>
-          <h2 class="admin__section-title">Партнёры (${partners.length})</h2>
-          <p class="admin__section-desc">Премиальные заведения, бары и отели, использующие посуду Cocktail Embassy.</p>
-        </div>
-      </div>
-      <div class="admin__list">${rows || '<div class="admin__empty">Партнёров пока нет</div>'}</div>
-    `,
-    mount() {},
+    html: `<div class="admin__section-head"><div><h2 class="admin__section-title">Партнёры (${partners.length})</h2><p class="admin__section-desc">Премиальные заведения, бары и отели, использующие посуду Cocktail Embassy.</p></div>${btn(`${icon("plus")}<span>Добавить партнёра</span>`, "primary", "button", "data-partner-add")}</div><div class="admin__list">${rows || '<div class="admin__empty">Партнёров пока нет</div>'}</div>`,
+    mount(root) {
+      const save = (next) => saveLocalOverride({ ...cloneContent(data), settings: { ...data.settings, partners: next } });
+      root.querySelector("[data-partner-add]")?.addEventListener("click", async () => {
+        try { rerender(await save([...partners, { name: "Новый партнёр", location: "Dubai", badge: "", logo: "" }])); }
+        catch (err) { toast("Ошибка: " + errText(err), { iconName: "warning" }); }
+      });
+      root.addEventListener("click", async (e) => {
+        const button = e.target.closest("[data-partner-delete]");
+        if (!button) return;
+        const index = Number(button.dataset.partnerDelete);
+        if (!confirm(`Удалить партнёра «${partners[index]?.name || ""}»?`)) return;
+        try { rerender(await save(partners.filter((_, i) => i !== index))); }
+        catch (err) { toast("Ошибка: " + errText(err), { iconName: "warning" }); }
+      });
+      root.querySelectorAll("[data-partner-form]").forEach((form) => form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const index = Number(form.dataset.partnerForm);
+        const fd = new FormData(form);
+        const next = partners.map((p, i) => i === index ? { ...p, name: String(fd.get("name")).trim(), location: String(fd.get("location")).trim(), badge: String(fd.get("badge")).trim(), logo: String(fd.get("logo")).trim(), file: "" } : p);
+        try { rerender(await save(next)); toast("Партнёр сохранён"); }
+        catch (err) { toast("Ошибка: " + errText(err), { iconName: "warning" }); }
+      }));
+    },
   };
 }
 
