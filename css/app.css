@@ -1923,15 +1923,6 @@ main {
   color: rgba(255, 255, 255, 0.42);
 }
 
-.footer__admin-link {
-  color: rgba(255, 255, 255, 0.52);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.footer__admin-link:hover {
-  color: #fff;
-}
-
 /* ---------- Tab bar (mobile) ---------- */
 .tabbar {
   position: fixed;
