@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "updatedAt": "2026-11-02T13:30:00+03:00",
+  "updatedAt": "2026-11-22T21:42:01.828Z",
   "settings": {
     "brand": "Cocktail Embassy",
     "tagline": "Hand-blown glassware for the modern bar.",
@@ -423,15 +423,18 @@
       "slug": "levitating-martini",
       "name": "Levitating Martini",
       "subtitle": "Hand-Blown Crystal · 210 ml",
-      "categorySlug": "cocktail",
+      "description": "An ultra-delicate, elongated martini glass designed for minimal elegance. The pulled stem replicates classic proportions while keeping the piece almost weightless in the hand.",
       "price": 42,
-      "priceUsd": null,
       "volume": "210 ml",
+      "categorySlug": "cocktail",
+      "badge": "Signature",
+      "featured": true,
+      "inStock": true,
+      "sort": 1,
       "images": [
         "glasses/levitating-martini/IMG_1762.png",
         "glasses/levitating-martini/photo.webp"
       ],
-      "description": "An ultra-delicate, elongated martini glass designed for minimal elegance. The pulled stem replicates classic proportions while keeping the piece almost weightless in the hand.",
       "specs": {
         "Capacity": "210 ml",
         "Material": "Lead-free hand-blown crystal",
@@ -440,26 +443,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0005"
       },
-      "badge": "Signature",
-      "featured": true,
-      "id": "p01",
-      "sort": 1,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "champagne-saucer",
       "name": "Champagne Saucer",
       "subtitle": "Wide Bowl Saucer · 250 ml",
-      "categorySlug": "wine",
+      "description": "The classic saucer, re-proportioned for aroma. A wide surface and thin rim make it the glass we reach for at the end of the night.",
       "price": 32,
-      "priceUsd": null,
       "volume": "250 ml",
+      "categorySlug": "wine",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 2,
       "images": [
         "glasses/champagne-saucer/IMG_1761.png",
         "glasses/champagne-saucer/photo.webp"
       ],
-      "description": "The classic saucer, re-proportioned for aroma. A wide surface and thin rim make it the glass we reach for at the end of the night.",
       "specs": {
         "Capacity": "250 ml",
         "Material": "Hand-blown crystal",
@@ -469,25 +470,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0007"
       },
-      "featured": false,
-      "id": "p02",
-      "sort": 2,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "stemmed-tumbler",
       "name": "Stemmed Tumbler",
       "subtitle": "Footed Tumbler · 330 ml",
-      "categorySlug": "rocks",
+      "description": "A tumbler lifted onto a low foot — the silhouette of a wine glass with the ease of a rocks. Our quiet favourite.",
       "price": 36,
-      "priceUsd": null,
       "volume": "330 ml",
+      "categorySlug": "rocks",
+      "badge": "New",
+      "featured": false,
+      "inStock": true,
+      "sort": 3,
       "images": [
         "glasses/stemmed-tumbler/IMG_1751.jpeg",
         "glasses/stemmed-tumbler/photo.webp"
       ],
-      "description": "A tumbler lifted onto a low foot — the silhouette of a wine glass with the ease of a rocks. Our quiet favourite.",
       "specs": {
         "Capacity": "330 ml",
         "Material": "Hand-blown crystal",
@@ -497,27 +497,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0014"
       },
-      "badge": "New",
-      "featured": false,
-      "id": "p03",
-      "sort": 3,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "levitating-super-pony",
-      "cod": "AG0020",
       "name": "Levitating Super Pony",
       "subtitle": "Levitating · 140 ml",
-      "categorySlug": "cocktail",
+      "description": "Ultra-light crystal with a pulled stem, suspended for a unique experience.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "140 ml",
+      "categorySlug": "cocktail",
+      "badge": "New",
+      "featured": true,
+      "inStock": true,
+      "sort": 4,
       "images": [
         "glasses/levitating-super-pony/IMG_1765.jpeg",
         "glasses/levitating-super-pony/photo.webp"
       ],
-      "description": "Ultra-light crystal with a pulled stem, suspended for a unique experience.",
       "specs": {
         "Capacity": "140 ml",
         "Material": "Lead-free crystal",
@@ -527,27 +524,24 @@
         "Code": "AG0020",
         "Origin": "Hand-blown in China"
       },
-      "badge": "New",
-      "featured": true,
-      "id": "p04",
-      "sort": 4,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "levitating-rocks-glass",
-      "cod": "AG0021",
       "name": "Levitating Rocks Glass",
       "subtitle": "Levitating · 300 ml",
-      "categorySlug": "rocks",
+      "description": "Ultra-light crystal with a pulled stem, suspended for a unique experience.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "300 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 5,
       "images": [
         "glasses/levitating-rocks-glass/IMG_1764.jpeg",
         "glasses/levitating-rocks-glass/photo.webp"
       ],
-      "description": "Ultra-light crystal with a pulled stem, suspended for a unique experience.",
       "specs": {
         "Capacity": "300 ml",
         "Material": "Lead-free crystal",
@@ -557,26 +551,24 @@
         "Code": "AG0021",
         "Origin": "Hand-blown in China"
       },
-      "featured": false,
-      "id": "p05",
-      "sort": 5,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "levitating-highball-glass",
-      "cod": "AG0022",
       "name": "Levitating Highball Glass",
       "subtitle": "Levitating · 390 ml",
-      "categorySlug": "highball",
+      "description": "Ultra-light crystal with a pulled stem, suspended for a unique experience.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "390 ml",
+      "categorySlug": "highball",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 6,
       "images": [
         "glasses/levitating-highball-glass/IMG_1763.jpeg",
         "glasses/levitating-highball-glass/photo.webp"
       ],
-      "description": "Ultra-light crystal with a pulled stem, suspended for a unique experience.",
       "specs": {
         "Capacity": "390 ml",
         "Material": "Lead-free crystal",
@@ -586,25 +578,24 @@
         "Code": "AG0022",
         "Origin": "Hand-blown in China"
       },
-      "featured": false,
-      "id": "p06",
-      "sort": 6,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "saucer-coupe",
       "name": "Saucer Coupe",
       "subtitle": "Double-Wall Coupe · 220 ml",
-      "categorySlug": "wine",
+      "description": "A stepped coupe with an inner volume ring so the bowl reads fuller than it is. Tuned for champagne, sours and clarified milk punches.",
       "price": 34,
-      "priceUsd": null,
       "volume": "220 ml",
+      "categorySlug": "wine",
+      "badge": "",
+      "featured": true,
+      "inStock": true,
+      "sort": 7,
       "images": [
         "glasses/saucer-coupe/IMG_1752.jpeg",
         "glasses/saucer-coupe/photo.webp"
       ],
-      "description": "A stepped coupe with an inner volume ring so the bowl reads fuller than it is. Tuned for champagne, sours and clarified milk punches.",
       "specs": {
         "Capacity": "220 ml",
         "Material": "Hand-blown crystal",
@@ -614,25 +605,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0028"
       },
-      "featured": true,
-      "id": "p07",
-      "sort": 7,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "embassy-goblet",
       "name": "Embassy Goblet",
       "subtitle": "Burgundy Goblet · 400 ml",
-      "categorySlug": "wine",
+      "description": "A generous all-purpose goblet with a slim shoulder and a wide, stable foot. Our most requested piece for wine service and large-format stirred drinks.",
       "price": 38,
-      "priceUsd": null,
       "volume": "400 ml",
+      "categorySlug": "wine",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 8,
       "images": [
         "glasses/embassy-goblet/IMG_1747.jpeg",
         "glasses/embassy-goblet/photo.webp"
       ],
-      "description": "A generous all-purpose goblet with a slim shoulder and a wide, stable foot. Our most requested piece for wine service and large-format stirred drinks.",
       "specs": {
         "Capacity": "400 ml",
         "Material": "Hand-blown crystal",
@@ -642,24 +632,23 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0029"
       },
-      "featured": false,
-      "id": "p08",
-      "sort": 8,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "etched-highball",
       "name": "Etched Highball",
       "subtitle": "Etched Edition · 350 ml",
-      "categorySlug": "highball",
+      "description": "A tall, slender highball decorated with a hand-etched constellation. Keeps carbonation alive and reads beautifully under bar light.",
       "price": 28,
-      "priceUsd": null,
       "volume": "350 ml",
+      "categorySlug": "highball",
+      "badge": "Etched",
+      "featured": false,
+      "inStock": true,
+      "sort": 9,
       "images": [
         "glasses/etched-highball/photo.webp"
       ],
-      "description": "A tall, slender highball decorated with a hand-etched constellation. Keeps carbonation alive and reads beautifully under bar light.",
       "specs": {
         "Capacity": "350 ml",
         "Material": "Etched crystal",
@@ -669,26 +658,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0030"
       },
-      "badge": "Etched",
-      "featured": false,
-      "id": "p09",
-      "sort": 9,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "column-tumbler",
       "name": "Column Tumbler",
       "subtitle": "Etched Column · 300 ml",
-      "categorySlug": "rocks",
+      "description": "A clean cylinder with a hand-etched chevron. Designed to disappear into the table and hold the light.",
       "price": 28,
-      "priceUsd": null,
       "volume": "300 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 10,
       "images": [
         "glasses/column-tumbler/IMG_1759.jpeg",
         "glasses/column-tumbler/photo.webp"
       ],
-      "description": "A clean cylinder with a hand-etched chevron. Designed to disappear into the table and hold the light.",
       "specs": {
         "Capacity": "300 ml",
         "Material": "Etched crystal",
@@ -698,25 +685,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0031"
       },
-      "featured": false,
-      "id": "p10",
-      "sort": 10,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "basalt-rocks",
       "name": "Basalt Rocks",
       "subtitle": "Heavy Base Rocks · 320 ml",
-      "categorySlug": "rocks",
+      "description": "A thick-bottomed rocks glass with a straight wall and a hint of weight. Built for spirit-forward serves and slow ice.",
       "price": 30,
-      "priceUsd": null,
       "volume": "320 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": true,
+      "inStock": true,
+      "sort": 11,
       "images": [
         "glasses/basalt-rocks/IMG_1757.jpeg",
         "glasses/basalt-rocks/photo.webp"
       ],
-      "description": "A thick-bottomed rocks glass with a straight wall and a hint of weight. Built for spirit-forward serves and slow ice.",
       "specs": {
         "Capacity": "320 ml",
         "Material": "Pressed crystal",
@@ -726,25 +712,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0032"
       },
-      "featured": true,
-      "id": "p11",
-      "sort": 11,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "slope-tumbler",
       "name": "Slope Tumbler",
       "subtitle": "Stacking Tumbler · 300 ml",
-      "categorySlug": "rocks",
+      "description": "A taper that stacks in the cupboard and reads clean on the table. The everyday workhorse of the Embassy range.",
       "price": 26,
-      "priceUsd": null,
       "volume": "300 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 12,
       "images": [
         "glasses/slope-tumbler/IMG_1756.jpeg",
         "glasses/slope-tumbler/photo.webp"
       ],
-      "description": "A taper that stacks in the cupboard and reads clean on the table. The everyday workhorse of the Embassy range.",
       "specs": {
         "Capacity": "300 ml",
         "Material": "Pressed crystal",
@@ -754,25 +739,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0033"
       },
-      "featured": false,
-      "id": "p12",
-      "sort": 12,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "cylinder-hurricane",
       "name": "Cylinder Hurricane",
       "subtitle": "Candle Hurricane · 380 ml",
-      "categorySlug": "highball",
+      "description": "A straight-sided hurricane that holds a pillar candle or a tall floral centre. Blown thick at the foot so it stands level.",
       "price": 34,
-      "priceUsd": null,
       "volume": "380 ml",
+      "categorySlug": "highball",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 13,
       "images": [
         "glasses/cylinder-hurricane/IMG_1750.jpeg",
         "glasses/cylinder-hurricane/photo.webp"
       ],
-      "description": "A straight-sided hurricane that holds a pillar candle or a tall floral centre. Blown thick at the foot so it stands level.",
       "specs": {
         "Capacity": "380 ml",
         "Material": "Hand-blown crystal",
@@ -781,26 +765,24 @@
         "Origin": "Hand-blown in China",
         "Code": "AG0034"
       },
-      "featured": false,
-      "id": "p13",
-      "sort": 13,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "retro-asia-cocktail-glass",
-      "cod": "AG0015",
       "name": "Retro Asia Cocktail Glass",
       "subtitle": "Retro Asia · 140 ml",
-      "categorySlug": "cocktail",
+      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "140 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 14,
       "images": [
         "glasses/retro-asia-cocktail-glass/IMG_1749.jpeg",
         "glasses/retro-asia-cocktail-glass/photo.webp"
       ],
-      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "specs": {
         "Capacity": "140 ml",
         "Material": "Lead-free crystal",
@@ -810,25 +792,23 @@
         "Code": "AG0015",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p14",
-      "sort": 14,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "retro-asia-rocks-glass",
-      "cod": "AG0016",
       "name": "Retro Asia Rocks Glass",
       "subtitle": "Retro Asia · 270 ml",
-      "categorySlug": "rocks",
+      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "price": 25,
-      "priceUsd": 6.8,
       "volume": "270 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 15,
       "images": [
         "glasses/retro-asia-rocks-glass/photo.webp"
       ],
-      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "specs": {
         "Capacity": "270 ml",
         "Material": "Lead-free crystal",
@@ -838,25 +818,23 @@
         "Code": "AG0016",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p15",
-      "sort": 15,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 6.8
     },
     {
       "slug": "retro-asia-highball-glass",
-      "cod": "AG0017",
       "name": "Retro Asia Highball Glass",
       "subtitle": "Retro Asia · 310 ml",
-      "categorySlug": "highball",
+      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "price": 25,
-      "priceUsd": 6.8,
       "volume": "310 ml",
+      "categorySlug": "highball",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 16,
       "images": [
         "glasses/retro-asia-highball-glass/photo.webp"
       ],
-      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "specs": {
         "Capacity": "310 ml",
         "Material": "Lead-free crystal",
@@ -866,26 +844,24 @@
         "Code": "AG0017",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p16",
-      "sort": 16,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 6.8
     },
     {
       "slug": "retro-asia-shot-glass",
-      "cod": "AG0018",
       "name": "Retro Asia Shot Glass",
       "subtitle": "Retro Asia · 60 ml",
-      "categorySlug": "cocktail",
+      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "price": 10,
-      "priceUsd": 2.8,
       "volume": "60 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 17,
       "images": [
         "glasses/retro-asia-shot-glass/IMG_1754.jpeg",
         "glasses/retro-asia-shot-glass/photo.webp"
       ],
-      "description": "The house classic: fine walls, a straight taper and a foot that finds the table by itself.",
       "specs": {
         "Capacity": "60 ml",
         "Material": "Lead-free crystal",
@@ -895,25 +871,23 @@
         "Code": "AG0018",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p17",
-      "sort": 17,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 2.8
     },
     {
       "slug": "retro-asia-engraved-cocktail-glass",
-      "cod": "AG0011",
       "name": "Retro Asia Engraved Cocktail Glass",
       "subtitle": "Retro Asia Engraved · 140 ml",
-      "categorySlug": "cocktail",
+      "description": "Retro Asia, engraved by hand — the dots read as frost under bar light.",
       "price": 35,
-      "priceUsd": 10.9,
       "volume": "140 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 18,
       "images": [
         "glasses/retro-asia-engraved-cocktail-glass/photo.webp"
       ],
-      "description": "Retro Asia, engraved by hand — the dots read as frost under bar light.",
       "specs": {
         "Capacity": "140 ml",
         "Material": "Lead-free crystal, engraved",
@@ -923,25 +897,23 @@
         "Code": "AG0011",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p18",
-      "sort": 18,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 10.9
     },
     {
       "slug": "retro-asia-engraved-rocks-glass",
-      "cod": "AG0012",
       "name": "Retro Asia Engraved Rocks Glass",
       "subtitle": "Retro Asia Engraved · 270 ml",
-      "categorySlug": "rocks",
+      "description": "Retro Asia, engraved by hand — the dots read as frost under bar light.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "270 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 19,
       "images": [
         "glasses/retro-asia-engraved-rocks-glass/photo.webp"
       ],
-      "description": "Retro Asia, engraved by hand — the dots read as frost under bar light.",
       "specs": {
         "Capacity": "270 ml",
         "Material": "Lead-free crystal, engraved",
@@ -951,25 +923,23 @@
         "Code": "AG0012",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p19",
-      "sort": 19,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "retro-asia-engraved-highball-glass",
-      "cod": "AG0013",
       "name": "Retro Asia Engraved Highball Glass",
       "subtitle": "Retro Asia Engraved · 310 ml",
-      "categorySlug": "highball",
+      "description": "Retro Asia, engraved by hand — the dots read as frost under bar light.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "310 ml",
+      "categorySlug": "highball",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 20,
       "images": [
         "glasses/retro-asia-engraved-highball-glass/photo.webp"
       ],
-      "description": "Retro Asia, engraved by hand — the dots read as frost under bar light.",
       "specs": {
         "Capacity": "310 ml",
         "Material": "Lead-free crystal, engraved",
@@ -979,26 +949,24 @@
         "Code": "AG0013",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p20",
-      "sort": 20,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "bullet-chalet-glass",
-      "cod": "AG0008",
       "name": "Bullet Chalet Glass",
       "subtitle": "Bullet · 210 ml",
-      "categorySlug": "rocks",
+      "description": "Tall-sided chalet shapes, weighted at the base for a low centre of gravity.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "210 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 21,
       "images": [
         "glasses/bullet-chalet-glass/IMG_1755.jpeg",
         "glasses/bullet-chalet-glass/photo.webp"
       ],
-      "description": "Tall-sided chalet shapes, weighted at the base for a low centre of gravity.",
       "specs": {
         "Capacity": "210 ml",
         "Material": "Lead-free crystal",
@@ -1008,26 +976,24 @@
         "Code": "AG0008",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p21",
-      "sort": 21,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "bullet-rocks-glass",
-      "cod": "AG0010",
       "name": "Bullet Rocks Glass",
       "subtitle": "Bullet · 390 ml",
-      "categorySlug": "rocks",
+      "description": "Tall-sided chalet shapes, weighted at the base for a low centre of gravity.",
       "price": 25,
-      "priceUsd": 6.8,
       "volume": "390 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 22,
       "images": [
         "glasses/bullet-rocks-glass/IMG_1760.jpeg",
         "glasses/bullet-rocks-glass/photo.webp"
       ],
-      "description": "Tall-sided chalet shapes, weighted at the base for a low centre of gravity.",
       "specs": {
         "Capacity": "390 ml",
         "Material": "Lead-free crystal",
@@ -1037,25 +1003,23 @@
         "Code": "AG0010",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p22",
-      "sort": 22,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 6.8
     },
     {
       "slug": "bullet-highball-glass",
-      "cod": "AG0009",
       "name": "Bullet Highball Glass",
       "subtitle": "Bullet · 410 ml",
-      "categorySlug": "highball",
+      "description": "Tall-sided chalet shapes, weighted at the base for a low centre of gravity.",
       "price": 25,
-      "priceUsd": 6.8,
       "volume": "410 ml",
+      "categorySlug": "highball",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 23,
       "images": [
         "glasses/bullet-highball-glass/photo.webp"
       ],
-      "description": "Tall-sided chalet shapes, weighted at the base for a low centre of gravity.",
       "specs": {
         "Capacity": "410 ml",
         "Material": "Lead-free crystal",
@@ -1065,25 +1029,23 @@
         "Code": "AG0009",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p23",
-      "sort": 23,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 6.8
     },
     {
       "slug": "flowers-cocktail-glass",
-      "cod": "AG0002",
       "name": "Flowers Cocktail Glass",
       "subtitle": "Flowers · 150 ml",
-      "categorySlug": "cocktail",
+      "description": "A flared bowl that opens like a petal; built for aromatic, floral serves.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "150 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 24,
       "images": [
         "glasses/flowers-cocktail-glass/photo.webp"
       ],
-      "description": "A flared bowl that opens like a petal; built for aromatic, floral serves.",
       "specs": {
         "Capacity": "150 ml",
         "Material": "Lead-free crystal",
@@ -1093,25 +1055,23 @@
         "Code": "AG0002",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p24",
-      "sort": 24,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "flowers-rocks-glass",
-      "cod": "AG0003",
       "name": "Flowers Rocks Glass",
       "subtitle": "Flowers · 330 ml",
-      "categorySlug": "rocks",
+      "description": "A flared bowl that opens like a petal; built for aromatic, floral serves.",
       "price": 25,
-      "priceUsd": 6.8,
       "volume": "330 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 25,
       "images": [
         "glasses/flowers-rocks-glass/photo.webp"
       ],
-      "description": "A flared bowl that opens like a petal; built for aromatic, floral serves.",
       "specs": {
         "Capacity": "330 ml",
         "Material": "Lead-free crystal",
@@ -1121,25 +1081,23 @@
         "Code": "AG0003",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p25",
-      "sort": 25,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 6.8
     },
     {
       "slug": "flowers-highball-glass",
-      "cod": "AG0001",
       "name": "Flowers Highball Glass",
       "subtitle": "Flowers · 370 ml",
-      "categorySlug": "highball",
+      "description": "A flared bowl that opens like a petal; built for aromatic, floral serves.",
       "price": 25,
-      "priceUsd": 6.8,
       "volume": "370 ml",
+      "categorySlug": "highball",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 26,
       "images": [
         "glasses/flowers-highball-glass/photo.webp"
       ],
-      "description": "A flared bowl that opens like a petal; built for aromatic, floral serves.",
       "specs": {
         "Capacity": "370 ml",
         "Material": "Lead-free crystal",
@@ -1149,26 +1107,24 @@
         "Code": "AG0001",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p26",
-      "sort": 26,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 6.8
     },
     {
       "slug": "coupethini-coupethini",
-      "cod": "AG0006",
       "name": "Coupethini",
       "subtitle": "Coupethini · 145 ml",
-      "categorySlug": "cocktail",
+      "description": "A coupe and a martini in one profile — the widest serve in the collection.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "145 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 27,
       "images": [
         "glasses/coupethini-coupethini/IMG_1758.jpeg",
         "glasses/coupethini-coupethini/photo.webp"
       ],
-      "description": "A coupe and a martini in one profile — the widest serve in the collection.",
       "specs": {
         "Capacity": "145 ml",
         "Material": "Lead-free crystal",
@@ -1178,25 +1134,23 @@
         "Code": "AG0006",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p27",
-      "sort": 27,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "replicate-rocks-glass",
-      "cod": "AG0004",
       "name": "Replicate Rocks Glass",
       "subtitle": "Replicate · 330 ml",
-      "categorySlug": "rocks",
+      "description": "Borosilicate, blown thin and left raw. Light and nearly unbreakable in service.",
       "price": 28,
-      "priceUsd": 8.0,
       "volume": "330 ml",
+      "categorySlug": "rocks",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 28,
       "images": [
         "glasses/replicate-rocks-glass/photo.webp"
       ],
-      "description": "Borosilicate, blown thin and left raw. Light and nearly unbreakable in service.",
       "specs": {
         "Capacity": "330 ml",
         "Material": "Borosilicate",
@@ -1206,26 +1160,24 @@
         "Code": "AG0004",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p28",
-      "sort": 28,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8
     },
     {
       "slug": "shorties-mini-martini",
-      "cod": "AG0023",
       "name": "Shorties Mini Martini",
       "subtitle": "Shorties · 150 ml",
-      "categorySlug": "cocktail",
+      "description": "Small-format glasses for tasting flights and miniature serves.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "150 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 29,
       "images": [
         "glasses/shorties-mini-martini/IMG_1744.png",
         "glasses/shorties-mini-martini/photo.webp"
       ],
-      "description": "Small-format glasses for tasting flights and miniature serves.",
       "specs": {
         "Capacity": "150 ml",
         "Material": "Lead-free crystal",
@@ -1233,26 +1185,24 @@
         "Code": "AG0023",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p29",
-      "sort": 29,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "shorties-daisy-coupe",
-      "cod": "AG0024",
       "name": "Shorties Daisy Coupe",
       "subtitle": "Shorties · 150 ml",
-      "categorySlug": "cocktail",
+      "description": "Small-format glasses for tasting flights and miniature serves.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "150 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 30,
       "images": [
         "glasses/shorties-daisy-coupe/IMG_1748.png",
         "glasses/shorties-daisy-coupe/photo.webp"
       ],
-      "description": "Small-format glasses for tasting flights and miniature serves.",
       "specs": {
         "Capacity": "150 ml",
         "Material": "Lead-free crystal",
@@ -1260,26 +1210,24 @@
         "Code": "AG0024",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p30",
-      "sort": 30,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "shorties-lil-nora",
-      "cod": "AG0026",
       "name": "Shorties Lil' Nora",
       "subtitle": "Shorties · 160 ml",
-      "categorySlug": "cocktail",
+      "description": "Small-format glasses for tasting flights and miniature serves.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "160 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 31,
       "images": [
         "glasses/shorties-lil-nora/IMG_1753.jpeg",
         "glasses/shorties-lil-nora/photo.webp"
       ],
-      "description": "Small-format glasses for tasting flights and miniature serves.",
       "specs": {
         "Capacity": "160 ml",
         "Material": "Lead-free crystal",
@@ -1287,26 +1235,24 @@
         "Code": "AG0026",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p31",
-      "sort": 31,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "shorties-modern-margo",
-      "cod": "AG0025",
       "name": "Shorties Modern Margo",
       "subtitle": "Shorties · 200 ml",
-      "categorySlug": "cocktail",
+      "description": "Small-format glasses for tasting flights and miniature serves.",
       "price": 30,
-      "priceUsd": 8.2,
       "volume": "200 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 32,
       "images": [
         "glasses/shorties-modern-margo/IMG_1746.png",
         "glasses/shorties-modern-margo/photo.webp"
       ],
-      "description": "Small-format glasses for tasting flights and miniature serves.",
       "specs": {
         "Capacity": "200 ml",
         "Material": "Lead-free crystal",
@@ -1314,25 +1260,23 @@
         "Code": "AG0025",
         "Origin": "Hand-blown in China"
       },
-      "comingSoon": false,
-      "id": "p32",
-      "sort": 32,
-      "featured": false,
-      "inStock": true
+      "priceUsd": 8.2
     },
     {
       "slug": "teapot-teapot",
-      "cod": "AG0027",
       "name": "Teapot",
       "subtitle": "Teapot · 500 ml",
-      "categorySlug": "wine",
+      "description": "Crystal and wood, held by a magnetic system. In development — ask for the first series.",
       "price": 145,
-      "priceUsd": null,
       "volume": "500 ml",
+      "categorySlug": "wine",
+      "badge": "",
+      "featured": false,
+      "inStock": false,
+      "sort": 33,
       "images": [
         "glasses/teapot-teapot/photo.webp"
       ],
-      "description": "Crystal and wood, held by a magnetic system. In development — ask for the first series.",
       "specs": {
         "Capacity": "500 ml",
         "Material": "Crystal and wood, magnetic system",
@@ -1340,24 +1284,23 @@
         "Origin": "Hand-blown in China"
       },
       "comingSoon": true,
-      "id": "p33",
-      "sort": 33,
-      "featured": false,
-      "inStock": false
+      "priceUsd": null
     },
     {
       "slug": "two-sips-cocktail-glass",
-      "cod": "AG0019",
       "name": "Two Sips Cocktail Glass",
       "subtitle": "Two Sips · 85 ml",
-      "categorySlug": "cocktail",
+      "description": "A two-sip cocktail glass. In development — ask for the first series.",
       "price": 0,
-      "priceUsd": null,
       "volume": "85 ml",
+      "categorySlug": "cocktail",
+      "badge": "",
+      "featured": false,
+      "inStock": false,
+      "sort": 34,
       "images": [
         "glasses/two-sips-cocktail-glass/photo.webp"
       ],
-      "description": "A two-sip cocktail glass. In development — ask for the first series.",
       "specs": {
         "Capacity": "85 ml",
         "Material": "Lead-free crystal",
@@ -1368,24 +1311,23 @@
         "Origin": "Hand-blown in China"
       },
       "comingSoon": true,
-      "id": "p34",
-      "sort": 34,
-      "featured": false,
-      "inStock": false
+      "priceUsd": null
     },
     {
       "slug": "eco-straw-sugar-cane",
-      "cod": "ST0003",
       "name": "Eco Straw · Sugar Cane",
       "subtitle": "Straws · 210 mm · ⌀ 5 mm",
-      "categorySlug": "acids",
+      "description": "Plant-based drinking straws for high-volume service.",
       "price": 125,
-      "priceUsd": null,
       "volume": "210 mm · ⌀ 5 mm",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 35,
       "images": [
         "packaging/eco-straw-sugar-cane/photo.webp"
       ],
-      "description": "Plant-based drinking straws for high-volume service.",
       "specs": {
         "Length": "210 mm",
         "Diameter": "5 mm",
@@ -1393,25 +1335,23 @@
         "Code": "ST0003",
         "Origin": "Hand-blown in China"
       },
-      "id": "p35",
-      "sort": 35,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "eco-straw-coffee",
-      "cod": "ST0002",
       "name": "Eco Straw · Coffee",
       "subtitle": "Straws · 210 mm · ⌀ 5 mm",
-      "categorySlug": "acids",
+      "description": "Plant-based drinking straws for high-volume service.",
       "price": 125,
-      "priceUsd": null,
       "volume": "210 mm · ⌀ 5 mm",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 36,
       "images": [
         "packaging/eco-straw-coffee/photo.webp"
       ],
-      "description": "Plant-based drinking straws for high-volume service.",
       "specs": {
         "Length": "210 mm",
         "Diameter": "5 mm",
@@ -1419,395 +1359,359 @@
         "Code": "ST0002",
         "Origin": "Hand-blown in China"
       },
-      "id": "p36",
-      "sort": 36,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "malic-acid",
-      "cod": "AC0003",
       "name": "Malic Acid",
       "subtitle": "Acids · 1000 g · food grade",
-      "categorySlug": "acids",
+      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "price": 100,
-      "priceUsd": 40.1,
       "volume": "1000 g · food grade",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 37,
       "images": [
         "packaging/malic-acid/photo.webp"
       ],
-      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "specs": {
         "Weight": "1000 g",
         "Grade": "Food grade",
         "Code": "AC0003"
       },
-      "id": "p37",
-      "sort": 37,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 40.1
     },
     {
       "slug": "citric-acid",
-      "cod": "AC0001",
       "name": "Citric Acid",
       "subtitle": "Acids · 1000 g · food grade",
-      "categorySlug": "acids",
+      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "price": 80,
-      "priceUsd": 32.7,
       "volume": "1000 g · food grade",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 38,
       "images": [
         "packaging/citric-acid/photo.webp"
       ],
-      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "specs": {
         "Weight": "1000 g",
         "Grade": "Food grade",
         "Code": "AC0001"
       },
-      "id": "p38",
-      "sort": 38,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 32.7
     },
     {
       "slug": "ascorbic-acid",
-      "cod": "AC0005",
       "name": "Ascorbic Acid",
       "subtitle": "Acids · 1000 g · food grade",
-      "categorySlug": "acids",
+      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "price": 140,
-      "priceUsd": 40.1,
       "volume": "1000 g · food grade",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 39,
       "images": [
         "packaging/ascorbic-acid/photo.webp"
       ],
-      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "specs": {
         "Weight": "1000 g",
         "Grade": "Food grade",
         "Code": "AC0005"
       },
-      "id": "p39",
-      "sort": 39,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 40.1
     },
     {
       "slug": "tartaric-acid",
-      "cod": "AC0002",
       "name": "Tartaric Acid",
       "subtitle": "Acids · 1000 g · food grade",
-      "categorySlug": "acids",
+      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "price": 100,
-      "priceUsd": 38.1,
       "volume": "1000 g · food grade",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 40,
       "images": [
         "packaging/tartaric-acid/photo.webp"
       ],
-      "description": "Cocktail acids by the kilo, food grade, for calibration and shelf-stable balance.",
       "specs": {
         "Weight": "1000 g",
         "Grade": "Food grade",
         "Code": "AC0002"
       },
-      "id": "p40",
-      "sort": 40,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 38.1
     },
     {
       "slug": "pectinase",
-      "cod": "PC0001",
       "name": "Pectinase",
       "subtitle": "Hydrocolloids · 300 ml · clarification",
-      "categorySlug": "acids",
+      "description": "Enzymes and gelling agents for clarification and texture work.",
       "price": 475,
-      "priceUsd": null,
       "volume": "300 ml · clarification",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 41,
       "images": [
         "packaging/pectinase/photo.webp"
       ],
-      "description": "Enzymes and gelling agents for clarification and texture work.",
       "specs": {
         "Volume": "300 ml",
         "Grade": "Food grade",
         "Code": "PC0001"
       },
-      "id": "p41",
-      "sort": 41,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": null
     },
     {
       "slug": "agar-agar",
-      "cod": "AG0001",
       "name": "Agar Agar",
       "subtitle": "Hydrocolloids · 1000 g · clarification",
-      "categorySlug": "acids",
+      "description": "Enzymes and gelling agents for clarification and texture work.",
       "price": 400,
-      "priceUsd": 109,
       "volume": "1000 g · clarification",
+      "categorySlug": "acids",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 42,
       "images": [
         "packaging/agar-agar/photo.webp"
       ],
-      "description": "Enzymes and gelling agents for clarification and texture work.",
       "specs": {
         "Weight": "1000 g",
         "Grade": "Food grade",
         "Code": "PC0002"
       },
-      "id": "p42",
-      "sort": 42,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 109
     },
     {
       "slug": "essence-strawberry",
-      "cod": "FE0001",
       "name": "Strawberry",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 43,
       "images": [
         "packaging/essence-strawberry/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0001"
       },
-      "id": "p43",
-      "sort": 43,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-raspberry",
-      "cod": "FE0002",
       "name": "Raspberry",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 44,
       "images": [
         "packaging/essence-raspberry/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0002"
       },
-      "id": "p44",
-      "sort": 44,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-grapefruit",
-      "cod": "FE0003",
       "name": "Grapefruit",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 45,
       "images": [
         "packaging/essence-grapefruit/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0003"
       },
-      "id": "p45",
-      "sort": 45,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-peach",
-      "cod": "FE0004",
       "name": "Peach",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 46,
       "images": [
         "packaging/essence-peach/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0004"
       },
-      "id": "p46",
-      "sort": 46,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-vanilla",
-      "cod": "FE0005",
       "name": "Vanilla",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 47,
       "images": [
         "packaging/essence-vanilla/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0005"
       },
-      "id": "p47",
-      "sort": 47,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-cherry",
-      "cod": "FE0006",
       "name": "Cherry",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 48,
       "images": [
         "packaging/essence-cherry/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0006"
       },
-      "id": "p48",
-      "sort": 48,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-green-apple",
-      "cod": "FE0007",
       "name": "Green Apple",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 49,
       "images": [
         "packaging/essence-green-apple/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0007"
       },
-      "id": "p49",
-      "sort": 49,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-mango",
-      "cod": "FE0008",
       "name": "Mango",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 50,
       "images": [
         "packaging/essence-mango/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0008"
       },
-      "id": "p50",
-      "sort": 50,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-banana",
-      "cod": "FE0009",
       "name": "Banana",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 51,
       "images": [
         "packaging/essence-banana/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0009"
       },
-      "id": "p51",
-      "sort": 51,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     },
     {
       "slug": "essence-blackcurrant",
-      "cod": "FE0010",
       "name": "Blackcurrant",
       "subtitle": "Flavour essences · 100 ml · natural",
-      "categorySlug": "essences",
+      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "price": 100,
-      "priceUsd": 28,
       "volume": "100 ml · natural",
+      "categorySlug": "essences",
+      "badge": "",
+      "featured": false,
+      "inStock": true,
+      "sort": 52,
       "images": [
         "packaging/essence-blackcurrant/photo.webp"
       ],
-      "description": "Natural flavour essences, 100 ml, dosed by the drop.",
       "specs": {
         "Volume": "100 ml",
         "Grade": "Natural",
         "Code": "FE0010"
       },
-      "id": "p52",
-      "sort": 52,
-      "featured": false,
-      "comingSoon": false,
-      "inStock": true
+      "priceUsd": 28
     }
   ]
 }
