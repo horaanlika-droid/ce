@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "updatedAt": "2026-11-22T21:42:01.828Z",
+  "updatedAt": "2026-11-22T21:56:40.473Z",
   "settings": {
     "brand": "Cocktail Embassy",
     "tagline": "Hand-blown glassware for the modern bar.",
@@ -432,16 +432,15 @@
       "inStock": true,
       "sort": 1,
       "images": [
-        "glasses/levitating-martini/IMG_1762.png",
-        "glasses/levitating-martini/photo.webp"
+        "glasses/levitating-martini/photo.jpg"
       ],
       "specs": {
-        "Capacity": "210 ml",
-        "Material": "Lead-free hand-blown crystal",
-        "Height": "185 mm",
         "Care": "Hand wash",
         "Origin": "Hand-blown in China",
-        "Code": "AG0005"
+        "Code": "AG0005",
+        "Capacity": "210 ml",
+        "Height": "185 mm",
+        "Material": "Lead-free hand-blown crystal"
       },
       "priceUsd": null
     },
