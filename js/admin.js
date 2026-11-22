@@ -255,7 +255,9 @@ async function api(path, options = {}) {
   }
   if (!res.ok) {
     const detail = await res.json().catch(() => null);
-    throw new Error((detail && detail.detail) || `Ошибка запроса (${res.status})`);
+    const error = new Error((detail && detail.detail) || `Ошибка запроса (${res.status})`);
+    error.status = res.status;
+    throw error;
   }
   return await res.json();
 }
@@ -400,6 +402,17 @@ async function deleteCategoryOp(slug, data) {
  *  Static mode + saved GitHub token: the photo goes straight into its repo folder
  *  (target = { folder, baseName }), so only a small path string is stored locally —
  *  no multi-megabyte data URLs that overflow localStorage. */
+function imageUploadToast(result, successMessage) {
+  if (result.draftOnly) {
+    toast("Фото добавлено в черновик. Сохраните изменения и нажмите «Опубликовать на сайт».", {
+      iconName: "warning",
+      duration: 6000,
+    });
+  } else {
+    toast(successMessage);
+  }
+}
+
 async function processImageFile(file, target = null) {
   const dataUrl = await new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -435,18 +448,12 @@ async function processImageFile(file, target = null) {
     reader.readAsDataURL(file);
   });
 
-  if (!isStatic()) {
-    const res = await api("/api/admin/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: file.name || "photo.webp", dataUrl }),
-    });
-    return res.url;
-  }
-  // Static (GitHub Pages) mode: if the owner saved a token in the Публикация tab,
-  // upload directly into the item's repo folder and keep just the path.
-  const token = (localStorage.getItem(GH_TOKEN_KEY) || "").trim();
-  if (token && target && target.folder) {
+  const uploadToGitHub = async () => {
+    // In either deployment mode, a saved publisher token can put the file straight
+    // into the repository. This is also the fallback for older API deployments
+    // that do not yet expose /api/admin/upload (404).
+    const token = (localStorage.getItem(GH_TOKEN_KEY) || "").trim();
+    if (!token || !target?.folder) return null;
     const repo = (localStorage.getItem(GH_REPO_KEY) || "horaanlika-droid/ce").trim();
     const m = /^data:image\/(webp|png|jpe?g);base64,(.+)$/i.exec(dataUrl);
     const ext = m ? (m[1].toLowerCase() === "jpeg" ? "jpg" : m[1].toLowerCase()) : "webp";
@@ -460,8 +467,30 @@ async function processImageFile(file, target = null) {
       message: `Admin: upload ${filePath}`,
     });
     return filePath;
+  };
+
+  if (!isStatic()) {
+    try {
+      const res = await api("/api/admin/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: file.name || "photo.webp", dataUrl }),
+      });
+      return { url: res.url, draftOnly: false };
+    } catch (err) {
+      if (err.status !== 404) throw err;
+      const repoUrl = await uploadToGitHub();
+      if (repoUrl) return { url: repoUrl, draftOnly: false };
+      // Older BotHost releases sometimes lack the upload route. Keep the image as
+      // a normal draft URL instead of blocking the admin; it can be published to
+      // GitHub from the Publication tab, whose publisher externalizes inline photos.
+      return { url: dataUrl, draftOnly: true };
+    }
   }
-  return dataUrl;
+
+  const repoUrl = await uploadToGitHub();
+  if (repoUrl) return { url: repoUrl, draftOnly: false };
+  return { url: dataUrl, draftOnly: true };
 }
 
 /* ------------------------------------------- GitHub Pages publisher */
@@ -945,7 +974,8 @@ function productsView(data, rerender) {
                 .filter((u) => u.startsWith(folder + "/"))
             : [];
           const baseName = folderImgs.length === 0 ? "photo" : `photo-${folderImgs.length + 1}`;
-          const url = await processImageFile(file, folder ? { folder, baseName } : null);
+          const result = await processImageFile(file, folder ? { folder, baseName } : null);
+          const url = result.url;
           const cur = imagesArea.value
             .split(/\r?\n/)
             .map((s) => s.trim())
@@ -953,7 +983,7 @@ function productsView(data, rerender) {
           cur.unshift(url);
           imagesArea.value = cur.join("\n");
           paintPreviews();
-          toast("Фото добавлено");
+          imageUploadToast(result, "Фото добавлено");
         } catch (err) {
           toast("Ошибка загрузки: " + errText(err), { iconName: "warning" });
         }
@@ -1263,9 +1293,9 @@ function categoriesView(data, rerender) {
             folder && cur.startsWith(folder + "/")
               ? cur.slice(folder.length + 1).replace(/\.[^.]+$/, "")
               : "cover";
-          const url = await processImageFile(file, folder ? { folder, baseName } : null);
-          form.elements.cover.value = url;
-          toast("Обложка загружена");
+          const result = await processImageFile(file, folder ? { folder, baseName } : null);
+          form.elements.cover.value = result.url;
+          imageUploadToast(result, "Обложка загружена");
         } catch (err) {
           toast("Ошибка: " + errText(err), { iconName: "warning" });
         }
@@ -1580,13 +1610,13 @@ function settingsView(data, rerender) {
         if (!file) return;
         try {
           toast("Обработка фото…");
-          const url = await processImageFile(file, {
+          const result = await processImageFile(file, {
             folder: "covers/announcement",
             baseName: "announcement",
           });
-          announceField.value = url;
+          announceField.value = result.url;
           paintAnnouncePreview();
-          toast("Картинка загружена");
+          imageUploadToast(result, "Картинка загружена");
         } catch (err) {
           toast("Ошибка загрузки: " + errText(err), { iconName: "warning" });
         }
@@ -1616,13 +1646,13 @@ function settingsView(data, rerender) {
           if (!file || !key) return;
           try {
             toast("Обработка фото…");
-            const url = await processImageFile(file, {
+            const result = await processImageFile(file, {
               folder: inp.dataset.folder || "covers",
               baseName: inp.dataset.base || "cover",
             });
-            if (field) field.value = url;
+            if (field) field.value = result.url;
             paintSiteCoverPreview(key);
-            toast("Фото загружено");
+            imageUploadToast(result, "Фото загружено");
           } catch (err) {
             toast("Ошибка загрузки: " + errText(err), { iconName: "warning" });
           }
@@ -1666,10 +1696,10 @@ function settingsView(data, rerender) {
         const field = row.querySelector(isPortrait ? "[data-hero-portrait]" : "[data-hero-cover]");
         try {
           toast("Обработка фото…");
-          const url = await processImageFile(file, folder ? { folder, baseName: base } : null);
-          if (field) field.value = url;
+          const result = await processImageFile(file, folder ? { folder, baseName: base } : null);
+          if (field) field.value = result.url;
           paintHeroPreviews(row);
-          toast("Обложка слайда загружена");
+          imageUploadToast(result, "Обложка слайда загружена");
         } catch (err) {
           toast("Ошибка загрузки: " + errText(err), { iconName: "warning" });
         }
