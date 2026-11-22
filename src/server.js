@@ -21,6 +21,9 @@ import { renderInvoiceHtml, invoiceSummary } from './payments/invoice.js';
 import * as yookassa from './payments/yookassa.js';
 
 import { mediaManifest } from './media.js';
+import {
+  issueAdminToken, verifyAdminPassword, setAdminPassword, requireAdmin,
+} from './admin-auth.js';
 
 const WEBAPP_DIR = path.join(ROOT, 'webapp');
 
@@ -99,12 +102,39 @@ export function createServer() {
   api.use((req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
   api.use(authenticate);
 
+
   const wrap = (fn) => (req, res) => {
     Promise.resolve(fn(req, res)).catch((err) => {
       console.error('[api]', err);
       if (!res.headersSent) res.status(400).json({ error: err.message || 'error' });
     });
   };
+
+
+  // ─── админ-аутентификация веб-панели ─────────────────────────
+  // Роуты зеркалируют FastAPI-сервер (server/main.py): тот же fallback и тот же
+  // Bearer-токен на 24 часа. Здоровится /api/health, запись сохраняется в db.settings.
+  api.post('/admin/login', wrap((req, res) => {
+    const password = req.body && req.body.password;
+    if (!verifyAdminPassword(password)) {
+      return res.status(401).json({ error: 'wrong-password' });
+    }
+    res.json({ ok: true, token: issueAdminToken() });
+  }));
+
+  api.post('/admin/password', requireAdmin, wrap((req, res) => {
+    const currentPassword = req.body && req.body.currentPassword;
+    const newPassword = req.body && req.body.newPassword;
+    if (!verifyAdminPassword(currentPassword)) {
+      return res.status(400).json({ error: 'wrong-current-password' });
+    }
+    const clean = String(newPassword || '').trim();
+    if (clean.length < 4) {
+      return res.status(400).json({ error: 'new-password-too-short' });
+    }
+    setAdminPassword(clean);
+    res.json({ ok: true });
+  }));
 
   // ─── конфигурация витрины ─────────────────────────────────────
   api.get('/config', wrap((req, res) => {
