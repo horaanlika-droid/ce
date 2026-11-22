@@ -284,6 +284,12 @@ async function refreshStorefront() {
 }
 
 async function saveSettingsOp(settingsPatch, data) {
+  const saveDraft = () => {
+    const copy = cloneContent(data);
+    copy.settings = { ...copy.settings, ...settingsPatch };
+    return { updated: saveLocalOverride(copy), localDraft: true };
+  };
+
   if (!isStatic()) {
     try {
       await api("/api/admin/settings/bulk", {
@@ -292,19 +298,25 @@ async function saveSettingsOp(settingsPatch, data) {
         body: JSON.stringify({ settings: settingsPatch }),
       });
     } catch {
-      for (const [key, value] of Object.entries(settingsPatch)) {
-        await api("/api/admin/settings", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key, value }),
-        });
+      // Older/misconfigured API deployments may not have the settings endpoint.
+      // Try the legacy per-setting route first, then keep the edits as a local
+      // draft so a missing API route doesn't block image changes/publication.
+      try {
+        for (const [key, value] of Object.entries(settingsPatch)) {
+          await api("/api/admin/settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key, value }),
+          });
+        }
+      } catch (singleError) {
+        if (singleError.status !== 404) throw singleError;
+        return saveDraft();
       }
     }
-    return await refreshStorefront();
+    return { updated: await refreshStorefront(), localDraft: false };
   }
-  const copy = cloneContent(data);
-  copy.settings = { ...copy.settings, ...settingsPatch };
-  return saveLocalOverride(copy);
+  return saveDraft();
 }
 
 async function saveProductOp(existingSlug, payload, data) {
@@ -1787,14 +1799,17 @@ function settingsView(data, rerender) {
           .filter((x) => x.productSlug);
 
         try {
-          const updated = await saveSettingsOp(patch, data);
+          const result = await saveSettingsOp(patch, data);
+          const imagesStripped = lastSaveStrippedImages();
           toast(
-            lastSaveStrippedImages()
+            imagesStripped
               ? "Сохранено. Фото не влезли в черновик браузера — нажмите «Опубликовать на сайт» (вкладка «Публикация»), чтобы залить их в репозиторий"
-              : "Настройки сохранены",
-            { iconName: lastSaveStrippedImages() ? "warning" : "checkCircle", duration: lastSaveStrippedImages() ? 6000 : 2600 }
+              : result.localDraft
+                ? "Сохранено в браузере. Нажмите «Опубликовать на сайт» во вкладке «Публикация», чтобы обновить сайт"
+                : "Настройки сохранены",
+            { iconName: imagesStripped || result.localDraft ? "warning" : "checkCircle", duration: imagesStripped || result.localDraft ? 6000 : 2600 }
           );
-          rerender(updated);
+          rerender(result.updated);
         } catch (err) {
           toast("Ошибка сохранения: " + errText(err), { iconName: "warning" });
         }
