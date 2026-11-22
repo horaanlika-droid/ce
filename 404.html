@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0b">
+<title>Cocktail Embassy</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://horaanlika-droid.github.io/ce/">
+<style>
+  html, body { margin: 0; padding: 0; background: #0b0b0b; color: #f2f2f2; }
+  body { min-height: 100dvh; display: grid; place-items: center; padding: 28px; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center; }
+  main { max-width: 420px; display: grid; gap: 14px; justify-items: center; }
+  .mark { width: 54px; height: auto; }
+  h1 { font-size: 18px; font-weight: 640; letter-spacing: -0.02em; margin: 0; }
+  p { font-size: 13px; line-height: 1.55; color: #9c9c9c; margin: 0; }
+  a.btn { display: inline-flex; align-items: center; gap: 8px; background: #f2f2f2; color: #0b0b0b; border-radius: 8px; padding: 12px 18px; font-size: 13px; font-weight: 600; letter-spacing: 0.01em; text-decoration: none; margin-top: 6px; }
+  a.btn:hover { background: #ffffff; }
+  .hint { font-size: 11px; color: #5f5f5f; margin-top: 10px; line-height: 1.5; }
+</style>
+<script>
+(function () {
+  // GitHub Pages serves this page for any unmatched path (e.g. /ce/admin).
+  // The catalogue is a hash-routed SPA, so forward the requested path into the
+  // hash instead of showing a blank 404. Files (last segment has a dot) and
+  // the site root stay as genuine 404s.
+  var path;
+  try { path = new URL(window.location.href).pathname.replace(/\/+$/, ""); } catch (e) { path = ""; }
+  var segments = path.split("/").filter(Boolean);
+  var last = segments.length ? segments[segments.length - 1] : "";
+  if (!last || last.indexOf(".") !== -1) return; // file or empty — stay a real 404
+
+  // project site (/ce/admin) -> first segment is the base; root site -> "/"
+  // a lone segment means the site is served at the root, so it is a route
+  var isProjectSite = segments.length >= 2;
+  var base = isProjectSite ? "/" + segments[0] + "/" : "/";
+  var route = isProjectSite ? segments.slice(1).join("/") : segments.join("/");
+  if (!route) return;
+
+  var target = base + "#/" + (route || "") + window.location.search;
+
+  var link = document.getElementById("go");
+  if (link) link.setAttribute("href", target);
+  window.location.replace(target);
+})();
+</script>
+</head>
+<body>
+  <main>
+    <img class="mark" src="/ce/assets/brand/mark-dark.png" alt="Cocktail Embassy" onerror="this.remove()">
+    <h1>Cocktail Embassy</h1>
+    <p>Opening your page&hellip;</p>
+    <a id="go" class="btn" href="./">Continue to the catalogue</a>
+    <p class="hint">If the page does not open, use the catalogue address<br>
+      <a href="./" style="color:#c8c8c8">./</a> and the navigation menu.</p>
+  </main>
+</body>
+</html>
