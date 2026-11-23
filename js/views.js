@@ -78,7 +78,7 @@ function heroPicture(slide, first = false) {
 // word. Anything else is printed straight.
 const FALLBACK_MARQUEE = [
   "Hand-blown *crystal*",
-  "52 pieces · six categories",
+  "52 pieces · six collections",
   "Bars, hotels & *studios*",
   "Trade prices in *AED*",
   "Dubai",
@@ -145,7 +145,7 @@ function categoryTile(data, category) {
   return `<a class="tile spotlight" href="#/shop?c=${attr(category.slug)}">
     <span class="tile__media">${img}</span>
     <span class="tile__inner">
-      <span class="tile__eyebrow">${esc(category.blurb || "Category")}</span>
+      <span class="tile__eyebrow">${esc(category.blurb || "Collection")}</span>
       <span class="tile__name">${esc(category.name)}</span>
       <span class="tile__count">${items.length} ${items.length === 1 ? "piece" : "pieces"}</span>
     </span>
@@ -194,8 +194,6 @@ export function homeView(data) {
     .map((slide) => ({ ...slide, product: selectors.productBySlug(data, slide.productSlug) }))
     .filter((slide) => slide.product);
   const first = slides[0];
-  const featured = selectors.featured(data);
-  const signaturePieces = (featured.length ? featured : data.products.filter((p) => !p.comingSoon)).slice(0, 8);
   const categories = data.categories.filter((c) => selectors.productsByCategory(data, c.slug).length);
   const kinetic = kineticHTML(settings);
   const partners = settings.partners || [];
@@ -255,22 +253,11 @@ export function homeView(data) {
     </div>
 
     <div class="wrap">
-      <section class="section reveal" aria-labelledby="featured-title">
-        <div class="section-head">
-          <div>
-            <p class="eyebrow">Signature pieces</p>
-            <h2 class="h2" id="featured-title" style="margin-top:8px">Hand-blown crystal</h2>
-          </div>
-          ${arrowLink("#/shop", `All ${data.products.length} pieces`)}
-        </div>
-        <div class="grid">${signaturePieces.map((p) => productCard(data, p)).join("")}</div>
-      </section>
-
       <section class="section reveal" aria-labelledby="categories-title">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Categories</p>
-            <h2 class="h2" id="categories-title" style="margin-top:8px">Six ways to serve</h2>
+            <p class="eyebrow">Collections</p>
+            <h2 class="h2" id="categories-title" style="margin-top:8px">Explore our collections</h2>
           </div>
           ${arrowLink("#/shop", "All pieces")}
         </div>
@@ -567,7 +554,7 @@ export function shopView(data, params = {}) {
 
   const html = `<div class="wrap">
     <header class="shop-head">
-      <p class="eyebrow">${esc(category ? "Category" : "Shop")}</p>
+      <p class="eyebrow">${esc(category ? "Collection" : "Shop")}</p>
       <div class="shop-title-row">
         <h1 class="h1" style="margin-top:6px">${esc(heading)}</h1>
       </div>
@@ -577,7 +564,7 @@ export function shopView(data, params = {}) {
     <div class="controls">
       <div class="searchbar">
         ${icon("search")}
-        <input type="search" placeholder="Search pieces, materials, categories" value="${attr(
+        <input type="search" placeholder="Search pieces, materials, collections" value="${attr(
           query
         )}" aria-label="Search the catalogue" data-shop-search>
         <button class="searchbar__clear" type="button" data-shop-clear aria-label="Clear search" ${
@@ -1295,7 +1282,7 @@ export function infoView(data) {
         <div class="mesh-card">
           <div style="display:grid;gap:14px;max-width:52ch">
             <h2 class="h2">Open the catalogue.</h2>
-            <p style="margin:0;color:var(--fg-soft);line-height:1.6">Fifty-two pieces, six categories, one house standard.</p>
+            <p style="margin:0;color:var(--fg-soft);line-height:1.6">Fifty-two pieces, six collections, one house standard.</p>
             <div><a class="btn" href="#/shop">Shop all pieces ${icon("arrowRight")}</a></div>
           </div>
         </div>

@@ -28,8 +28,6 @@ function heroSources(n) {
 export async function render() {
   const brand = state.config.brand;
   const texts = state.config.texts;
-  const featured = state.products.filter((p) => p.isHit || p.isNew);
-  const popular = (featured.length ? featured : state.products).slice(0, 8);
 
   const el = h(`<div>
     ${navbar({ brand: true, right: navActions() })}
@@ -80,7 +78,7 @@ export async function render() {
 
       <section class="section wrap">
         <div class="section-head">
-          <h2>Popular now</h2>
+          <h2>All pieces</h2>
           <button class="link" data-go="/collections">Catalog ${icons.arrow}</button>
         </div>
         <div class="grid" data-popular></div>
@@ -115,7 +113,7 @@ export async function render() {
   }
 
   const pop = el.querySelector('[data-popular]');
-  for (const p of popular) pop.appendChild(productCard(p));
+  for (const p of state.products) pop.appendChild(productCard(p));
 
   // ── hero: карусель (раунд 8, a11y) ────────────────────────────────────────
   // Автослайд ставится на паузу по наведению и по фокусу внутри (иначе

@@ -876,7 +876,7 @@ function productsView(data, rerender) {
   const products = data.products || [];
   const categories = data.categories || [];
   const catOptions = [
-    `<option value="">— Без категории —</option>`,
+    `<option value="">— Без коллекции —</option>`,
     ...categories.map((c) => `<option value="${attr(c.slug)}">${esc(c.name)}</option>`),
   ].join("");
 
@@ -897,10 +897,10 @@ function productsView(data, rerender) {
         <div class="admin__filters">
           <div class="admin__search">
             ${icon("search")}
-            <input type="search" class="admin__input" placeholder="Поиск по названию, артикулу, категории…" data-prod-search>
+            <input type="search" class="admin__input" placeholder="Поиск по названию, артикулу, коллекции…" data-prod-search>
           </div>
           <select class="admin__input admin__cat-select" data-prod-cat>
-            <option value="all">Все категории (${products.length})</option>
+            <option value="all">Все коллекции (${products.length})</option>
             ${categories.map((c) => `<option value="${attr(c.slug)}">${esc(c.name)}</option>`).join("")}
           </select>
         </div>
@@ -924,7 +924,7 @@ function productsView(data, rerender) {
                 ${input("Цена (AED)", "price", "", "number", "0", 'step="0.01" min="0"')}
                 ${input("Объём", "volume", "", "text", "190 ml")}
                 <div class="admin__field">
-                  <label class="admin__label">Категория</label>
+                  <label class="admin__label">Коллекция</label>
                   <select class="admin__input" name="categorySlug">${catOptions}</select>
                 </div>
               </div>
@@ -1086,7 +1086,7 @@ function productsView(data, rerender) {
                   <div class="admin__product-meta">
                     ${p.article ? `<span>${esc(p.article)}</span> · ` : ""}
                     <strong>${esc(p.comingSoon ? "First series" : formatPrice(data, p.price))}</strong>
-                    · ${esc(catObj ? catObj.name : p.categorySlug || "Без категории")}
+                    · ${esc(catObj ? catObj.name : p.categorySlug || "Без коллекции")}
                     ${p.volume ? ` · ${esc(p.volume)}` : ""}
                     · ${esc(status)}
                   </div>
@@ -1255,27 +1255,27 @@ function categoriesView(data, rerender) {
     .join("");
 
   return {
-    title: "Категории — Админ-панель",
+    title: "Коллекции — Админ-панель",
     html: `
       <div class="admin__section">
         <header class="admin__bar">
           <div>
-            <h2 class="admin__h2">Категории <span class="admin__count">${categories.length}</span></h2>
+            <h2 class="admin__h2">Коллекции <span class="admin__count">${categories.length}</span></h2>
             <p class="admin__sub">Разделы каталога и плитки на главной странице</p>
           </div>
           <div class="admin__bar-right">
-            ${btn(`${icon("plus")}<span>Добавить категорию</span>`, "primary", "button", "data-cat-add")}
+            ${btn(`${icon("plus")}<span>Добавить коллекцию</span>`, "primary", "button", "data-cat-add")}
           </div>
         </header>
 
         <div class="admin__product-list">
-          ${rows || `<div class="admin__empty">Категорий пока нет</div>`}
+          ${rows || `<div class="admin__empty">Коллекций пока нет</div>`}
         </div>
 
-        <div class="admin__modal" data-cat-modal role="dialog" aria-modal="true" aria-label="Редактор категории">
+        <div class="admin__modal" data-cat-modal role="dialog" aria-modal="true" aria-label="Редактор коллекции">
           <div class="admin__modal-card">
             <header class="admin__modal-head">
-              <h3 class="admin__card-title" data-cat-modal-title>Категория</h3>
+              <h3 class="admin__card-title" data-cat-modal-title>Коллекция</h3>
               <button type="button" class="admin__icon-close" data-cat-close aria-label="Закрыть">${icon("close")}</button>
             </header>
             <form class="admin__modal-form" id="admin-cat-form">
@@ -1315,7 +1315,7 @@ function categoriesView(data, rerender) {
 
       function openCatModal(cat = null) {
         form.reset();
-        titleEl.textContent = cat ? `Категория: ${cat.name}` : "Новая категория";
+        titleEl.textContent = cat ? `Коллекция: ${cat.name}` : "Новая коллекция";
         form.elements.existingSlug.value = cat ? cat.slug : "";
         form.elements.name.value = cat?.name || "";
         form.elements.slug.value = cat?.slug || "";
@@ -1368,10 +1368,10 @@ function categoriesView(data, rerender) {
         if (delBtn) {
           const cat = categories.find((c) => c.slug === delBtn.dataset.catDel);
           if (!cat) return;
-          if (!confirm(`Удалить категорию «${cat.name}»?`)) return;
+          if (!confirm(`Удалить коллекцию «${cat.name}»?`)) return;
           try {
             const result = await deleteCategoryOp(cat.slug, data);
-            savedOperationToast(result, "Категория удалена");
+            savedOperationToast(result, "Коллекция удалена");
             rerender(result.updated);
           } catch (err) {
             toast("Ошибка: " + errText(err), { iconName: "warning" });
@@ -1395,7 +1395,7 @@ function categoriesView(data, rerender) {
         try {
           const result = await saveCategoryOp(existingSlug, payload, data);
           closeModal(modal);
-          savedOperationToast(result, "Категория сохранена");
+          savedOperationToast(result, "Коллекция сохранена");
           rerender(result.updated);
         } catch (err) {
           toast("Ошибка: " + errText(err), { iconName: "warning" });
@@ -2200,7 +2200,7 @@ export function adminView(initialData) {
   const active = (location.hash.match(/^#\/admin\/([a-z]+)/) || [])[1] || "products";
   const tabs = [
     { key: "products", label: "Товары" },
-    { key: "categories", label: "Категории" },
+    { key: "categories", label: "Коллекции" },
     { key: "partners", label: "Партнёры" },
     { key: "settings", label: "Настройки" },
     { key: "requests", label: "Заявки" },
