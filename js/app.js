@@ -26,7 +26,7 @@ const NAV_ITEMS = [
 // running lines in the back office. The live copy is settings.ticker.
 const FALLBACK_TICKER = [
   "Worldwide delivery from Dubai",
-  "52 pieces · six categories",
+  "52 pieces · six collections",
   "Trade prices in AED",
   "bartending.solution.uae@gmail.com",
   "+971 56 238 8262",
