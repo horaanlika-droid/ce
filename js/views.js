@@ -188,6 +188,12 @@ export function partnersMarqueeHTML(partners) {
 
 /* ------------------------------------------------------------------- home */
 
+// A full row at every grid breakpoint (2, 3 or 4 columns).
+const HOME_CATALOG_PAGE_SIZE = 12;
+const homeCatalogStatus = (shown, total) =>
+  total ? `Showing ${shown} of ${total} ${total === 1 ? "piece" : "pieces"}` : "No pieces available";
+const homeCatalogProgress = (shown, total) => (total ? Math.round((shown / total) * 100) : 0);
+
 export function homeView(data) {
   const settings = data.settings || {};
   const slides = (settings.hero || [])
@@ -195,6 +201,7 @@ export function homeView(data) {
     .filter((slide) => slide.product);
   const first = slides[0];
   const categories = data.categories.filter((c) => selectors.productsByCategory(data, c.slug).length);
+  const initialProducts = data.products.slice(0, HOME_CATALOG_PAGE_SIZE);
   const kinetic = kineticHTML(settings);
   const partners = settings.partners || [];
 
@@ -265,13 +272,13 @@ export function homeView(data) {
       </section>
 
       <section class="section reveal" aria-labelledby="catalog-title" data-home-catalog>
-        <div class="section-head">
+        <div class="section-head home-catalog__head">
           <div>
-            <p class="eyebrow">The collection</p>
-            <h2 class="h2" id="catalog-title" style="margin-top:8px">Explore all positions</h2>
+            <p class="eyebrow">The catalogue</p>
+            <h2 class="h2" id="catalog-title" style="margin-top:8px">All pieces</h2>
           </div>
-          <div style="display:flex;align-items:center;gap:12px">
-            <span class="muted" style="font-size:13.5px" data-home-catalog-count>${data.products.length} pieces</span>
+          <div class="home-catalog__meta">
+            <span class="muted" style="font-size:13.5px" data-home-catalog-count>${data.products.length} ${data.products.length === 1 ? "piece" : "pieces"}</span>
             ${arrowLink("#/shop", "Shop with filters")}
           </div>
         </div>
@@ -286,11 +293,13 @@ export function homeView(data) {
             )
             .join("")}
         </div>
-        <div class="grid" data-home-grid>
-          ${data.products.map((p) => productCard(data, p)).join("")}
+        <div class="grid" id="home-catalog-grid" data-home-grid>
+          ${initialProducts.map((p) => productCard(data, p)).join("")}
         </div>
-        <div style="text-align:center;margin-top:28px">
-          <a class="btn btn--ghost" href="#/shop">Open full catalogue &amp; filters ${icon("arrowRight")}</a>
+        <div class="home-catalog__more">
+          <p class="home-catalog__status" data-home-catalog-status role="status" aria-live="polite">${homeCatalogStatus(initialProducts.length, data.products.length)}</p>
+          <span class="home-catalog__progress" data-home-progress aria-hidden="true" ${data.products.length ? "" : "hidden"}><span data-home-progress-fill style="width:${homeCatalogProgress(initialProducts.length, data.products.length)}%"></span></span>
+          <button class="btn btn--ghost" type="button" data-home-more aria-controls="home-catalog-grid" ${initialProducts.length >= data.products.length ? "hidden" : ""}>Show more pieces ${icon("chevronDown")}</button>
         </div>
       </section>
 
@@ -368,18 +377,45 @@ function mountHome(root, slides, data) {
   if (catSection && data && data.products) {
     const gridEl = catSection.querySelector("[data-home-grid]");
     const countEl = catSection.querySelector("[data-home-catalog-count]");
+    const statusEl = catSection.querySelector("[data-home-catalog-status]");
+    const progressEl = catSection.querySelector("[data-home-progress]");
+    const progressFill = catSection.querySelector("[data-home-progress-fill]");
+    const moreBtn = catSection.querySelector("[data-home-more]");
     const chips = catSection.querySelectorAll("[data-home-chip]");
+    let activeCat = "all";
+    let filtered = data.products;
+    let shown = Math.min(HOME_CATALOG_PAGE_SIZE, filtered.length);
+
+    function updateCatalogControls() {
+      if (countEl) countEl.textContent = `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"}`;
+      if (statusEl) statusEl.textContent = homeCatalogStatus(shown, filtered.length);
+      if (progressEl) progressEl.hidden = filtered.length === 0;
+      if (progressFill) progressFill.style.width = `${homeCatalogProgress(shown, filtered.length)}%`;
+      if (moreBtn) moreBtn.hidden = shown >= filtered.length;
+    }
 
     chips.forEach((chip) => {
       chip.addEventListener("click", () => {
         const cat = chip.dataset.homeChip;
+        if (cat === activeCat) return;
+        activeCat = cat;
         chips.forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
-        const filtered = cat === "all" ? data.products : data.products.filter((p) => p.categorySlug === cat);
-        if (countEl) countEl.textContent = `${filtered.length} ${filtered.length === 1 ? "piece" : "pieces"}`;
-        if (gridEl) {
-          gridEl.innerHTML = filtered.map((p) => productCard(data, p)).join("");
-        }
+        filtered = cat === "all" ? data.products : data.products.filter((p) => p.categorySlug === cat);
+        shown = Math.min(HOME_CATALOG_PAGE_SIZE, filtered.length);
+        if (gridEl) gridEl.innerHTML = filtered.slice(0, shown).map((p) => productCard(data, p)).join("");
+        updateCatalogControls();
       });
+    });
+
+    moreBtn?.addEventListener("click", (event) => {
+      if (!gridEl || shown >= filtered.length) return;
+      const previousShown = shown;
+      shown = Math.min(shown + HOME_CATALOG_PAGE_SIZE, filtered.length);
+      gridEl.insertAdjacentHTML("beforeend", filtered.slice(previousShown, shown).map((p) => productCard(data, p)).join(""));
+      updateCatalogControls();
+      // Keyboard users can continue through the newly inserted cards instead of
+      // skipping straight past them (especially when the last button disappears).
+      if (event.detail === 0) gridEl.children[previousShown]?.querySelector(".card__link")?.focus();
     });
   }
 

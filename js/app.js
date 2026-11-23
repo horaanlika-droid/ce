@@ -11,7 +11,7 @@ import {
   infoView,
   notFoundView,
   adminView,
-} from "./views.js";
+} from "./views.js?v=21";
 
 const app = document.getElementById("app");
 const NAV_ITEMS = [
@@ -155,7 +155,8 @@ function footerHTML(data) {
   <div class="footer__base">
     <span>© ${new Date().getFullYear()} ${esc(s.brand || "Cocktail Embassy")}. All rights reserved.</span>
     <span>${esc(s.priceNote || "")}</span>
-  </div>`;
+  </div>
+  <div class="footer__credit">app by @stonym0ntana</div>`;
 }
 
 /* ------------------------------------------------------ opening curtain */
@@ -452,7 +453,7 @@ async function boot() {
   // a successful boot traps visitors behind the same broken cached response.
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker
-      .register("sw.js?v=20")
+      .register("sw.js?v=21")
       .then((reg) => reg.update().catch(() => {}))
       .catch(() => {});
   }
