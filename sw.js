@@ -1,19 +1,19 @@
 /* Cocktail Embassy — offline shell.
    Code, catalogue JSON, and per-item photo folders (glasses/, covers/, packaging/)
    use network-first so replaced repository photos appear on the very first reload. */
-const CACHE = "ce-shell-v20";
+const CACHE = "ce-shell-v21";
 const SHELL = [
   "./",
   "index.html",
-  "css/app.css?v=20",
-  "js/app.js?v=20",
-  "js/config.js?v=20",
+  "css/app.css?v=21",
+  "js/app.js?v=21",
+  "js/config.js?v=21",
   "js/api.js",
   "js/content-snapshot.js",
   "js/admin.js",
   "js/store.js",
   "js/ui.js",
-  "js/views.js",
+  "js/views.js?v=21",
   "js/icons.js",
   "data/content.json",
   "data/folder-defaults.json",

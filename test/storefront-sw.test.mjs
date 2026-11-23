@@ -59,6 +59,9 @@ test('offline shell installation survives a failed catalogue JSON download', asy
   assert.ok(cached.includes('js/content-snapshot.js'));
   assert.ok(cached.includes('js/api.js'));
   assert.ok(cached.includes('index.html'));
+  const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+  const viewsImport = app.match(/from "\.\/(views\.js[^\"]*)"/)?.[1];
+  assert.ok(viewsImport && cached.includes(`js/${viewsImport}`), 'the imported view module is available offline');
 });
 
 for (const status of [404, 503]) {

@@ -78,8 +78,10 @@ means it works identically on GitHub Pages, BotHost, or from a local folder.
   in the URL so a filtered view can be shared. Every piece carries an article number
   (AG/AC/PC/FE/ST + four digits) printed on the card and the product page.
 * **Mechanics**:
+  * **Home catalogue** — all pieces follow the collections, initially showing 12
+    cards with a “Show more” button. Collection filters keep the same pagination.
   * **Opening curtain** — the chrome lockup and a single hairline progress bar,
-    with `app by @stonym0ntana` set at the bottom.
+    with `app by @stonym0ntana` set at the bottom and repeated in the page footer.
   * **iOS screen motion** — a piece *pushes* in from the right, going back *pops* in from the left, tab switches cross-fade.
   * **Bar** — the current piece name fades into the top bar as you scroll, and a back chevron appears on deep screens.
   * **Running line** — ticker under the bar carries trade announcements and contact lines across the top; kinetic display band on the home page.
