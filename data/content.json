@@ -1,6 +1,6 @@
 {
   "version": 7,
-  "updatedAt": "2026-11-22T21:56:40.473Z",
+  "updatedAt": "2026-11-23T10:04:15.092Z",
   "settings": {
     "brand": "Cocktail Embassy",
     "tagline": "Hand-blown glassware for the modern bar.",
@@ -377,44 +377,68 @@
   "categories": [
     {
       "slug": "highball",
-      "name": "Highball & Collins",
+      "name": "BULLET",
       "blurb": "Long drinks, collins, hurricanes",
       "sort": 1,
       "cover": "covers/category-highball/cover.webp"
     },
     {
       "slug": "rocks",
-      "name": "Rocks & Tumblers",
+      "name": "RETRO ASIA",
       "blurb": "Old fashioned, neat, on the rocks",
       "sort": 2,
       "cover": "covers/category-rocks/cover.webp"
     },
     {
       "slug": "cocktail",
-      "name": "Cocktail & Martini",
+      "name": "FLOWERS",
       "blurb": "Martinies, coupes, shots, two sips",
       "sort": 3,
       "cover": "covers/category-cocktail/cover.webp"
     },
     {
       "slug": "wine",
-      "name": "Wine & Serve",
+      "name": "COUPETHINI",
       "blurb": "Wine, champagne, goblets, tea",
       "sort": 4,
       "cover": "covers/category-wine/cover.webp"
     },
     {
+      "slug": "levitating",
+      "name": "LEVITATING",
+      "blurb": "",
+      "sort": 7
+    },
+    {
+      "slug": "replicate",
+      "name": "REPLICATE",
+      "blurb": "",
+      "sort": 8
+    },
+    {
+      "slug": "short",
+      "name": "SHORTIES",
+      "blurb": "",
+      "sort": 9
+    },
+    {
       "slug": "acids",
       "name": "Acids & Essentials",
       "blurb": "Acids, enzymes, eco straws",
-      "sort": 5,
+      "sort": 11,
       "cover": "covers/category-acids/cover.webp"
+    },
+    {
+      "slug": "soon",
+      "name": "SOON",
+      "blurb": "",
+      "sort": 11
     },
     {
       "slug": "essences",
       "name": "Essences",
       "blurb": "Ten flavours, dosed by the drop",
-      "sort": 6,
+      "sort": 11,
       "cover": "covers/category-essences/cover.webp"
     }
   ],
