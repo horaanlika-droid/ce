@@ -1,13 +1,13 @@
 {
   "version": 7,
-  "updatedAt": "2026-11-23T10:04:15.092Z",
+  "updatedAt": "2026-11-23T10:54:53.768Z",
   "settings": {
     "brand": "Cocktail Embassy",
-    "tagline": "Hand-blown glassware for the modern bar.",
+    "tagline": "Hand-blown glassware for the modern bars",
     "announcement": "Trade catalogue · 52 pieces · prices in AED · worldwide delivery",
     "ticker": [
       "Worldwide delivery from Dubai",
-      "52 pieces · six categories",
+      "52 pieces · six collections",
       "Trade prices in AED",
       "bartending.solution.uae@gmail.com",
       "+971 56 238 8262",
@@ -26,44 +26,12 @@
     "requestNote": "No online payment — submit a request and our team confirms availability, shipping and final invoicing within one business day.",
     "hero": [
       {
-        "productSlug": "levitating-martini",
-        "kicker": "The Levitating Series",
-        "title": "Levitating",
-        "copy": "Hand-blown crystal that defies gravity. Ultra-light, perfectly balanced, unforgettable in the hand.",
-        "name": "Levitating Martini",
-        "subtitle": "Hand-Blown Crystal",
-        "cover": "covers/hero-levitating-martini/cover.webp",
-        "portraitCover": "covers/hero-levitating-martini/portrait.webp"
-      },
-      {
-        "productSlug": "etched-highball",
-        "kicker": "Etched Editions",
-        "title": "Etched",
-        "copy": "A slender highball with a hand-etched constellation. Built for long, cold, precise serves.",
-        "name": "Etched Highball",
-        "subtitle": "Etched Edition",
-        "cover": "covers/hero-etched-highball/cover.webp",
-        "portraitCover": "covers/hero-etched-highball/portrait.webp"
-      },
-      {
-        "productSlug": "champagne-saucer",
-        "kicker": "Noir Series",
-        "title": "Noir",
-        "copy": "A wide, shallow bowl tuned for aroma. The silhouette that started the Embassy.",
-        "name": "Champagne Saucer",
-        "subtitle": "Wide Bowl Saucer",
-        "cover": "covers/hero-champagne-saucer/cover.webp",
-        "portraitCover": "covers/hero-champagne-saucer/portrait.webp"
-      },
-      {
-        "productSlug": "levitating-super-pony",
-        "kicker": "The Levitating Series",
-        "title": "Super Pony",
-        "copy": "140 ml of crystal hanging off a pulled stem. The piece the trade orders by the case.",
-        "name": "Levitating Super Pony",
-        "subtitle": "Levitating",
-        "cover": "covers/hero-levitating-super-pony/cover.webp",
-        "portraitCover": "covers/hero-levitating-super-pony/portrait.webp"
+        "productSlug": "agar-agar",
+        "kicker": "The House",
+        "title": "Acids & Enzymes",
+        "name": "in stock",
+        "subtitle": "Vegan proof gelatine",
+        "copy": "order now"
       }
     ],
     "contacts": {
@@ -118,10 +86,11 @@
       }
     ],
     "covers": {
-      "homeCraft": "covers/home-craft/cover.webp",
-      "infoBanner": "covers/info-banner/cover.webp",
+      "homeCraft": "covers/home-craft/cover.jpg",
+      "infoBanner": "covers/info-banner/cover.jpg",
       "infoStory": "covers/info-story/cover.webp",
-      "ogShare": "covers/og-share/cover.jpg"
+      "ogShare": "covers/og-share/cover.jpg",
+      "announcementImage": "covers/announcement/announcement.jpg"
     },
     "partners": [
       {
